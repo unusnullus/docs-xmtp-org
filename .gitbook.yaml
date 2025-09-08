@@ -1,0 +1,5 @@
+root: ./pages
+structure:
+  readme: README.md
+
+
