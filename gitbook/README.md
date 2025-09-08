@@ -1,3 +1,5 @@
-# XMTP Documentation
+# Home
 
-This is the GitBook view of the docs.
+This section contains:
+
+- [terms](./terms.md)

@@ -1,3 +1,5 @@
-# uagents
+# agents
 
-This section contains agents.
+This section contains:
+
+- [deploy agent](./deploy-agent.md)

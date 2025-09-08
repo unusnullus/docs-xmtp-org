@@ -1,3 +1,5 @@
-# uprotocol
+# protocol
 
-This section contains protocol.
+This section contains:
+
+- [xips](./xips.md)

@@ -1,3 +1,5 @@
-# ucore messaging
+# core messaging
 
-This section contains core-messaging.
+This section contains:
+
+- [stream](./stream.md)

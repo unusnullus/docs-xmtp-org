@@ -1,3 +1,5 @@
-# unetwork
+# network
 
-This section contains network.
+This section contains:
+
+- [run a node](./run-a-node.md)
