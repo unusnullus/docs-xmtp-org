@@ -1,10 +1,822 @@
 # Core messaging
 
-## List conversations
+## Messaging implementation guideline
 
 ***
 
-### List existing conversations
+### Understanding of Client concept&#x20;
+
+***
+
+#### Create a EOA or SCW signer
+
+XMTP SDKs support message signing with 2 different types of Ethereum accounts: Externally Owned Accounts (EOAs) and Smart Contract Wallets (SCWs). All SDK clients accept a signer object (or instance), which provides a method for signing messages.
+
+***
+
+#### Create an Externally Owned Account signer
+
+The EOA signer must have 3 properties: the account type, a function that returns the account identifier, and a function that signs messages.
+
+{% tabs %}
+{% tab title="Browser" %}
+```javascript
+import type { Signer, Identifier } from '@xmtp/browser-sdk';
+ 
+const accountIdentifier: Identifier = {
+  identifier: '0x...', // Ethereum address as the identifier
+  identifierKind: 'Ethereum', // Specifies the identity type
+};
+ 
+const signer: Signer = {
+  type: 'EOA',
+  getIdentifier: () => accountIdentifier,
+  signMessage: async (message: string): Uint8Array => {
+    // typically, signing methods return a hex string
+    // this string must be converted to bytes and returned in this function
+  },
+};
+```
+{% endtab %}
+
+{% tab title="Node" %}
+```javascript
+import type { Signer, Identifier, IdentifierKind } from '@xmtp/node-sdk';
+ 
+const accountIdentifier: Identifier = {
+  identifier: '0x...', // Ethereum address as the identifier
+  identifierKind: IdentifierKind.Ethereum, // Specifies the identity type
+};
+ 
+const signer: Signer = {
+  type: 'EOA',
+  getIdentifier: () => accountIdentifier,
+  signMessage: async (message: string): Uint8Array => {
+    // typically, signing methods return a hex string
+    // this string must be converted to bytes and returned in this function
+  },
+};
+```
+{% endtab %}
+
+{% tab title="React Native" %}
+```javascript
+// Example EOA Signer
+export function convertEOAToSigner(eoaAccount: EOAAccount): Signer {
+  return {
+    getIdentifier: async () =>
+      new PublicIdentity(eoaAccount.address, 'ETHEREUM'),
+    getChainId: () => undefined, // Provide a chain ID if available or return undefined
+    getBlockNumber: () => undefined, // Block number is typically not available in Wallet, return undefined
+    signerType: () => 'EOA', // "EOA" indicates an externally owned account
+    signMessage: async (message: string) => {
+      const signature = await eoaAccount.signMessage(message);
+ 
+      return {
+        signature,
+      };
+    },
+  };
+}
+```
+{% endtab %}
+
+{% tab title="Kotlin" %}
+{% code title="" %}
+```kotlin
+class EOAWallet : SigningKey {
+    override val publicIdentity: PublicIdentity
+      get() = PublicIdentity(
+          IdentityKind.ETHEREUM,
+          key.publicAddress
+      )
+    override val type: SignerType
+      get() = SignerType.EOA
+ 
+    override suspend fun sign(message: String): SignedData {
+        val signature = key.sign(message = message)
+        return SignedData(signature)
+    }
+}
+```
+{% endcode %}
+{% endtab %}
+
+{% tab title="Swift" %}
+{% code title="" %}
+```swift
+public struct EOAWallet: SigningKey {
+    public var identity: PublicIdentity {
+      return PublicIdentity(kind: .ethereum, identifier: key.publicAddress)
+    }
+ 
+    public var type: SignerType { .EOA }
+ 
+    public func sign(message: String) async throws -> SignedData {
+        let signature = try await key.sign(message: message)
+        return SignedData(signature)
+    }
+}
+```
+{% endcode %}
+{% endtab %}
+{% endtabs %}
+
+***
+
+#### Create a Smart Contract Wallet signer
+
+The SCW signer has the same 3 required properties as the EOA signer, but also requires a function that returns the chain ID of the blockchain being used and an optional function that returns the block number to verify signatures against. If a function is not provided to retrieve the block number, the latest block number will be used.
+
+Here is a list of supported chain IDs:
+
+* chain\_rpc\_1 = string
+* chain\_rpc\_8453 = string
+* chain\_rpc\_42161 = string
+* chain\_rpc\_10 = string
+* chain\_rpc\_137 = string
+* chain\_rpc\_324 = string
+* chain\_rpc\_59144 = string
+* chain\_rpc\_480 = string
+
+Need support for a different chain ID? Please post your request to the [XMTP Community Forums](https://community.xmtp.org/c/general/ideas/54).
+
+The details of creating an SCW signer are highly dependent on the wallet provider and the library you're using to interact with it. Here are some general guidelines to consider:
+
+* **Wallet provider integration**: Different wallet providers (Safe, Argent, Rainbow, etc.) have different methods for signing messages. See the wallet provider documentation for more details.
+* **Library selection**: Choose a library that supports your wallet provider (e.g., viem, ethers.js, web3.js). Each library has its own API for interacting with wallets. See the library documentation for more details.
+* **Add an Ethereum-specific prefix**: Before signing, Ethereum requires a specific prefix to be added to the message. To learn more, see [ERC-191: Signed Data Standard](https://eips.ethereum.org/EIPS/eip-191). Libraries and wallet providers might add the prefix for you, so make sure you don't add the prefix twice.
+* **Hash the prefixed message with Keccak-256**: The prefixed message is hashed using the Keccak-256 algorithm, which is Ethereum's standard hashing algorithm. This step creates a fixed-length representation of the message, ensuring consistency and security. Note that some wallet providers might handle this hashing internally.
+* **Sign the replay-safe hash**: The replay-safe hash is signed using the private key of the SCW. This generates a cryptographic signature that proves ownership of the wallet and ensures the integrity of the message.
+* **Convert the signature to a Uint8Array**: The resulting signature is converted to a `Uint8Array` format, which is required by the XMTP SDK for compatibility and further processing.
+
+The code snippets below are examples only and will need to be adapted based on your specific wallet provider and library.
+
+{% tabs %}
+{% tab title="Browser" %}
+```javascript
+export const createSCWSigner = (
+  address: `0x${string}`,
+  walletClient: WalletClient,
+  chainId: bigint,
+): Signer => {
+  return {
+    type: "SCW",
+    getIdentifier: () => ({
+      identifier: address.toLowerCase(),
+      identifierKind: "Ethereum",
+    }),
+    signMessage: async (message: string) => {
+      const signature = await walletClient.signMessage({
+        account: address,
+        message,
+      });
+      return toBytes(signature);
+    },
+    getChainId: () => {
+      return chainId;
+    },
+  };
+```
+{% endtab %}
+
+{% tab title="Node" %}
+```javascript
+import type { Signer, Identifier, IdentifierKind } from '@xmtp/node-sdk';
+ 
+const accountIdentifier: Identifier = {
+  identifier: '0x...', // Ethereum address as the identifier
+  identifierKind: IdentifierKind.Ethereum, // Specifies the identity type
+};
+ 
+const signer: Signer = {
+  type: 'SCW',
+  getIdentifier: () => accountIdentifier,
+  signMessage: async (message: string): Uint8Array => {
+    // typically, signing methods return a hex string
+    // this string must be converted to bytes and returned in this function
+  },
+  getChainId: () => BigInt(8453), // Example: Base chain ID
+};
+```
+{% endtab %}
+
+{% tab title="React Native" %}
+```javascript
+// Example SCW Signer
+export function convertSCWToSigner(scwAccount: SCWAccount): Signer {
+  return {
+    getIdentifier: async () =>
+      new PublicIdentity(scwAccount.address, 'ETHEREUM'),
+    getChainId: () => 8453, // https://chainlist.org/
+    getBlockNumber: () => undefined, // Optional: will be computed at runtime
+    signerType: () => 'SCW', // "SCW" indicates smart contract wallet account
+    signMessage: async (message: string) => {
+      const byteArray = await scwAccount.signMessage(message);
+      const signature = ethers.utils.hexlify(byteArray); // Convert to hex string
+ 
+      return {
+        signature,
+      };
+    },
+  };
+}
+```
+{% endtab %}
+
+{% tab title="Kotlin" %}
+{% code title="" %}
+```kotlin
+public struct SCWallet: SigningKey {
+    public var identity: PublicIdentity {
+      return PublicIdentity(kind: .ethereum, identifier: key.publicAddress)
+    }
+ 
+    public var chainId: Int64? {
+        8453
+    }
+ 
+    public var blockNumber: Int64? {
+        nil
+    }
+ 
+    public var type: SignerType { .SCW }
+ 
+    public func sign(message: String) async throws -> SignedData {
+        let signature = try await key.sign(message: message)
+        return SignedData(signature.hexStringToByteArray )
+    }
+}
+```
+{% endcode %}
+{% endtab %}
+
+{% tab title="Swift" %}
+{% code title="" %}
+```swift
+public struct EOAWallet: SigningKey {
+    public var identity: PublicIdentity {
+      return PublicIdentity(kind: .ethereum, identifier: key.publicAddress)
+    }
+ 
+    public var type: SignerType { .EOA }
+ 
+    public func sign(message: String) async throws -> SignedData {
+        let signature = try await key.sign(message: message)
+        return SignedData(signature)
+    }
+}
+```
+{% endcode %}
+{% endtab %}
+{% endtabs %}
+
+***
+
+#### Understand creating and building a client
+
+When you call `Client.create()`, the following steps happen under the hood:
+
+1. Extracts the `signer` and retrieves the wallet address from it.
+2. Checks the XMTP identity ledger to find an inbox ID associated with the signer address. The inbox ID serves as the user's identity on the XMTP network.
+   1. If it doesn't find an existing inbox ID, it requests a wallet signature to register the identity and create an inbox ID.
+   2. If it finds an existing inbox ID, it uses the existing inbox ID.
+3. Checks if a local SQLite database exists. This database contains the identity's installation state and message data.
+   1. If it doesn't find an existing local database, it creates one. On non-web platforms, it encrypts the database with the provided `dbEncryptionKey`.
+   2. If it finds an existing local database:
+      * **For the Node, React Native, Android, and iOS SDKs**: It checks if the provided `dbEncryptionKey` matches. If it matches, it uses the existing database. If not, it creates a new database encrypted with the provided key.
+      * **For the Browser SDK**: A `dbEncryptionKey` is not used for encryption due to technical limitations in web environments. Be aware that the database is not encrypted.
+4. Returns the XMTP client, ready to send and receive messages.
+
+The `dbEncryptionKey` client option is used by the Node, React Native, Android, and Swift SDKs only.
+
+The encryption key is critical to the stability and continuity of an XMTP client. It encrypts the local SQLite database created when you call `Client.create()`, and must be provided every time you create or build a client.
+
+As long as the local database and encryption key remain intact, you can use [`Client.build()`](https://docs.xmtp.org/chat-apps/core-messaging/create-a-client#build-an-existing-client) to rehydrate the same client without re-signing.
+
+This encryption key is not stored or persisted by the XMTP SDK, so it's your responsibility as the app developer to store it securely and consistently.
+
+If the encryption key is lost, rotated, or passed incorrectly during a subsequent `Client.create()` or `Client.build()` call (on non-web platforms), the app will be unable to access the local database. Likewise, if you initially provided the `dbPath` option, you must always provide it with every subsequent call or the client may be unable to access the database. The client will assume that the database can't be decrypted or doesn't exist, and will fall back to creating a new installation.
+
+Creating a new installation requires a new identity registration and signature—and most importantly, **results in loss of access to all previously stored messages** unless the user has done a [history sync](https://docs.xmtp.org/chat-apps/list-stream-sync/history-sync).
+
+To ensure seamless app experiences persist the `dbEncryptionKey` securely, and make sure it's available and correctly passed on each app launch
+
+The `dbEncryptionKey` client option is not used by the Browser SDK for due to technical limitations in web environments. In this case, be aware that the database is not encrypted.
+
+To learn more about database operations, see the [XMTP MLS protocol spec](https://github.com/xmtp/libxmtp/blob/main/xmtp_mls/README.md).
+
+For debugging, it can be useful to decrypt a locally stored database. When a `dbEncryptionKey` is used, the XMTP client creates a [SQLCipher database](https://www.zetetic.net/sqlcipher/) which applies transparent 256-bit AES encryption. A `.sqlitecipher_salt` file is also generated alongside the database.
+
+To open this database, you need to construct the password by prefixing `0x` (to indicate hexadecimal numbers), then appending the encryption key (64 hex characters, 32 bytes) and the salt (32 hex characters, 16 bytes). For example, if your encryption key is `A` and your salt is `B`, the resulting password would be `0xAB`.
+
+The database also uses a [plaintext header size](https://www.zetetic.net/sqlcipher/sqlcipher-api/#cipher_plaintext_header_size) of 32 bytes.
+
+If you want to inspect the database visually, you can use [DB Browser for SQLite](https://sqlitebrowser.org/), an open source tool that supports SQLite and SQLCipher. In its **Custom** encryption settings, set the **Plaintext Header Size** to _**32**_, and use the full **Password** as a **Raw key.**
+
+***
+
+#### Create a client
+
+To call `Client.create()`, you must pass in a required `signer` and can also pass in any of the optional parameters covered in [Configure an XMTP client](https://docs.xmtp.org/chat-apps/core-messaging/create-a-client#configure-an-xmtp-client).
+
+{% tabs %}
+{% tab title="Browser" %}
+```javascript
+import { Client, type Signer } from '@xmtp/browser-sdk';
+ 
+// create a signer
+const signer: Signer = {
+  /* ... */
+};
+ 
+const client = await Client.create(
+  signer,
+  // client options
+  {
+    // Note: dbEncryptionKey is not used for encryption in browser environments
+  }
+);
+```
+{% endtab %}
+
+{% tab title="Node" %}
+```javascript
+import { Client, type Signer } from '@xmtp/node-sdk';
+import { getRandomValues } from 'node:crypto';
+ 
+// create a signer
+const signer: Signer = {
+  /* ... */
+};
+ 
+/**
+ * The database encryption key is optional but strongly recommended for
+ * secure local storage of the database.
+ *
+ * This value must be consistent when creating a client with an existing
+ * database.
+ */
+const dbEncryptionKey = getRandomValues(new Uint8Array(32));
+ 
+const client = await Client.create(
+  signer,
+  // client options
+  {
+    dbEncryptionKey,
+    // Optional: Use a function to dynamically set the database path based on inbox ID
+    // dbPath: (inboxId) => `./databases/xmtp-${inboxId}.db3`,
+  }
+);
+```
+{% endtab %}
+
+{% tab title="React Native" %}
+```javascript
+Client.create(signer, {
+  env: 'production', // 'local' | 'dev' | 'production'
+  dbEncryptionKey: keyBytes, // 32 bytes
+});
+```
+{% endtab %}
+
+{% tab title="Kotlin" %}
+{% code title="" %}
+```kotlin
+val options = ClientOptions(
+    ClientOptions.Api(XMTPEnvironment.PRODUCTION, true),
+    appContext = ApplicationContext(),
+    dbEncryptionKey = keyBytes // 32 bytes
+)
+val client = Client().create(
+        account = SigningKey,
+        options = options
+    )
+```
+{% endcode %}
+{% endtab %}
+
+{% tab title="Swift" %}
+{% code title="" %}
+```swift
+let options = ClientOptions.init(
+  api: .init(env: .production, isSecure: true),
+  dbEncryptionKey: keyBytes // 32 bytes
+)
+let client = try await Client.create(
+  account: SigningKey,
+  options: options
+)
+```
+{% endcode %}
+{% endtab %}
+{% endtabs %}
+
+***
+
+#### Configure an XMTP client
+
+You can configure an XMTP client with these options passed to `Client.create`:
+
+{% tabs %}
+{% tab title="Browser" %}
+```javascript
+import type { ContentCodec } from '@xmtp/content-type-primitives';
+ 
+type ClientOptions = {
+  /**
+   * Specify which XMTP environment to connect to. (default: `dev`)
+   */
+  env?: 'local' | 'dev' | 'production';
+  /**
+   * Add a client app version identifier that's included with API requests.
+   * Production apps are strongly encouraged to set this value.
+   *
+   * You can use the following format: `appVersion: 'APP_NAME/APP_VERSION'`.
+   *
+   * For example: `appVersion: 'alix/2.x'`
+   *
+   * If you have an app and an agent, it's best to distinguish them from each other by
+   * adding `-app` and `-agent` to the names. For example:
+   *
+   * - App: `appVersion: 'alix-app/3.x'`
+   * - Agent: `appVersion: 'alix-agent/2.x'`
+   *
+   * Setting this value provides telemetry that shows which apps are using the
+   * XMTP client SDK. This information can help XMTP core developers provide you with app
+   * support, especially around communicating important SDK updates, deprecations,
+   * and required upgrades.
+   */
+  appVersion?: string;
+  /**
+   * apiUrl can be used to override the `env` flag and connect to a
+   * specific endpoint
+   */
+  apiUrl?: string;
+  /**
+   * historySyncUrl can be used to override the `env` flag and connect to a
+   * specific endpoint for syncing history
+   */
+  historySyncUrl?: string | null;
+  /**
+   * Allow configuring codecs for additional content types
+   */
+  codecs?: ContentCodec[];
+  /**
+   * Path to the local DB
+   *
+   * There are 4 value types that can be used to specify the database path:
+   *
+   * - `undefined` (or excluded from the client options)
+   *    The database will be created in the current working directory and is based on
+   *    the XMTP environment and client inbox ID.
+   *    Example: `xmtp-dev-<inbox-id>.db3`
+   *
+   * - `null`
+   *    No database will be created and all data will be lost once the client disconnects.
+   *
+   * - `string`
+   *    The given path will be used to create the database.
+   *    Example: `./my-db.db3`
+   *
+   * - `function`
+   *    A callback function that receives the inbox ID and returns a string path.
+   *    Example: `(inboxId) => string`
+   */
+  dbPath?: string | null | ((inboxId: string) => string);
+  /**
+   * Encryption key for the local DB
+   */
+  dbEncryptionKey?: Uint8Array;
+  /**
+   * Enable structured JSON logging
+   */
+  structuredLogging?: boolean;
+  /**
+   * Enable performance metrics
+   */
+  performanceLogging?: boolean;
+  /**
+   * Logging level
+   */
+  loggingLevel?: 'off' | 'error' | 'warn' | 'info' | 'debug' | 'trace';
+  /**
+   * Disable automatic registration when creating a client
+   */
+  disableAutoRegister?: boolean;
+  /**
+   * Disable device sync
+   */
+  disableDeviceSync?: boolean;
+};
+```
+{% endtab %}
+
+{% tab title="Node" %}
+```javascript
+import type { ContentCodec } from '@xmtp/content-type-primitives';
+import type { LogLevel } from '@xmtp/node-bindings';
+ 
+type ClientOptions = {
+  /**
+   * Specify which XMTP environment to connect to. (default: `dev`)
+   */
+  env?: 'local' | 'dev' | 'production';
+  /**
+   * Add a client app version identifier that's included with API requests.
+   * Production apps are strongly encouraged to set this value.
+   *
+   * You can use the following format: `appVersion: 'APP_NAME/APP_VERSION'`.
+   *
+   * For example: `appVersion: 'alix/2.x'`
+   *
+   * If you have an app and an agent, it's best to distinguish them from each other by
+   * adding `-app` and `-agent` to the names. For example:
+   *
+   * - App: `appVersion: 'alix-app/3.x'`
+   * - Agent: `appVersion: 'alix-agent/2.x'`
+   *
+   * Setting this value provides telemetry that shows which apps are using the
+   * XMTP client SDK. This information can help XMTP core developers provide you with app
+   * support, especially around communicating important SDK updates, deprecations,
+   * and required upgrades.
+   */
+  appVersion?: string;
+  /**
+   * apiUrl can be used to override the `env` flag and connect to a
+   * specific endpoint
+   */
+  apiUrl?: string;
+  /**
+   * historySyncUrl can be used to override the `env` flag and connect to a
+   * specific endpoint for syncing history
+   */
+  historySyncUrl?: string | null;
+  /**
+   * Path to the local DB
+   *
+   * There are 4 value types that can be used to specify the database path:
+   *
+   * - `undefined` (or excluded from the client options)
+   *    The database will be created in the current working directory and is based on
+   *    the XMTP environment and client inbox ID.
+   *    Example: `xmtp-dev-<inbox-id>.db3`
+   *
+   * - `null`
+   *    No database will be created and all data will be lost once the client disconnects.
+   *
+   * - `string`
+   *    The given path will be used to create the database.
+   *    Example: `./my-db.db3`
+   *
+   * - `function`
+   *    A callback function that receives the inbox ID and returns a string path.
+   *    Example: `(inboxId) => string`
+   */
+  dbPath?: string | null | ((inboxId: string) => string);
+  /**
+   * Encryption key for the local DB
+   */
+  dbEncryptionKey?: Uint8Array;
+  /**
+   * Allow configuring codecs for additional content types
+   */
+  codecs?: ContentCodec[];
+  /**
+   * Enable structured JSON logging
+   */
+  structuredLogging?: boolean;
+  /**
+   * Logging level
+   */
+  loggingLevel?: LogLevel;
+  /**
+   * Disable automatic registration when creating a client
+   */
+  disableAutoRegister?: boolean;
+  /**
+   * Disable device sync
+   */
+  disableDeviceSync?: boolean;
+};
+```
+{% endtab %}
+
+{% tab title="React Native" %}
+```javascript
+import type { ContentCodec } from '@xmtp/react-native-sdk';
+ 
+type ClientOptions = {
+  /**
+   * Specify which XMTP environment to connect to. (default: `dev`)
+   */
+  env: 'local' | 'dev' | 'production';
+  /**
+   * Add a client app version identifier that's included with API requests.
+   * Production apps are strongly encouraged to set this value.
+   *
+   * You can use the following format: `appVersion: 'APP_NAME/APP_VERSION'`.
+   *
+   * For example: `appVersion: 'alix/2.x'`
+   *
+   * If you have an app and an agent, it's best to distinguish them from each other by
+   * adding `-app` and `-agent` to the names. For example:
+   *
+   * - App: `appVersion: 'alix-app/3.x'`
+   * - Agent: `appVersion: 'alix-agent/2.x'`
+   *
+   * Setting this value provides telemetry that shows which apps are using the
+   * XMTP client SDK. This information can help XMTP core developers provide you with app
+   * support, especially around communicating important SDK updates, deprecations,
+   * and required upgrades.
+   */
+  appVersion?: string;
+  /**
+   * REQUIRED specify the encryption key for the database. The encryption key must be exactly 32 bytes.
+   */
+  dbEncryptionKey: Uint8Array;
+  /**
+   * Set optional callbacks for handling identity setup
+   */
+  preAuthenticateToInboxCallback?: () => Promise<void> | void;
+  /**
+   * OPTIONAL specify the XMTP managed database directory
+   */
+  dbDirectory?: string;
+  /**
+   * OPTIONAL specify a url to sync message history from
+   */
+  historySyncUrl?: string;
+  /**
+   * OPTIONAL specify a custom local host for testing on physical devices for example `localhost`
+   */
+  customLocalHost?: string;
+  /**
+   * Allow configuring codecs for additional content types
+   */
+  codecs?: ContentCodec[];
+};
+```
+{% endtab %}
+
+{% tab title="Kotlin" %}
+{% code title="" %}
+```kotlin
+import android.content.Context
+ 
+typealias PreEventCallback = suspend () -> Unit
+ 
+data class ClientOptions(
+    val api: Api = Api(),
+    val preAuthenticateToInboxCallback: PreEventCallback? = null,
+    val appContext: Context,
+    val dbEncryptionKey: ByteArray,
+    val historySyncUrl: String? = when (api.env) {
+        XMTPEnvironment.PRODUCTION -> "https://message-history.production.ephemera.network/"
+        XMTPEnvironment.LOCAL -> "http://0.0.0.0:5558"
+        else -> "https://message-history.dev.ephemera.network/"
+    },
+    val dbDirectory: String? = null,
+) {
+    data class Api(
+        val env: XMTPEnvironment = XMTPEnvironment.DEV,
+        val isSecure: Boolean = true,
+        /**
+         * Add a client app version identifier that's included with API requests.
+         * Production apps are strongly encouraged to set this value.
+         *
+         * You can use the following format: `appVersion: "APP_NAME/APP_VERSION"`.
+         *
+         * For example: `appVersion: 'alix/2.x'`
+         *
+         * If you have an app and an agent, it's best to distinguish them from each other by
+         * adding `-app` and `-agent` to the names. For example:
+         *
+         * - App: `appVersion: 'alix-app/3.x'`
+         * - Agent: `appVersion: 'alix-agent/2.x'`
+         *
+         * Setting this value provides telemetry that shows which apps are using the
+         * XMTP client SDK. This information can help XMTP core developers provide you
+         * with app support, especially around communicating important SDK updates,
+         * deprecations, and required upgrades.
+         */
+        val appVersion: String? = null,
+    )
+}
+```
+{% endcode %}
+{% endtab %}
+
+{% tab title="Swift" %}
+{% code title="" %}
+```swift
+import LibXMTP
+ 
+public struct ClientOptions {
+ // Specify network options
+ public struct Api {
+  /// Specify which XMTP network to connect to. Defaults to ``.dev``
+  public var env: XMTPEnvironment = .dev
+ 
+  /// Specify whether the API client should use TLS security. In general this should only be false when using the `.local` environment.
+  public var isSecure: Bool = true
+ 
+  /// Add a client app version identifier that's included with API requests.
+  /// Production apps are strongly encouraged to set this value.
+  ///
+  /// You can use the following format: `appVersion: "APP_NAME/APP_VERSION"`.
+  ///
+  /// For example: `appVersion: 'alix/2.x'`
+  ///
+  /// If you have an app and an agent, it's best to distinguish them from each other by
+  /// adding `-app` and `-agent` to the names. For example:
+  /// - App: `appVersion: 'alix-app/3.x'`
+  /// - Agent: `appVersion: 'alix-agent/2.x'`
+  ///
+  /// Setting this value provides telemetry that shows which apps are using the
+  /// XMTP client SDK. This information can help XMTP core developers provide you
+  //  with app support, especially around communicating important SDK updates,
+  /// deprecations, and required upgrades.
+  public var appVersion: String?
+ }
+ 
+ public var api = Api()
+ public var codecs: [any ContentCodec] = []
+ 
+ /// `preAuthenticateToInboxCallback` will be called immediately before an Auth Inbox signature is requested from the user
+ public var preAuthenticateToInboxCallback: PreEventCallback?
+ 
+ public var dbEncryptionKey: Data
+ public var dbDirectory: String?
+ public var historySyncUrl: String?
+}
+```
+{% endcode %}
+{% endtab %}
+{% endtabs %}
+
+***
+
+#### Log out a client
+
+When you log a user out of your app, you can give them the option to delete their local database.
+
+{% hint style="info" %}
+**Important**
+
+If the user chooses to delete their local database, they will lose all of their messages and will have to create a new installation the next time they log in.
+{% endhint %}
+
+{% tabs %}
+{% tab title="Browser" %}
+```javascript
+/**
+ * The Browser SDK client does not currently support deleting the local database.
+ */
+ 
+// this method only terminates the client's associated web worker
+client.close();
+```
+{% endtab %}
+
+{% tab title="Node" %}
+```javascript
+/**
+ * The Node SDK client does not have a method to delete the local database.
+ * Simply delete the local database file from the file system.
+ */
+```
+{% endtab %}
+
+{% tab title="React Native" %}
+```javascript
+await client.deleteLocalDatabase();
+await Client.dropClient(client.installationId);
+```
+{% endtab %}
+
+{% tab title="Kotlin" %}
+{% code title="" %}
+```kotlin
+client.deleteLocalDatabase()
+```
+{% endcode %}
+{% endtab %}
+
+{% tab title="Swift" %}
+{% code title="" %}
+```swift
+try await client.deleteLocalDatabase()
+```
+{% endcode %}
+{% endtab %}
+{% endtabs %}
+
+### List conversations
+
+***
+
+#### List existing conversations
 
 Get a list of existing group chat and DM conversations in the local database.
 
@@ -102,7 +914,7 @@ let orderFilteredConversations = try await client.conversations.listGroups(conse
 
 ***
 
-### List a user's active conversations
+#### List a user's active conversations
 
 The `isActive()` method determines whether the current user is still an active member of a group conversation. For example:
 
@@ -113,11 +925,11 @@ You can use a user's `isActive: true` value as a filter parameter when listing c
 
 ***
 
-## Stream conversations and messages
+### Stream conversations and messages
 
 ***
 
-### List existing conversations
+#### List existing conversations
 
 Get a list of existing group chat and DM conversations in the local database.
 
@@ -223,7 +1035,7 @@ for await convo in try await alix.conversations.stream(type: /* OPTIONAL .dms, .
 
 ***
 
-### Stream new group chat and DM messages
+#### Stream new group chat and DM messages
 
 This function listens to the network for new messages within all active group chats and DMs.
 
@@ -342,7 +1154,7 @@ for await message in try await alix.conversations.streamAllMessages(type: /* OPT
 
 ***
 
-### Handle stream failures
+#### Handle stream failures
 
 {% hint style="danger" %}
 **Browser and Node SDK**
@@ -489,7 +1301,7 @@ func stopMessageStream() {
 
 ***
 
-## Sync conversations and messages
+### Sync conversations and messages
 
 ***
 
@@ -543,7 +1355,7 @@ try await client.conversation.sync()
 
 ***
 
-### Sync new conversations
+#### Sync new conversations
 
 Get any new group chat or DM conversations from the network.
 
@@ -585,7 +1397,7 @@ try await client.conversation.sync()
 
 ***
 
-### Sync all new welcomes, conversations, messages, and preferences
+#### Sync all new welcomes, conversations, messages, and preferences
 
 Sync all new welcomes, group chat and DM conversations, messages, and [preference updates](https://docs.xmtp.org/chat-apps/list-stream-sync/sync-preferences) from the network.
 
