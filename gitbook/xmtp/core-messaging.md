@@ -32,7 +32,7 @@ const allDms = await client.conversations.listDms({
 {% endtab %}
 
 {% tab title="Node" %}
-```python
+```javascript
 const allConversations = await client.conversations.list({
   consentStates: [ConsentState.Allowed],
 });
@@ -46,7 +46,7 @@ const allDms = await client.conversations.listDms({
 {% endtab %}
 
 {% tab title="React Native" %}
-<pre class="language-ruby"><code class="lang-ruby"><strong>// List Conversation items
+<pre class="language-javascript"><code class="lang-javascript"><strong>// List Conversation items
 </strong>await alix.conversations.list(['allowed']);
  
 // List Conversation items and return only the fields set to true. Optimize data transfer
@@ -65,7 +65,7 @@ await alix.conversations.list({
 
 {% tab title="Kotlin" %}
 {% code title="" %}
-```
+```kotlin
 // List conversations (both groups and dms)
 val conversations = alix.conversations.list()
 val filteredConversations = client.conversations.list(consentState = ConsentState.ALLOWED)
@@ -83,7 +83,7 @@ val filteredGroups = client.conversations.listGroups(consentState = ConsentState
 
 {% tab title="Swift" %}
 {% code title="" %}
-```
+```swift
 // List conversations (both groups and dms)
 let conversations = try await alix.conversations.list()
 let orderFilteredConversations = try await client.conversations.list(consentState: .allowed)
@@ -155,7 +155,7 @@ for await (const conversation of stream) {
 {% endtab %}
 
 {% tab title="Node" %}
-```python
+```javascript
 const stream = await client.conversations.stream({
   onValue: (conversation) => {
     // Received a conversation
@@ -193,7 +193,7 @@ for await (const conversation of stream) {
 {% endtab %}
 
 {% tab title="React Native" %}
-```ruby
+```javascript
 await alix.conversations.stream(async (conversation: Conversation<any>) => {
   // Received a conversation
 });
@@ -202,7 +202,7 @@ await alix.conversations.stream(async (conversation: Conversation<any>) => {
 
 {% tab title="Kotlin" %}
 {% code title="" %}
-```
+```kotlin
 alix.conversations.stream(type: /* OPTIONAL DMS, GROUPS, ALL */).collect {
   // Received a conversation
 }
@@ -212,7 +212,7 @@ alix.conversations.stream(type: /* OPTIONAL DMS, GROUPS, ALL */).collect {
 
 {% tab title="Swift" %}
 {% code title="" %}
-```
+```swift
 for await convo in try await alix.conversations.stream(type: /* OPTIONAL .dms, .groups, .all */) {
   // Received a conversation
 }
@@ -267,7 +267,7 @@ for await (const conversation of stream) {
 {% endtab %}
 
 {% tab title="Node" %}
-```python
+```javascript
 // stream all messages from conversations with a consent state of allowed
 const stream = await client.conversations.streamAllMessages({
   consentStates: [ConsentState.Allowed],
@@ -309,7 +309,7 @@ for await (const message of stream) {
 {% endtab %}
 
 {% tab title="React Native" %}
-```ruby
+```javascript
 await alix.conversations.streamAllMessages(
   async (message: DecodedMessage<any>) => {
     // Received a message
@@ -321,7 +321,7 @@ await alix.conversations.streamAllMessages(
 
 {% tab title="Kotlin" %}
 {% code title="" %}
-```
+```kotlin
 alix.conversations.streamAllMessages(type: /* OPTIONAL DMS, GROUPS, ALL */, consentState: listOf(ConsentState.ALLOWED)).collect {
   // Received a message
 }
@@ -331,7 +331,7 @@ alix.conversations.streamAllMessages(type: /* OPTIONAL DMS, GROUPS, ALL */, cons
 
 {% tab title="Swift" %}
 {% code title="" %}
-```
+```swift
 for await message in try await alix.conversations.streamAllMessages(type: /* OPTIONAL .dms, .groups, .all */, consentState: [.allowed]) {
   // Received a message
 }
@@ -378,7 +378,7 @@ const stream = await client.conversations.streamAllMessages({
 {% endtab %}
 
 {% tab title="Node" %}
-```python
+```javascript
 // disable automatic reconnects
 const stream = await client.conversations.streamAllMessages({
   retryOnFail: false,
@@ -412,7 +412,7 @@ const stream = await client.conversations.streamAllMessages({
 {% endtab %}
 
 {% tab title="React Native" %}
-```ruby
+```javascript
 const [messages, setMessages] = useState<DecodedMessage[]>([]);
  
 const messageCallback = async (message: DecodedMessage<any>) => {
@@ -437,7 +437,7 @@ const startMessageStream = async () => {
 
 {% tab title="Kotlin" %}
 {% code title="" %}
-```
+```kotlin
 private val _messages = MutableStateFlow<List<DecodedMessage>>(emptyList())
 val messages: StateFlow<List<DecodedMessage>> = _messages.asStateFlow()
  
@@ -457,7 +457,7 @@ fun startMessageStream() {
 
 {% tab title="Swift" %}
 {% code title="" %}
-```
+```swift
 @Published private(set) var messages: [DecodedMessage] = []
  
 private var streamTask: Task<Void, Never>? = nil
@@ -513,20 +513,20 @@ await client.conversation.sync();
 {% endtab %}
 
 {% tab title="Node" %}
-```python
+```javascript
 await client.conversation.sync();
 ```
 {% endtab %}
 
 {% tab title="React Native" %}
-```ruby
+```javascript
 await client.conversation.sync();
 ```
 {% endtab %}
 
 {% tab title="Kotlin" %}
 {% code title="" %}
-```
+```kotlin
 client.conversation.sync()
 ```
 {% endcode %}
@@ -534,7 +534,7 @@ client.conversation.sync()
 
 {% tab title="Swift" %}
 {% code title="" %}
-```
+```swift
 try await client.conversation.sync()
 ```
 {% endcode %}
@@ -555,20 +555,20 @@ await client.conversation.sync();
 {% endtab %}
 
 {% tab title="Node" %}
-```python
+```javascript
 await client.conversation.sync();
 ```
 {% endtab %}
 
 {% tab title="React Native" %}
-```ruby
+```javascript
 await client.conversation.sync();
 ```
 {% endtab %}
 
 {% tab title="Kotlin" %}
 {% code title="" %}
-```
+```kotlin
 client.conversation.sync()
 ```
 {% endcode %}
@@ -576,7 +576,7 @@ client.conversation.sync()
 
 {% tab title="Swift" %}
 {% code title="" %}
-```
+```swift
 try await client.conversation.sync()
 ```
 {% endcode %}
@@ -605,20 +605,20 @@ await client.conversations.syncAll(['allowed']);
 {% endtab %}
 
 {% tab title="Node" %}
-```python
+```javascript
 await client.conversations.syncAll(['allowed']);
 ```
 {% endtab %}
 
 {% tab title="React Native" %}
-```ruby
+```javascript
 await client.conversations.syncAllConversations(['allowed']);
 ```
 {% endtab %}
 
 {% tab title="Kotlin" %}
 {% code title="" %}
-```
+```kotlin
 client.conversations.syncAllConversations(consentState = listOf(ConsentState.ALLOWED))
 ```
 {% endcode %}
@@ -626,7 +626,7 @@ client.conversations.syncAllConversations(consentState = listOf(ConsentState.ALL
 
 {% tab title="Swift" %}
 {% code title="" %}
-```
+```swift
 try await client.conversations.syncAllConversations(consentState: [.allowed])
 ```
 {% endcode %}

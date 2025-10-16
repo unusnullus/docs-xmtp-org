@@ -6,7 +6,7 @@
 
 * [Get started](xmtp/readme.md)
 * [Core messaging](xmtp/core-messaging.md)
-* [content types](xmtp/content-types.md)
+* [Additional content types](xmtp/content-types.md)
 * [chat apps](xmtp/chat-apps.md)
 * [content types](xmtp/content-types-1.md)
 * [core messaging](xmtp/core-messaging-1.md)
