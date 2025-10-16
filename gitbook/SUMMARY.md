@@ -2,6 +2,10 @@
 
 * [Home](README.md)
 
+## ARX
+
+* [ARX architecture](arx/arx-architecture.md)
+
 ## XMTP
 
 * [Get started](xmtp/readme.md)
@@ -14,6 +18,10 @@
 * [User consents](xmtp/user-consent.md)
 * [Network](xmtp/network.md)
 * [Protocol](xmtp/protocol.md)
+
+## Encryption
+
+* [Signal protocol](encryption/signal-protocol.md)
 
 ## Legal agreement
 
