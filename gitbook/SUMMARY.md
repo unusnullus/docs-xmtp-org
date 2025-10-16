@@ -1,8 +1,6 @@
 # Table of contents
 
 * [Home](README.md)
-* [Privacy](privacy.md)
-* [terms](terms.md)
 * [agents](agents/README.md)
 * [content types](agents/content-types/README.md)
 * [core messaging](agents/core-messaging/README.md)
@@ -16,3 +14,8 @@
 * [user consent](chat-apps/user-consent/README.md)
 * [network](network/README.md)
 * [protocol](protocol/README.md)
+
+## Legal agreement
+
+* [Privacy](legal-agreement/privacy.md)
+* [Terms of use](legal-agreement/terms.md)
