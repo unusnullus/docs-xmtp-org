@@ -7,6 +7,7 @@
 * [Get started](xmtp/readme.md)
 * [SDKs](xmtp/sdks.md)
 * [Core messaging](xmtp/core-messaging.md)
+* [Agents](xmtp/agents.md)
 * [Additional content types](xmtp/content-types.md)
 * [Signatures](xmtp/chat-apps.md)
 * [Push notifications](xmtp/push-notifs.md)
