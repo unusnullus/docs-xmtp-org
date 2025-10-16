@@ -1,19 +1,21 @@
 # Table of contents
 
 * [Home](README.md)
-* [agents](agents/README.md)
-* [content types](agents/content-types/README.md)
-* [core messaging](agents/core-messaging/README.md)
-* [Get started](<README (1).md>)
-* [chat apps](chat-apps/README.md)
-* [content types](chat-apps/content-types/README.md)
-* [core messaging](chat-apps/core-messaging/README.md)
-* [list stream sync](chat-apps/list-stream-sync/README.md)
-* [push notifs](chat-apps/push-notifs/README.md)
-* [sdks](chat-apps/sdks/README.md)
-* [user consent](chat-apps/user-consent/README.md)
-* [network](network/README.md)
-* [protocol](protocol/README.md)
+
+## XMTP
+
+* [Get started](xmtp/readme.md)
+* [Core messaging](xmtp/core-messaging.md)
+* [content types](xmtp/content-types.md)
+* [chat apps](xmtp/chat-apps.md)
+* [content types](xmtp/content-types-1.md)
+* [core messaging](xmtp/core-messaging-1.md)
+* [list stream sync](xmtp/list-stream-sync.md)
+* [push notifs](xmtp/push-notifs.md)
+* [sdks](xmtp/sdks.md)
+* [user consent](xmtp/user-consent.md)
+* [network](xmtp/network.md)
+* [protocol](xmtp/protocol.md)
 
 ## Legal agreement
 

@@ -2,4 +2,4 @@
 
 This section contains:
 
-- [xips](./xips.md)
+* [xips](../protocol/xips.md)
