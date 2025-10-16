@@ -8,9 +8,9 @@
 * [Core messaging](xmtp/core-messaging.md)
 * [Additional content types](xmtp/content-types.md)
 * [Signatures](xmtp/chat-apps.md)
-* [push notifs](xmtp/push-notifs.md)
-* [sdks](xmtp/sdks.md)
-* [user consent](xmtp/user-consent.md)
+* [Push notifications](xmtp/push-notifs.md)
+* [SDKs](xmtp/sdks.md)
+* [User consents](xmtp/user-consent.md)
 * [network](xmtp/network.md)
 * [protocol](xmtp/protocol.md)
 

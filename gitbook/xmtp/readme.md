@@ -12,7 +12,7 @@
 
 *   Pick your SDK:
 
-    [Browser](https://docs.xmtp.org/chat-apps/sdks/browser) [Node](https://docs.xmtp.org/chat-apps/sdks/node) [React Native](https://docs.xmtp.org/chat-apps/sdks/react-native) [Android](https://docs.xmtp.org/chat-apps/sdks/android) [iOS](https://docs.xmtp.org/chat-apps/sdks/ios)
+    [Browser](sdks.md#get-started-with-the-xmtp-browser-sdk) [Node](sdks.md#get-started-with-the-xmtp-node-sdk) [React Native](sdks.md#get-started-with-the-xmtp-react-native-sdk) [Android](sdks.md#get-started-with-the-xmtp-android-sdk) [iOS](sdks.md#get-started-with-the-xmtp-ios-sdk)
 * [Run a local XMTP node](https://github.com/xmtp/xmtp-local-node/tree/main) for development and testing.
 
 ***
