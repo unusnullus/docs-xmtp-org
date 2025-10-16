@@ -142,7 +142,7 @@ Note: On Sepolia, USDC permit (EIP-2612) can reject; the web falls back to appro
 
 ***
 
-#### Diagram: Services Architecture
+### Diagram: Services Architecture
 
 ```mermaid
 graph TD
