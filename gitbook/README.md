@@ -1,16 +1,16 @@
 # Home
 
-## ARX & XMTP
+## $ARX & XMTP
 
-ARX integrated into [XMTP](https://docs.xmtp.org/) provides flexible & scalable API to implement chat & money functionality in one app that allows easily do everything you want at one place.
+$ARX integrated into [XMTP](https://docs.xmtp.org/) provides flexible & scalable API to implement chat & money functionality in one app that allows easily do everything you want at one place.
 
-ARX NET Slice (ARX) is a governance and utility token with a sophisticated on-chain sales system, featuring a "zap router" for easy, one-click conversion of other cryptocurrencies into ARX.
+ARX NET Slice (ARX) is a governance and utility token with a sophisticated on-chain sales system, featuring a "zap router" for easy, one-click conversion of other cryptocurrencies into $ARX.
 
 XMTP is a secure web3 messaging protocol that allows developers to build applications with private, end-to-end encrypted chat where users own their data and conversations.
 
 ***
 
-## Why building with ARX?
+## Why building with $ARX?
 
 ARX NET Slice ("ARX") is a 6‑decimal ERC‑20 token designed for governance and utility inside the ARX ecosystem. The project ships a complete on-chain sale architecture with upgradeable contracts, a zap router for 1‑click conversion (any token/ETH → USDC → ARX), and a modern web app to onboard users with clear quoting and slippage controls.
 

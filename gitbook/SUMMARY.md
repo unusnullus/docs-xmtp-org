@@ -2,9 +2,9 @@
 
 * [Home](README.md)
 
-## ARX
+## $ARX
 
-* [ARX architecture](arx/arx-architecture.md)
+* [$ARX architecture](usdarx/usdarx-architecture.md)
 
 ## XMTP
 
