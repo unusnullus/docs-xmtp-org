@@ -1,4 +1,8 @@
-# Home
+---
+hidden: true
+---
+
+# Home1
 
 ## $ARX & XMTP
 
