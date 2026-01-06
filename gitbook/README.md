@@ -1,46 +1,15 @@
----
-hidden: true
----
+# Introduction
 
-# Home1
+ARX is a decentralized communication, financial and connectivity ecosystem built to unify messaging, payments, VPN/e-sim, and cloud storage inside a single privacy-first network. The system is designed for global scalability, strong security, and regulatory readiness. It gives individuals and businesses a way to operate safely across digital and physical borders without relying on centralized intermediaries.
 
-## $ARX & XMTP
+ARX uses a multi-layer architecture that combines off-chain encrypted communication with on-chain coordination, governance, and economic incentives. The Identity, Messaging, Network, and Governance layers operate independently while working together as one cohesive infrastructure. This structure protects user data, ensures high performance, and enables long-term reliability at scale.
 
-$ARX integrated into [XMTP](https://docs.xmtp.org/) provides flexible & scalable API to implement chat & money functionality in one app that allows easily do everything you want at one place.
+At the core of ARX is the Proof of Relay consensus model. This combines Proof of Stake validation with performance-based rewards for node operators. Nodes contribute by relaying encrypted data, providing VPN sessions, and hosting decentralized cloud storage. Their rewards are calculated from verified uptime and throughput, creating a DePIN ecosystem powered by active participation instead of intermediaries.
 
-ARX NET Slice (ARX) is a governance and utility token with a sophisticated on-chain sales system, featuring a "zap router" for easy, one-click conversion of other cryptocurrencies into $ARX.
+The ARX token is the utility and governance asset of the network. It powers payments for VPN sessions, eSIM data, cloud storage, premium features, and in-app commerce. It is also used for staking, node rewards, and is “the oil in the DAO mechanism”. The economic model is built as a circular economy where network fees, validator rewards, and treasury flows create natural demand that supports long-term sustainability.
 
-XMTP is a secure web3 messaging protocol that allows developers to build applications with private, end-to-end encrypted chat where users own their data and conversations.
+Governance is executed through the ARX DAO. Token holders, validators, and delegated representatives participate in proposal creation, voting, and treasury management. Governance moves through defined phases. These begin with foundation support for stability and progress toward full community control as network participation grows.
 
-***
+ARX offers a strong competitive position through its unified ecosystem and privacy-first approach. Messaging, payments, VPN, and storage all operate under a single identity and infrastructure. This creates a seamless user experience while keeping ownership of data, identity, and financial activity in the hands of the user. Nodes can choose flexible operational roles, making the system highly scalable across different markets and resource types.
 
-## Why building with $ARX?
-
-ARX NET Slice ("ARX") is a 6‑decimal ERC‑20 token designed for governance and utility inside the ARX ecosystem. The project ships a complete on-chain sale architecture with upgradeable contracts, a zap router for 1‑click conversion (any token/ETH → USDC → ARX), and a modern web app to onboard users with clear quoting and slippage controls.
-
-* Token: `ARX` (name: "ARX NET Slice", symbol: `ARX`, 6 decimals, Permit, Burnable, ERC20Votes)
-* Sale: `ArxTokenSale` accepts USDC and mints ARX at an owner‑set price; forwards 100% of USDC to a treasury (silo)
-* Zaps: `ArxZapRouter` takes ERC‑20/ETH, swaps to USDC via Uniswap V3, then calls `sale.buyFor()` to deliver ARX in a single transaction
-* Frontend: Next.js app with wallet connect, token selector (USDC/ETH), Uniswap Quoter pricing, slippage controls, and live transaction preview
-
-***
-
-## Why building with XMTP?
-
-Build with [XMTP](https://docs.xmtp.org/) to:
-
-*   **Deliver secure and private messaging**
-
-    Using the [Messaging Layer Security](https://docs.xmtp.org/protocol/security) (MLS) standard, a ratified [IETF](https://www.ietf.org/about/introduction/) standard, [XMTP](https://docs.xmtp.org/) provides end-to-end encrypted messaging with forward secrecy and post-compromise security.
-*   **Provide spam-free chats**
-
-    In any open and permissionless messaging ecosystem, spam is an inevitable reality, and [XMTP](https://docs.xmtp.org/) is no exception. However, with [XMTP](https://docs.xmtp.org/) [user consent preferences](https://docs.xmtp.org/chat-apps/user-consent/user-consent), developers can give their users spam-free chats displaying conversations with chosen contacts only.
-*   **Build on native crypto rails**
-
-    Build with [XMTP](https://docs.xmtp.org/) to tap into the capabilities of crypto and web3. Support decentralized identities, crypto transactions, and more, directly in a messaging experience.
-*   **Empower users to own and control their communications**
-
-    With apps built with [XMTP](https://docs.xmtp.org/), users own their conversations, data, and identity. Combined with the interoperability that comes with protocols, this means users can access their end-to-end encrypted communications using any app built with [XMTP](https://docs.xmtp.org/).
-*   **Create with confidence**
-
-    Developers are free to create the messaging experiences their users want-on a censorship-resistant protocol architected to last forever. Because [XMTP](https://docs.xmtp.org/) isn't a closed proprietary platform, developers can build confidently, knowing their access and functionality can't be revoked by a central authority.
+With its technical base, compliance-focused design, and sustainable economy, ARX establishes itself as a next-generation decentralized infrastructure for private communication, secure data transmission, and regulated digital finance. It creates an environment where users fully control their identity, their data, and their participation in the network.

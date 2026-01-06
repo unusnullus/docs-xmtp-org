@@ -1,10 +1,8 @@
 # Table of contents
 
-* [Home1](README.md)
-
 ## Home
 
-* [Introduction](home/introduction.md)
+* [Introduction](README.md)
 * [1 Background & Motivation](home/1-background-and-motivation/README.md)
   * [1.1 Centralization of the internet](home/1-background-and-motivation/1.1-centralization-of-the-internet.md)
   * [1.2 The price of convenience](home/1-background-and-motivation/1.2-the-price-of-convenience.md)
