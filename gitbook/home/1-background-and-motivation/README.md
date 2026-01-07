@@ -1,31 +1,38 @@
 # 1 Background & Motivation
 
-The internet has entered a **critical transition period**. While centralized systems currently dominate how we communicate, transact, and connect, they do so at a significant cost to **privacy, ownership, and autonomy**.
+The internet has entered a **critical transition period**. Centralized systems dominate how people communicate, transact, and connect—but at the cost of privacy, ownership, and autonomy.
 
 {% hint style="info" %}
-ARX is built to restore balance by combining **cryptographic identity**, **decentralized communication**, and **blockchain-based incentives**.
+**The ARX Solution**
+ARX is built to address this imbalance by combining **cryptographic identity**, **decentralized communication**, and **blockchain-based incentives** to create a network where users own their data, assets, and connectivity.
 {% endhint %}
 
 ---
 
-### The Evolution of Digital Sovereignty
+### Context and Objectives
 
-ARX addresses the core imbalances of the modern web. This section explores the driving forces behind our architecture:
+This section outlines the driving forces behind the ARX ecosystem:
 
-* **The Centralization Trap:** How the shift toward monolithic platforms reshaped the internet into "walled gardens."
-* **Convergence of Privacy & Compliance:** Why modern systems must balance user anonymity with regulatory standards.
-* **The Web3 Solution:** How decentralized technologies enable users to reclaim their digital sovereignty.
+* **The Impact of Centralization:** How monolithic platforms reshaped the internet into extractive ecosystems.
+* **Privacy & Compliance:** The converging path where privacy technology meets global regulatory standards.
+* **Digital Sovereignty:** How Web3 frameworks enable users to reclaim their fundamental digital rights.
 
-### The Shift to ARX
+### The ARX Architecture Shift
 
 ```mermaid
 graph LR
-    A[Centralized Systems] -->|Lack of Privacy| B(The Imbalance)
-    A -->|No Ownership| B
-    B -->|ARX Solution| C{Digital Sovereignty}
-    C --> D[Owned Data]
-    C --> E[Owned Assets]
-    C --> F[Owned Connectivity]
-    
-    style B fill:#f96,stroke:#333,stroke-width:2px
-    style C fill:#69f,stroke:#333,stroke-width:2px
+    %% Background container styling
+    subgraph ARX_Framework ["ARX: Reclaiming Control"]
+        direction LR
+        A[Centralized Systems] -->|Lack of Privacy| B(The Imbalance)
+        B -->|ARX Architecture| C{Digital Sovereignty}
+        C --> D[User-Owned Data]
+        C --> E[User-Owned Assets]
+        C --> F[Native Connectivity]
+    end
+
+    %% Visual Styling using requested palette
+    style ARX_Framework fill:#2B3648,stroke:#7858ff,stroke-width:2px,color:#fefeff
+    style A fill:#2c2c2c,stroke:#346ddb,color:#fefeff
+    style B fill:#2c2c2c,stroke:#
+```
