@@ -3,7 +3,6 @@
 The internet has entered a **critical transition period**. While centralized systems currently dominate how we communicate, transact, and connect, they do so at a significant cost to **privacy, ownership, and autonomy**.
 
 {% hint style="info" %}
-**The ARX Mission**
 ARX is built to restore balance by combining **cryptographic identity**, **decentralized communication**, and **blockchain-based incentives**.
 {% endhint %}
 
