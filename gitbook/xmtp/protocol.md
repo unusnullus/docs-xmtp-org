@@ -2,87 +2,60 @@
 
 ## XMTP protocol overview
 
-***
-
-XMTP is a decentralized messaging protocol that enables secure, end-to-end encrypted communication between any identities that can produce a verifiable cryptographic signature.
+XMTP (Extensible Message Transport Protocol) is the largest and most secure decentralized messaging framework. XMTP is open and permissionless, empowering any developer to build end-to-end encrypted 1:1, group, and agent messaging experiences, and more.
 
 XMTP implements [Messaging Layer Security](https://messaginglayersecurity.rocks/) (MLS), which is designed to operate within the context of a messaging service. As the messaging service, XMTP needs to provide two services to facilitate messaging using MLS:
 
 * An [authentication service](https://messaginglayersecurity.rocks/mls-architecture/draft-ietf-mls-architecture.html#name-authentication-service)
 * A [delivery service](https://messaginglayersecurity.rocks/mls-architecture/draft-ietf-mls-architecture.html#name-delivery-service)
 
-This section covers the elements of XMTP that provide these services.
+## What is it used for?
 
-{% hint style="info" %}
-**Who should read these docs**
+ARX is built on top of XMTP. It extends features that come out-of-the-box and removes components that are not used to reduce the complexity of the original framework:
 
-This protocol documentation is designed for:
+* Improved cooperation between on-chain & off-chain nodes;
+* Added rewards program for running self-hosted nodes;
+* Removed support for unused message content types;
+* Reworked media handling to use distributed file storage
+* etc.
 
-* Protocol contributors working on XMTP's core implementation
-* Security researchers auditing XMTP's cryptographic design
-* Anyone curious about the technical details behind XMTP's messaging
-
-For most developers, the [Build chat apps](https://docs.xmtp.org/chat-apps/intro/get-started) and [Build agents](https://docs.xmtp.org/agents/get-started/build-an-agent) sections provide the practical guidance needed to build with XMTP.
-{% endhint %}
-
-***
+Below you can find the concepts that we share with XMTP.
 
 ### Encryption
 
-The encryption elements are mainly defined by MLS, with some additions by XMTP. To learn more, see:
+The encryption elements are mainly defined by MLS, with some additions by ARX:
 
-*   [Security](https://docs.xmtp.org/protocol/security)
+*   Security
 
-    XMTP and MLS prioritize security, privacy, and message integrity through advanced cryptographic techniques, delivering end-to-end encryption for both 1:1 and group conversations
-*   [Epochs](https://docs.xmtp.org/protocol/epochs)
+    ARX and MLS prioritize security, privacy, and message integrity through advanced cryptographic techniques, delivering end-to-end encryption for both 1:1 and group conversations
+*   Epochs
 
     Represent the cryptographic state of a group at any point in time. Each group operation (like adding members) creates a new epoch with fresh encryption keys
-*   [Envelope types](https://docs.xmtp.org/protocol/envelope-types)
+*   Envelope types
 
     Messages are packaged as envelope types that contain the actual message data plus metadata for routing and processing.
 
-***
-
 ### Identity
 
-The identity elements are mainly defined by XMTP. To learn more, see:
+The identity elements are mainly defined by ARX:
 
-*   [Inboxes, identities, and installations](https://docs.xmtp.org/protocol/identity)
+*   Inboxes, identities, and installations
 
     The identity model includes an inbox ID and its associated identities and installations.
-*   [Wallet signatures](https://docs.xmtp.org/protocol/signatures)
+*   Wallet signatures
 
     Authenticate users using verifiable cryptographic signatures.
 
-***
-
 ### Delivery
 
-The delivery elements are mainly defined by XMTP. To learn more, see:
+The delivery elements are mainly defined by ARX:
 
-*   [Topics](https://docs.xmtp.org/protocol/topics)
+*   Topics
 
     Messages are routed through topics, which are unique addresses that identify conversation channels.
-*   [Cursors](https://docs.xmtp.org/protocol/cursors)
+*   Cursors
 
     Enable efficient message synchronization by tracking where each client left off when fetching new messages.
-*   [Intents](https://docs.xmtp.org/protocol/intents)
+*   Intents
 
     Provide reliable groupstate management through an internal bookkeeping system that handles retries, crashes, and race conditions when applying group changes.
-
-***
-
-### Protocol evolution
-
-XMTP evolves through [**XMTP Improvement Proposals**](https://docs.xmtp.org/protocol/xips) (XIPs), which are design documents that propose new features and improvements. This governance process ensures systematic and decentralized protocol development.
-
-***
-
-### Additional resources
-
-For a broader vision of XMTP's approach to core concepts, see the following topics on [xmtp.org](https://xmtp.org):
-
-* [Security](https://xmtp.org/vision/concepts/encryption)
-* [Identity](https://xmtp.org/vision/concepts/identity)
-* [Consent](https://xmtp.org/vision/concepts/consent)
-* [Decentralizing XMTP](https://xmtp.org/vision/concepts/decentralizing-xmtp)

@@ -1,8 +1,4 @@
-# ARX architecture
-
-## Understanding of ARX NET Slice
-
-***
+# Architecture
 
 ### What is ARX NET Slice?
 
@@ -22,8 +18,6 @@
 
 Price formula: `arxOut = (usdcAmount * 10^arxDecimals) / priceUSDC` (ARX uses 6 decimals).
 
-***
-
 ### Current Testnet Deployment (Sepolia)
 
 * ARX: `0x0cCDaB7eEf5a5071a39bBdbB0C3525D8780E3e1A`
@@ -33,8 +27,6 @@ Price formula: `arxOut = (usdcAmount * 10^arxDecimals) / priceUSDC` (ARX uses 6 
 * StakingAccess: `0xF676135E8eE1239FA7C985fBe3742CF3BeB80b0C`
 * ServiceRegistry: `0x4f5052F8bdf2e5CE3632CA8366055273c9F87AC8`
 * ArxMultiTokenMerkleClaim: `0x1a2A187bC43cd95842Af42Ba7471636Be51FA091`
-
-***
 
 #### Addresses Table (Sepolia)
 
@@ -49,8 +41,6 @@ Price formula: `arxOut = (usdcAmount * 10^arxDecimals) / priceUSDC` (ARX uses 6 
 | ArxMultiTokenMerkleClaim (UUPS) | `0x1a2A187bC43cd95842Af42Ba7471636Be51FA091` | [https://sepolia.etherscan.io/address/0x1a2A187bC43cd95842Af42Ba7471636Be51FA091](https://sepolia.etherscan.io/address/0x1a2A187bC43cd95842Af42Ba7471636Be51FA091) |
 
 Note: On Sepolia, USDC permit (EIP-2612) can reject; the web falls back to approve-only.
-
-***
 
 ### Architecture & Contract Binding (Schema)
 
@@ -106,8 +96,6 @@ Note: On Sepolia, USDC permit (EIP-2612) can reject; the web falls back to appro
                                    USDC -> Silo, ARX minted to buyer
 ```
 
-***
-
 ### Governance & Voting
 
 * Vote token: `ARX` implements `ERC20Votes` (upgradeable) with 6 decimals.
@@ -139,8 +127,6 @@ Note: On Sepolia, USDC permit (EIP-2612) can reject; the web falls back to appro
   * Create proposal: `Governor.propose(targets, values, calldatas, description)`
   * Queue: `Governor.queue(..., descriptionHash)` (Timelock schedules batch)
   * Execute: `Governor.execute(..., descriptionHash)` (Timelock executes batch)
-
-***
 
 ### Diagram: Services Architecture
 
