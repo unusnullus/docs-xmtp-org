@@ -16,7 +16,7 @@ Set `ARX_BOT_TOKEN`, `CHAT_ID` and `REQUEST_KEY` before running the example. Use
 {% tab title="TypeScript" %}
 
 ```ts
-import { Client } from "@arx/nexo";
+import { Client, InlineButton, InlineKeyboard } from "@arx/nexo";
 
 const token = process.env.ARX_BOT_TOKEN;
 const key = process.env.REQUEST_KEY;
@@ -29,23 +29,14 @@ try {
 	const result = await bot.messagesSend(chatId, {
 		key,
 		body: {
-			content: {
-				type: "text",
-				text: "Save this reminder?",
-			},
-			reply_markup: {
-				type: "inline_keyboard",
-				rows: [
-					[
-						{
-							type: "callback",
-							text: "Save reminder",
-							data: "reminder:save:42",
-							style: "primary",
-						},
-					],
-				],
-			},
+			content: { type: "text", text: "Save this reminder?" },
+			reply_markup: new InlineKeyboard()
+				.row(
+					InlineButton.callback("Save reminder", "reminder:save:42", {
+						style: "primary",
+					}),
+				)
+				.build(),
 		},
 	});
 	console.log(result);
@@ -59,33 +50,23 @@ try {
 
 ```python
 import os
-from arx_nexo import Client, Config, models
+from arx_nexo import Client, Config, models, FormattedText, InlineButton, InlineKeyboard
 
 chat_id = os.environ["CHAT_ID"]
-request = models.SendMessage.model_validate(
-    {
-        "content": {"type": "text", "text": "Save this reminder?"},
-        "reply_markup": {
-            "type": "inline_keyboard",
-            "rows": [
-                [
-                    {
-                        "type": "callback",
-                        "text": "Save reminder",
-                        "data": "reminder:save:42",
-                        "style": "primary",
-                    }
-                ]
-            ],
-        },
-    }
-)
 with Client(
     Config(
         token=os.environ["ARX_BOT_TOKEN"],
         base_url="https://signal.arx.pro/bot-api/v1",
     )
 ) as bot:
+    request = models.SendMessage(
+        content=FormattedText("Save this reminder?").content(),
+        reply_markup=InlineKeyboard()
+        .row(
+            InlineButton.callback("Save reminder", "reminder:save:42", style="primary")
+        )
+        .markup(),
+    )
     result = bot.messages_send(
         chat_id,
         body=request,
@@ -98,7 +79,10 @@ with Client(
 {% tab title="Rust" %}
 
 ```rust
-use arx_nexo::{Client, Config, models};
+use arx_nexo::{
+    ButtonStyle, Client, Config, FormattedText, InlineButton, InlineKeyboard, models,
+    presence::Presence,
+};
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -106,29 +90,25 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let key = std::env::var("REQUEST_KEY")?;
     let chat_id = std::env::var("CHAT_ID")?;
     let bot = Client::new(Config::new(token, "https://signal.arx.pro/bot-api/v1", false)?)?;
-    let request: models::SendMessage = serde_json::from_value(serde_json::json!({
-      "content": {
-        "type": "text",
-        "text": "Save this reminder?"
-      },
-      "reply_markup": {
-        "type": "inline_keyboard",
-        "rows": [
-          [
-            {
-              "type": "callback",
-              "text": "Save reminder",
-              "data": "reminder:save:42",
-              "style": "primary"
-            }
-          ]
-        ]
-      }
-    }))?;
+    let query = [];
+    let keyboard = InlineKeyboard::new().row(vec![InlineButton::callback(
+        "Save reminder",
+        "reminder:save:42",
+        Some(ButtonStyle::Primary),
+    )?])?;
+    let request = models::SendMessage {
+        content: FormattedText::new("Save this reminder?", vec![])?.content()?,
+        effect_id: None,
+        link_preview: Presence::Unset,
+        protect_content: None,
+        reply_markup: Some(keyboard.markup()?),
+        reply_to: None,
+        silent: None,
+    };
     let result = bot
-        .messages_send(&chat_id, &[], Some(&request), Some(&key))
+        .messages_send(&chat_id, &query, Some(&request), Some(&key))
         .await?;
-    println!("{}", serde_json::to_string(&result)?);
+    println!("{result:?}");
     Ok(())
 }
 ```
@@ -153,7 +133,7 @@ A `callback_query` contains `id`, `user`, `message`, `chat_instance`, `data` and
 
 Validate the action and the user's permission to perform it. A press can arrive again, and the underlying reminder may already have changed. Use the [update delivery rules](updates.md#order-and-duplicates) to avoid repeating an action.
 
-Call `callback_queries.answer` for every callback, including actions that need no visible reply. Use the callback's `id` as the path argument. The body can be `{}` or, for example:
+Call `callback_queries.answer` for every callback, including actions that need no visible reply. Use the callback's `id` as the path argument. The HTTP request body can be `{}` or, for example:
 
 ```json
 {"text":"Reminder saved","show_alert":false,"cache_seconds":0}
@@ -172,7 +152,7 @@ The user's app waits up to 15 seconds for your answer. Answer within that time t
 
 ## Edit or remove inline buttons <a href="#edit-or-remove-inline-buttons" id="edit-or-remove-inline-buttons"></a>
 
-Use `messages.edit` with the last returned `revision` as `expected_revision`. A keyboard-only edit needs no `content`:
+Use `messages.edit` with the last returned `revision` as `expected_revision`. A keyboard-only edit needs no `content`. This HTTP body removes the buttons from a message at revision `1`:
 
 ```json
 {
@@ -187,7 +167,7 @@ An empty `rows` array removes inline buttons. Omitting `reply_markup` keeps them
 
 ## Reply keyboards <a href="#reply-keyboards" id="reply-keyboards"></a>
 
-To offer conversation inputs, send a new message with a reply keyboard:
+To offer conversation inputs over HTTP, send a new message with this reply keyboard body:
 
 ```json
 {

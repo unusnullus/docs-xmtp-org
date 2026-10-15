@@ -12,7 +12,7 @@ You can decide how to recover from a failed request by reading `error.code` and 
   "error": {
     "code": "rate_limited",
     "message": "Please retry later",
-    "request_id": "example-request",
+    "request_id": "019a0ff4-12c0-7000-8000-000000000001",
     "retry_after": 3,
     "scope": "chat"
   }

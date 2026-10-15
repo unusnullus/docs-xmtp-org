@@ -153,8 +153,8 @@ import { Client } from "@arx/nexo";
 const token = process.env.ARX_BOT_TOKEN;
 const key = process.env.REQUEST_KEY;
 const webhookUrl = process.env.WEBHOOK_URL;
-const secretToken = process.env.WEBHOOK_SECRET;
-if (!token || !key || !webhookUrl || !secretToken) {
+const webhookSecret = process.env.WEBHOOK_SECRET;
+if (!token || !key || !webhookUrl || !webhookSecret) {
 	throw new Error(
 		"Set ARX_BOT_TOKEN, REQUEST_KEY, WEBHOOK_URL, WEBHOOK_SECRET",
 	);
@@ -165,7 +165,7 @@ try {
 		key,
 		body: {
 			url: webhookUrl,
-			secret_token: secretToken,
+			secret_token: webhookSecret,
 			max_connections: 40,
 			allowed_updates: ["default", "messages_deleted"],
 			drop_pending_updates: false,
@@ -185,22 +185,22 @@ try {
 import os
 from arx_nexo import Client, Config, models
 
-request = models.SetWebhook.model_validate(
-    {
-        "url": os.environ["WEBHOOK_URL"],
-        "secret_token": os.environ["WEBHOOK_SECRET"],
-        "max_connections": 40,
-        "allowed_updates": ["default", "messages_deleted"],
-        "drop_pending_updates": False,
-        "reply_operations_enabled": False,
-    }
-)
+webhook_url = os.environ["WEBHOOK_URL"]
+webhook_secret = os.environ["WEBHOOK_SECRET"]
 with Client(
     Config(
         token=os.environ["ARX_BOT_TOKEN"],
         base_url="https://signal.arx.pro/bot-api/v1",
     )
 ) as bot:
+    request = models.SetWebhook(
+        url=webhook_url,
+        secret_token=webhook_secret,
+        max_connections=40,
+        allowed_updates=["default", "messages_deleted"],
+        drop_pending_updates=False,
+        reply_operations_enabled=False,
+    )
     result = bot.webhook_set(
         body=request,
         key=os.environ["REQUEST_KEY"],
@@ -219,21 +219,24 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let token = std::env::var("ARX_BOT_TOKEN")?;
     let key = std::env::var("REQUEST_KEY")?;
     let webhook_url = std::env::var("WEBHOOK_URL")?;
-    let secret = std::env::var("WEBHOOK_SECRET")?;
+    let webhook_secret = std::env::var("WEBHOOK_SECRET")?;
     let bot = Client::new(Config::new(token, "https://signal.arx.pro/bot-api/v1", false)?)?;
-    let request: models::SetWebhook = serde_json::from_value(serde_json::json!({
-      "url": webhook_url,
-      "secret_token": secret,
-      "max_connections": 40,
-      "allowed_updates": [
-        "default",
-        "messages_deleted"
-      ],
-      "drop_pending_updates": false,
-      "reply_operations_enabled": false
-    }))?;
-    let result = bot.webhook_set(&[], Some(&request), Some(&key)).await?;
-    println!("{}", serde_json::to_string(&result)?);
+    let query = [];
+    let request = models::SetWebhook {
+        allowed_updates: Some(vec![
+            models::SetWebhookAllowedUpdatesItem::Default,
+            models::SetWebhookAllowedUpdatesItem::MessagesDeleted,
+        ]),
+        certificate: None,
+        drop_pending_updates: Some(false),
+        ip_address: None,
+        max_connections: Some(40),
+        reply_operations_enabled: Some(false),
+        secret_token: Some(webhook_secret),
+        url: webhook_url,
+    };
+    let result = bot.webhook_set(&query, Some(&request), Some(&key)).await?;
+    println!("{result:?}");
     Ok(())
 }
 ```
@@ -256,16 +259,16 @@ The SDKs expose `webhookSetMultipart` or `webhook_set_multipart` for a custom ce
 
 ## Verify webhook deliveries <a href="#verify-webhook-deliveries" id="verify-webhook-deliveries"></a>
 
-ARX sends one raw JSON update per POST with these headers:
+ARX sends one raw JSON update per POST. For example, a delivery can have these headers:
 
 ```http
 Content-Type: application/json
 User-Agent: ARX-BotWebhook/1
-ARX-Bot-Id: BOT_ID
-ARX-Signature: t=TIMESTAMP,v1=HEX_SIGNATURE
-ARX-Webhook-Delivery-Id: ATTEMPT_UUID
+ARX-Bot-Id: 1001
+ARX-Signature: t=1792069200,v1=8de6472d5f1f9d6b52a8e5036fc2d644ba095e8080d2c1f747d21c6a62ddc902
+ARX-Webhook-Delivery-Id: 4a708670-01d2-4a57-a88c-f6cb4935c64e
 ARX-Webhook-Attempt: 1
-ARX-Bot-Api-Secret-Token: CONFIGURED_SECRET
+ARX-Bot-Api-Secret-Token: docs_example_secret_1
 ```
 
 The secret header is present when you configure `secret_token`. Verify the raw body bytes before parsing or reserializing them. The SDK helpers check the signature, a timestamp tolerance of 300 seconds, and your configured secret. Set `ARX_BOT_TOKEN` and `WEBHOOK_SECRET` for these receiver functions:
@@ -383,7 +386,7 @@ Inspect `pending_update_count`, `oldest_pending_at`, `dropped_update_count_24h`,
 
 ## Operations in a webhook response <a href="#operations-in-a-webhook-response" id="operations-in-a-webhook-response"></a>
 
-If you enable `reply_operations_enabled`, a successful JSON response can request an operation:
+If you enable `reply_operations_enabled`, a successful HTTP JSON response can request an operation:
 
 ```json
 {

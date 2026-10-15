@@ -42,6 +42,8 @@ HTTP 400 `download_too_large` means you must use metadata-only access for this f
 
 ### Example <a href="#example" id="example"></a>
 
+Set `ARX_BOT_TOKEN`, `DOWNLOAD_PATH`, `FILE_ID` before running this example. Set `DOWNLOAD_PATH` to the output file you want to create.
+
 {% tabs %}
 
 {% tab title="TypeScript" %}
@@ -49,9 +51,17 @@ HTTP 400 `download_too_large` means you must use metadata-only access for this f
 ```ts
 import { Client, DownloadTarget } from "@arx/nexo";
 
-const bot = new Client({ baseUrl: "https://signal.arx.pro/bot-api/v1" });
+const arxBotToken = process.env.ARX_BOT_TOKEN;
+const downloadPath = process.env.DOWNLOAD_PATH;
+const fileId = process.env.FILE_ID;
+if (!arxBotToken || !downloadPath || !fileId) {
+  throw new Error("Set ARX_BOT_TOKEN, DOWNLOAD_PATH, FILE_ID");
+}
+
+const bot = new Client({ token: arxBotToken, baseUrl: "https://signal.arx.pro/bot-api/v1" });
 try {
-  const written = await bot.filesDownload("REPLACE_WITH_UPLOADED_FILE_ID", DownloadTarget.fromPath("./file-part.bin"), { rangeHeader: "bytes=0-1023" });
+  const written = await bot.filesDownload(fileId, DownloadTarget.fromPath(downloadPath), { rangeHeader: "bytes=0-1023" });
+  console.log(written);
 } finally {
   await bot.close();
 }
@@ -62,10 +72,12 @@ try {
 {% tab title="Python" %}
 
 ```python
+import os
 from arx_nexo import Client, Config, DownloadTarget
 
-with Client(Config(base_url="https://signal.arx.pro/bot-api/v1")) as bot:
-    written = bot.files_download('REPLACE_WITH_UPLOADED_FILE_ID', DownloadTarget.from_path("./file-part.bin"), range_header="bytes=0-1023")
+with Client(Config(token=os.environ["ARX_BOT_TOKEN"], base_url="https://signal.arx.pro/bot-api/v1")) as bot:
+    written = bot.files_download(os.environ["FILE_ID"], DownloadTarget.from_path(os.environ["DOWNLOAD_PATH"]), range_header="bytes=0-1023")
+    print(written)
 ```
 
 {% endtab %}
@@ -77,10 +89,12 @@ use arx_nexo::{ Client, Config, DownloadTarget };
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let token = std::env::var("ARX_BOT_TOKEN")?;
-    let config = Config::new(token, "https://signal.arx.pro/bot-api/v1", false)?;
-    let bot = Client::new(config)?;
-    let written = bot.files_download("REPLACE_WITH_UPLOADED_FILE_ID", DownloadTarget::from_path("./file-part.bin"), Some("bytes=0-1023"), None).await?;
+    let arx_bot_token = std::env::var("ARX_BOT_TOKEN")?;
+    let download_path = std::env::var("DOWNLOAD_PATH")?;
+    let file_id = std::env::var("FILE_ID")?;
+    let bot = Client::new(Config::new(arx_bot_token, "https://signal.arx.pro/bot-api/v1", false)?)?;
+    let written = bot.files_download(&file_id, DownloadTarget::from_path(&download_path), Some("bytes=0-1023"), None).await?;
+    println!("{:?}", written);
     Ok(())
 }
 ```
@@ -91,17 +105,17 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 ```sh
 curl --fail-with-body --max-time 3600 -X GET \
-  "https://signal.arx.pro/bot-api/v1/file_contents/REPLACE_WITH_UPLOADED_FILE_ID" \
+  "https://signal.arx.pro/bot-api/v1/file_contents/${FILE_ID}" \
   -H "Authorization: Bearer ${ARX_BOT_TOKEN}" \
   -H "Range: bytes=0-1023" \
-  --output ./file-part.bin
+  --output "${DOWNLOAD_PATH}"
 ```
 
 {% endtab %}
 
 {% endtabs %}
 
-A matching response is HTTP 206 with `Content-Range: bytes 0-1023/1024` and 1,024 file bytes. There is no JSON envelope. The SDK methods return the number of bytes written.
+A supported range returns HTTP 206 with `Content-Range` and the requested file bytes. The SDK methods return the number of bytes written.
 
 ## files.upload <a href="#operation-files-upload" id="operation-files-upload"></a>
 
@@ -140,24 +154,30 @@ HTTP 413 `file_too_large` includes the type's byte limit in `error.details.limit
 
 ### Example <a href="#example-1" id="example-1"></a>
 
-Use your own local file at the path shown below. The SDK sends a JSON `payload` part and the named binary part in one multipart request. Use a new idempotency key for each new action. Reuse the example key only when retrying this exact request.
+Set `ARX_BOT_TOKEN`, `FILE_PATH`, `REQUEST_KEY` before running this example. Set `FILE_PATH` to a PDF document you own.
 
 {% tabs %}
 
 {% tab title="TypeScript" %}
 
 ```ts
-import { Client, UploadSource } from "@arx/nexo";
+import { Client, type Models, UploadSource } from "@arx/nexo";
 
-const bot = new Client({ baseUrl: "https://signal.arx.pro/bot-api/v1" });
+const arxBotToken = process.env.ARX_BOT_TOKEN;
+const filePath = process.env.FILE_PATH;
+const requestKey = process.env.REQUEST_KEY;
+if (!arxBotToken || !filePath || !requestKey) {
+  throw new Error("Set ARX_BOT_TOKEN, FILE_PATH, REQUEST_KEY");
+}
+
+const bot = new Client({ token: arxBotToken, baseUrl: "https://signal.arx.pro/bot-api/v1" });
 try {
-  const result = await bot.filesUpload(UploadSource.fromPath("./sample.pdf", { contentType: "application/pdf" }), {
-    "body": {
-      "kind": "document",
-      "file_name": "sample.pdf"
-    },
-    "key": "example-files-upload-1"
-  });
+  const body: Models.UploadFile = {
+    "kind": "document",
+    "file_name": "sample.pdf"
+  };
+  const result = await bot.filesUpload(UploadSource.fromPath(filePath, { contentType: "application/pdf" }), { body, key: requestKey });
+  console.log(result);
 } finally {
   await bot.close();
 }
@@ -168,34 +188,35 @@ try {
 {% tab title="Python" %}
 
 ```python
-from arx_nexo import Client, Config, UploadSource
-from arx_nexo import models
+import os
+from arx_nexo import Client, Config, models, UploadSource
 
-with Client(Config(base_url="https://signal.arx.pro/bot-api/v1")) as bot:
-    body = models.UploadFile.model_validate({'kind': 'document', 'file_name': 'sample.pdf'})
-    result = bot.files_upload(UploadSource.from_path('./sample.pdf', content_type='application/pdf'), body=body, key='example-files-upload-1')
+with Client(Config(token=os.environ["ARX_BOT_TOKEN"], base_url="https://signal.arx.pro/bot-api/v1")) as bot:
+    body = models.UploadFile(kind='document', file_name='sample.pdf')
+    result = bot.files_upload(UploadSource.from_path(os.environ["FILE_PATH"], content_type='application/pdf'), body=body, key=os.environ["REQUEST_KEY"])
+    print(result)
 ```
 
 {% endtab %}
 
 {% tab title="Rust" %}
 
-Add `serde_json = "1"` to your application's `[dependencies]` in `Cargo.toml`.
-
 ```rust
-use arx_nexo::{ Client, Config, UploadSource };
+use arx_nexo::{ Client, Config, models, UploadSource };
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let token = std::env::var("ARX_BOT_TOKEN")?;
-    let config = Config::new(token, "https://signal.arx.pro/bot-api/v1", false)?;
-    let bot = Client::new(config)?;
-    let body: arx_nexo::models::UploadFile = serde_json::from_value(serde_json::json!({
-      "kind": "document",
-      "file_name": "sample.pdf"
-    }))?;
-    let source = UploadSource::from_path("./sample.pdf")?.with_content_type("application/pdf")?;
-    let result = bot.files_upload(source, &body, Some("example-files-upload-1")).await?;
+    let arx_bot_token = std::env::var("ARX_BOT_TOKEN")?;
+    let file_path = std::env::var("FILE_PATH")?;
+    let request_key = std::env::var("REQUEST_KEY")?;
+    let bot = Client::new(Config::new(arx_bot_token, "https://signal.arx.pro/bot-api/v1", false)?)?;
+    let body = models::UploadFile {
+        file_name: Some("sample.pdf".to_owned()),
+        kind: models::UploadFileKind::Document,
+    };
+    let source = UploadSource::from_path(&file_path)?.with_content_type("application/pdf")?;
+    let result = bot.files_upload(source, &body, Some(&request_key)).await?;
+    println!("{:?}", result);
     Ok(())
 }
 ```
@@ -208,9 +229,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 curl --fail-with-body --max-time 3600 -X POST \
   "https://signal.arx.pro/bot-api/v1/files" \
   -H "Authorization: Bearer ${ARX_BOT_TOKEN}" \
-  -H "Idempotency-Key: example-files-upload-1" \
+  -H "Idempotency-Key: ${REQUEST_KEY}" \
   -F 'payload={"kind": "document", "file_name": "sample.pdf"};type=application/json' \
-  -F 'file=@./sample.pdf;type=application/pdf'
+  -F "file=@${FILE_PATH};type=application/pdf"
 ```
 
 {% endtab %}
@@ -223,9 +244,9 @@ Example success response (HTTP 200). The SDK methods return `result`:
 {
   "ok": true,
   "result": {
-    "file_id": "example-document-file-1",
+    "file_id": "rt1.c2FtcGxlLWRvY3VtZW50.Ir2wneC_Vb9figjCW6xqWn_HDRYeTJovqODOrRv9Owk",
     "file_size": 1024,
-    "file_unique_id": "example-document-unique-1",
+    "file_unique_id": "z_nxueD-UFpG2bnk2mxCZ3C4nfDl8JDiIqtBk4W5VYI",
     "kind": "document",
     "mime_type": "application/pdf",
     "state": "ready",
@@ -265,6 +286,8 @@ HTTP 400 `download_too_large` means you should repeat the metadata request with 
 
 ### Example <a href="#example-2" id="example-2"></a>
 
+Set `ARX_BOT_TOKEN`, `FILE_ID` before running this example.
+
 {% tabs %}
 
 {% tab title="TypeScript" %}
@@ -272,13 +295,18 @@ HTTP 400 `download_too_large` means you should repeat the metadata request with 
 ```ts
 import { Client } from "@arx/nexo";
 
-const bot = new Client({ baseUrl: "https://signal.arx.pro/bot-api/v1" });
+const arxBotToken = process.env.ARX_BOT_TOKEN;
+const fileId = process.env.FILE_ID;
+if (!arxBotToken || !fileId) {
+  throw new Error("Set ARX_BOT_TOKEN, FILE_ID");
+}
+
+const bot = new Client({ token: arxBotToken, baseUrl: "https://signal.arx.pro/bot-api/v1" });
 try {
-  const result = await bot.filesGet("REPLACE_WITH_UPLOADED_FILE_ID", {
-    "query": {
-      "metadata_only": true
-    }
-  });
+  const result = await bot.filesGet(fileId, { query: {
+    "metadata_only": true
+  } });
+  console.log(result);
 } finally {
   await bot.close();
 }
@@ -289,10 +317,12 @@ try {
 {% tab title="Python" %}
 
 ```python
+import os
 from arx_nexo import Client, Config
 
-with Client(Config(base_url="https://signal.arx.pro/bot-api/v1")) as bot:
-    result = bot.files_get('REPLACE_WITH_UPLOADED_FILE_ID', metadata_only=True)
+with Client(Config(token=os.environ["ARX_BOT_TOKEN"], base_url="https://signal.arx.pro/bot-api/v1")) as bot:
+    result = bot.files_get(os.environ["FILE_ID"], metadata_only=True)
+    print(result)
 ```
 
 {% endtab %}
@@ -304,10 +334,12 @@ use arx_nexo::{ Client, Config };
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let token = std::env::var("ARX_BOT_TOKEN")?;
-    let config = Config::new(token, "https://signal.arx.pro/bot-api/v1", false)?;
-    let bot = Client::new(config)?;
-    let result = bot.files_get("REPLACE_WITH_UPLOADED_FILE_ID", &[("metadata_only", "true")], None, None).await?;
+    let arx_bot_token = std::env::var("ARX_BOT_TOKEN")?;
+    let file_id = std::env::var("FILE_ID")?;
+    let bot = Client::new(Config::new(arx_bot_token, "https://signal.arx.pro/bot-api/v1", false)?)?;
+    let query = [("metadata_only", "true")];
+    let result = bot.files_get(&file_id, &query, None, None).await?;
+    println!("{:?}", result);
     Ok(())
 }
 ```
@@ -318,7 +350,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 ```sh
 curl --fail-with-body --max-time 20 -X GET \
-  "https://signal.arx.pro/bot-api/v1/files/REPLACE_WITH_UPLOADED_FILE_ID?metadata_only=true" \
+  "https://signal.arx.pro/bot-api/v1/files/${FILE_ID}?metadata_only=true" \
   -H "Authorization: Bearer ${ARX_BOT_TOKEN}"
 ```
 
@@ -332,9 +364,9 @@ Example success response (HTTP 200). The SDK methods return `result`:
 {
   "ok": true,
   "result": {
-    "file_id": "example-document-file-1",
+    "file_id": "rt1.c2FtcGxlLWRvY3VtZW50.Ir2wneC_Vb9figjCW6xqWn_HDRYeTJovqODOrRv9Owk",
     "file_size": 1024,
-    "file_unique_id": "example-document-unique-1",
+    "file_unique_id": "z_nxueD-UFpG2bnk2mxCZ3C4nfDl8JDiIqtBk4W5VYI",
     "kind": "document",
     "mime_type": "application/pdf",
     "state": "ready",

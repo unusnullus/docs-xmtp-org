@@ -31,14 +31,7 @@ try {
 				type: "poll",
 				poll: {
 					question: "Which meeting time works?",
-					options: [
-						{
-							text: "Morning",
-						},
-						{
-							text: "Afternoon",
-						},
-					],
+					options: [{ text: "Morning" }, { text: "Afternoon" }],
 					is_anonymous: false,
 					allows_multiple_answers: true,
 				},
@@ -59,25 +52,28 @@ import os
 from arx_nexo import Client, Config, models
 
 chat_id = os.environ["CHAT_ID"]
-request = models.SendMessage.model_validate(
-    {
-        "content": {
-            "type": "poll",
-            "poll": {
-                "question": "Which meeting time works?",
-                "options": [{"text": "Morning"}, {"text": "Afternoon"}],
-                "is_anonymous": False,
-                "allows_multiple_answers": True,
-            },
-        }
-    }
-)
 with Client(
     Config(
         token=os.environ["ARX_BOT_TOKEN"],
         base_url="https://signal.arx.pro/bot-api/v1",
     )
 ) as bot:
+    request = models.SendMessage(
+        content=models.InputContent(
+            root=models.InputPollContent(
+                type="poll",
+                poll=models.InputPoll(
+                    question="Which meeting time works?",
+                    options=[
+                        models.InputPollOption(text="Morning"),
+                        models.InputPollOption(text="Afternoon"),
+                    ],
+                    is_anonymous=False,
+                    allows_multiple_answers=True,
+                ),
+            )
+        ),
+    )
     result = bot.messages_send(
         chat_id,
         body=request,
@@ -90,7 +86,7 @@ with Client(
 {% tab title="Rust" %}
 
 ```rust
-use arx_nexo::{Client, Config, models};
+use arx_nexo::{Client, Config, models, presence::Presence};
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -98,28 +94,59 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let key = std::env::var("REQUEST_KEY")?;
     let chat_id = std::env::var("CHAT_ID")?;
     let bot = Client::new(Config::new(token, "https://signal.arx.pro/bot-api/v1", false)?)?;
-    let request: models::SendMessage = serde_json::from_value(serde_json::json!({
-      "content": {
-        "type": "poll",
-        "poll": {
-          "question": "Which meeting time works?",
-          "options": [
-            {
-              "text": "Morning"
+    let query = [];
+    let request = models::SendMessage {
+        content: models::InputContent::InputPollContent(Box::new(models::InputPollContent {
+            r#type: models::InputPollContentType::Poll,
+            poll: models::InputPoll {
+                allow_adding_options: None,
+                allows_multiple_answers: Some(true),
+                allows_revoting: None,
+                close_at: None,
+                correct_option_ids: None,
+                country_codes: None,
+                description: None,
+                description_entities: None,
+                description_format: None,
+                explanation: None,
+                explanation_entities: None,
+                explanation_format: None,
+                explanation_media: None,
+                hide_results_until_closes: None,
+                is_anonymous: Some(false),
+                is_closed: None,
+                media: None,
+                members_only: None,
+                open_period_seconds: None,
+                options: vec![
+                    models::InputPollOption {
+                        media: None,
+                        text: "Morning".into(),
+                        text_entities: None,
+                    },
+                    models::InputPollOption {
+                        media: None,
+                        text: "Afternoon".into(),
+                        text_entities: None,
+                    },
+                ],
+                question: "Which meeting time works?".into(),
+                question_entities: None,
+                shuffle_options: None,
+                r#type: None,
             },
-            {
-              "text": "Afternoon"
-            }
-          ],
-          "is_anonymous": false,
-          "allows_multiple_answers": true
-        }
-      }
-    }))?;
+        })),
+        effect_id: None,
+        link_preview: Presence::Unset,
+        protect_content: None,
+        reply_markup: None,
+        reply_to: None,
+        silent: None,
+    };
     let result = bot
-        .messages_send(&chat_id, &[], Some(&request), Some(&key))
+        .messages_send(&chat_id, &query, Some(&request), Some(&key))
         .await?;
-    println!("{}", serde_json::to_string(&result)?);
+    println!("{result:?}");
     Ok(())
 }
 ```
@@ -150,7 +177,7 @@ Optional poll fields reject null. Questions and options use plain text. See [Not
 
 ## Create a quiz <a href="#create-a-quiz" id="create-a-quiz"></a>
 
-Set `type` to `quiz` and provide `correct_option_ids`. These are zero-based input indexes, not option UUIDs. Provide unique indexes in strictly increasing order and within the input options. ARX maps them to persistent option IDs when it accepts the message.
+Set `type` to `quiz` and provide `correct_option_ids`. These are zero-based input indexes, not option UUIDs. Provide unique indexes in strictly increasing order and within the input options. ARX maps them to persistent option IDs when it accepts the message. For HTTP:
 
 ```json
 {
@@ -178,7 +205,7 @@ The media fields are `poll.media`, `poll.explanation_media` and `poll.options[].
 | Poll or quiz explanation | `photo`, `video`, `animation`, `audio`, `document`, `live_photo`, static `location`, `venue` |
 | Option | `photo`, `video`, `animation`, `live_photo`, static `location`, `venue`, `link` |
 
-A photo uses `{"type":"photo","photo":{"file_id":"YOUR_PHOTO_FILE_ID"}}`. A document uses `{"type":"document","document":{"file_id":"YOUR_DOCUMENT_FILE_ID"}}`. A link option uses `{"type":"link","url":"https://example.com/details"}`. These are media objects, not `file` fields on the poll or option.
+For a photo, use an `InputPhoto` with its `photo` source. For a document, use an `InputDocument` with its `document` source. A link option uses the `link` type with a `url`, such as `https://example.com/details`. These are media objects, not `file` fields on the poll or option.
 
 File sources and upload restrictions follow [Files](files.md). [Locations and contacts](locations-and-contacts.md) covers static place fields. Poll locations cannot contain `live`. The response returns resolved media, without upload descriptors or source URLs.
 
@@ -216,14 +243,8 @@ try {
 				checklist: {
 					title: "Prepare the meeting",
 					tasks: [
-						{
-							id: "agenda",
-							text: "Send the agenda",
-						},
-						{
-							id: "room",
-							text: "Reserve the room",
-						},
+						{ id: "agenda", text: "Send the agenda" },
+						{ id: "room", text: "Reserve the room" },
 					],
 					others_can_add_tasks: true,
 					others_can_mark_tasks_as_done: true,
@@ -245,28 +266,28 @@ import os
 from arx_nexo import Client, Config, models
 
 chat_id = os.environ["CHAT_ID"]
-request = models.SendMessage.model_validate(
-    {
-        "content": {
-            "type": "checklist",
-            "checklist": {
-                "title": "Prepare the meeting",
-                "tasks": [
-                    {"id": "agenda", "text": "Send the agenda"},
-                    {"id": "room", "text": "Reserve the room"},
-                ],
-                "others_can_add_tasks": True,
-                "others_can_mark_tasks_as_done": True,
-            },
-        }
-    }
-)
 with Client(
     Config(
         token=os.environ["ARX_BOT_TOKEN"],
         base_url="https://signal.arx.pro/bot-api/v1",
     )
 ) as bot:
+    request = models.SendMessage(
+        content=models.InputContent(
+            root=models.InputChecklistContent(
+                type="checklist",
+                checklist=models.InputChecklist(
+                    title="Prepare the meeting",
+                    tasks=[
+                        models.InputChecklistTask(id="agenda", text="Send the agenda"),
+                        models.InputChecklistTask(id="room", text="Reserve the room"),
+                    ],
+                    others_can_add_tasks=True,
+                    others_can_mark_tasks_as_done=True,
+                ),
+            )
+        ),
+    )
     result = bot.messages_send(
         chat_id,
         body=request,
@@ -279,7 +300,7 @@ with Client(
 {% tab title="Rust" %}
 
 ```rust
-use arx_nexo::{Client, Config, models};
+use arx_nexo::{Client, Config, models, presence::Presence};
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -287,30 +308,45 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let key = std::env::var("REQUEST_KEY")?;
     let chat_id = std::env::var("CHAT_ID")?;
     let bot = Client::new(Config::new(token, "https://signal.arx.pro/bot-api/v1", false)?)?;
-    let request: models::SendMessage = serde_json::from_value(serde_json::json!({
-      "content": {
-        "type": "checklist",
-        "checklist": {
-          "title": "Prepare the meeting",
-          "tasks": [
-            {
-              "id": "agenda",
-              "text": "Send the agenda"
+    let query = [];
+    let request = models::SendMessage {
+        content: models::InputContent::InputChecklistContent(Box::new(
+            models::InputChecklistContent {
+                r#type: models::InputChecklistContentType::Checklist,
+                checklist: models::InputChecklist {
+                    others_can_add_tasks: Some(true),
+                    others_can_mark_tasks_as_done: Some(true),
+                    tasks: vec![
+                        models::InputChecklistTask {
+                            id: "agenda".into(),
+                            text: "Send the agenda".into(),
+                            text_entities: None,
+                            text_format: None,
+                        },
+                        models::InputChecklistTask {
+                            id: "room".into(),
+                            text: "Reserve the room".into(),
+                            text_entities: None,
+                            text_format: None,
+                        },
+                    ],
+                    title: "Prepare the meeting".into(),
+                    title_entities: None,
+                    title_format: None,
+                },
             },
-            {
-              "id": "room",
-              "text": "Reserve the room"
-            }
-          ],
-          "others_can_add_tasks": true,
-          "others_can_mark_tasks_as_done": true
-        }
-      }
-    }))?;
+        )),
+        effect_id: None,
+        link_preview: Presence::Unset,
+        protect_content: None,
+        reply_markup: None,
+        reply_to: None,
+        silent: None,
+    };
     let result = bot
-        .messages_send(&chat_id, &[], Some(&request), Some(&key))
+        .messages_send(&chat_id, &query, Some(&request), Some(&key))
         .await?;
-    println!("{}", serde_json::to_string(&result)?);
+    println!("{result:?}");
     Ok(())
 }
 ```
@@ -341,12 +377,12 @@ Copying or forwarding a poll creates new poll and option IDs, remaps the correct
 
 ## Reply to an option or task <a href="#reply-to-an-option-or-task" id="reply-to-an-option-or-task"></a>
 
-Pair `reply_to.message_id` with either `poll_option_id` or `checklist_task_id`:
+Pair `reply_to.message_id` with either `poll_option_id` or `checklist_task_id`. This HTTP body uses sample IDs from an accepted poll:
 
 ```json
 {
   "content": {"type":"text","text":"I'll reserve this time."},
-  "reply_to": {"message_id":"12","poll_option_id":"OPTION_UUID"}
+  "reply_to": {"message_id":"12","poll_option_id":"f43b0c0a-744c-42e9-9bd9-1fcf7bb88fe2"}
 }
 ```
 

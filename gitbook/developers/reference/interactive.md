@@ -40,7 +40,7 @@ The notification, alert, or bot start link used to answer an inline button press
 | `cache_seconds` | integer | No | This specifies how long the client may cache this callback answer, in seconds. The minimum is 0. The maximum is 3,600. The default is `0`. |
 | `show_alert` | boolean | No | This is true when the callback answer appears as an alert instead of a notification. The default is `false`. |
 | `text` | string | No | The plain notification text shown after the button press, up to 200 UTF-16 code units. Set show_alert to display it as an alert instead. Markup is not parsed. |
-| `url` | string | No | A start link for your own bot in the form https://www.arx.pro/bot/&lt;handle>?start=&lt;payload>. The payload must contain 1 to 64 ASCII letters, digits, underscores, or hyphens. Other destinations are rejected. Use a start link for your bot's current handle. Other bots and external URLs are not accepted. An invalid URL returns invalid_parameter with field set to url. The value must match `^https://www\.arx\.pro/bot/[A-Za-z0-9_]+\?start=[A-Za-z0-9_-]{1,64}$`. The maximum length is 2,048 characters. |
+| `url` | string | No | A start link for your own bot in the form https://www.arx.pro/bot/&lt;handle>?start=&lt;payload>. The payload must contain 1 to 64 ASCII letters, digits, underscores, or hyphens. Other destinations are rejected. Use a start link for your bot's current handle. Other bots and external URLs are not accepted. An invalid URL returns invalid_parameter with field set to url. For example, `https://www.arx.pro/bot/ACMESUPPORTBOT?start=help_42`. The value must match `^https://www\.arx\.pro/bot/[A-Za-z0-9_]+\?start=[A-Za-z0-9_-]{1,64}$`. The maximum length is 2,048 characters. |
 
 ### Response <a href="#response" id="response"></a>
 
@@ -54,25 +54,31 @@ For an invalid link, HTTP 400 `invalid_parameter` identifies `url`; correct it b
 
 ### Example <a href="#example" id="example"></a>
 
-Use a new idempotency key for each new action. Reuse the example key only when retrying this exact request.
+Set `ARX_BOT_TOKEN`, `CALLBACK_QUERY_ID`, `REQUEST_KEY` before running this example.
 
 {% tabs %}
 
 {% tab title="TypeScript" %}
 
 ```ts
-import { Client } from "@arx/nexo";
+import { Client, type Models } from "@arx/nexo";
 
-const bot = new Client({ baseUrl: "https://signal.arx.pro/bot-api/v1" });
+const arxBotToken = process.env.ARX_BOT_TOKEN;
+const callbackQueryId = process.env.CALLBACK_QUERY_ID;
+const requestKey = process.env.REQUEST_KEY;
+if (!arxBotToken || !callbackQueryId || !requestKey) {
+  throw new Error("Set ARX_BOT_TOKEN, CALLBACK_QUERY_ID, REQUEST_KEY");
+}
+
+const bot = new Client({ token: arxBotToken, baseUrl: "https://signal.arx.pro/bot-api/v1" });
 try {
-  const result = await bot.callbackQueriesAnswer("00000000-0000-4000-8000-000000000005", {
-    "body": {
-      "text": "Saved",
-      "show_alert": false,
-      "cache_seconds": 0
-    },
-    "key": "example-callback_queries-answer-1"
-  });
+  const body: Models.CallbackAnswer = {
+    "text": "Saved",
+    "show_alert": false,
+    "cache_seconds": 0
+  };
+  const result = await bot.callbackQueriesAnswer(callbackQueryId, { body, key: requestKey });
+  console.log(result);
 } finally {
   await bot.close();
 }
@@ -83,34 +89,37 @@ try {
 {% tab title="Python" %}
 
 ```python
-from arx_nexo import Client, Config
-from arx_nexo import models
+import os
+from arx_nexo import Client, Config, models
 
-with Client(Config(base_url="https://signal.arx.pro/bot-api/v1")) as bot:
-    body = models.CallbackAnswer.model_validate({'text': 'Saved', 'show_alert': False, 'cache_seconds': 0})
-    result = bot.callback_queries_answer('00000000-0000-4000-8000-000000000005', body=body, key='example-callback_queries-answer-1')
+with Client(Config(token=os.environ["ARX_BOT_TOKEN"], base_url="https://signal.arx.pro/bot-api/v1")) as bot:
+    body = models.CallbackAnswer(text='Saved', show_alert=False, cache_seconds=0)
+    result = bot.callback_queries_answer(os.environ["CALLBACK_QUERY_ID"], body=body, key=os.environ["REQUEST_KEY"])
+    print(result)
 ```
 
 {% endtab %}
 
 {% tab title="Rust" %}
 
-Add `serde_json = "1"` to your application's `[dependencies]` in `Cargo.toml`.
-
 ```rust
-use arx_nexo::{ Client, Config };
+use arx_nexo::{ Client, Config, models };
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let token = std::env::var("ARX_BOT_TOKEN")?;
-    let config = Config::new(token, "https://signal.arx.pro/bot-api/v1", false)?;
-    let bot = Client::new(config)?;
-    let body: arx_nexo::models::CallbackAnswer = serde_json::from_value(serde_json::json!({
-      "text": "Saved",
-      "show_alert": false,
-      "cache_seconds": 0
-    }))?;
-    let result = bot.callback_queries_answer("00000000-0000-4000-8000-000000000005", &[], Some(&body), Some("example-callback_queries-answer-1")).await?;
+    let arx_bot_token = std::env::var("ARX_BOT_TOKEN")?;
+    let callback_query_id = std::env::var("CALLBACK_QUERY_ID")?;
+    let request_key = std::env::var("REQUEST_KEY")?;
+    let bot = Client::new(Config::new(arx_bot_token, "https://signal.arx.pro/bot-api/v1", false)?)?;
+    let body = models::CallbackAnswer {
+        cache_seconds: Some(0),
+        show_alert: Some(false),
+        text: Some("Saved".to_owned()),
+        url: None,
+    };
+    let query = [];
+    let result = bot.callback_queries_answer(&callback_query_id, &query, Some(&body), Some(&request_key)).await?;
+    println!("{:?}", result);
     Ok(())
 }
 ```
@@ -121,9 +130,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 ```sh
 curl --fail-with-body --max-time 20 -X POST \
-  "https://signal.arx.pro/bot-api/v1/callback_queries/00000000-0000-4000-8000-000000000005/answer" \
+  "https://signal.arx.pro/bot-api/v1/callback_queries/${CALLBACK_QUERY_ID}/answer" \
   -H "Authorization: Bearer ${ARX_BOT_TOKEN}" \
-  -H "Idempotency-Key: example-callback_queries-answer-1" \
+  -H "Idempotency-Key: ${REQUEST_KEY}" \
   -H "Content-Type: application/json" \
   --data '{"text": "Saved", "show_alert": false, "cache_seconds": 0}'
 ```
@@ -181,29 +190,34 @@ HTTP 400 `reaction_not_allowed` means the selected reaction is unavailable. HTTP
 
 ### Example <a href="#example-1" id="example-1"></a>
 
-Use a new idempotency key for each new action. Reuse the example key only when retrying this exact request.
+Set `ARX_BOT_TOKEN`, `CHAT_ID`, `MESSAGE_ID`, `REQUEST_KEY` before running this example.
 
 {% tabs %}
 
 {% tab title="TypeScript" %}
 
 ```ts
-import { Client } from "@arx/nexo";
+import { Client, type Models } from "@arx/nexo";
 
-const bot = new Client({ baseUrl: "https://signal.arx.pro/bot-api/v1" });
+const arxBotToken = process.env.ARX_BOT_TOKEN;
+const chatId = process.env.CHAT_ID;
+const messageId = process.env.MESSAGE_ID;
+const requestKey = process.env.REQUEST_KEY;
+if (!arxBotToken || !chatId || !messageId || !requestKey) {
+  throw new Error("Set ARX_BOT_TOKEN, CHAT_ID, MESSAGE_ID, REQUEST_KEY");
+}
+
+const bot = new Client({ token: arxBotToken, baseUrl: "https://signal.arx.pro/bot-api/v1" });
 try {
-  const result = await bot.reactionsSet("4398046511200", "42", {
-    "body": {
-      "is_big": false,
-      "reactions": [
-        {
-          "emoji": "👍",
-          "type": "emoji"
-        }
-      ]
-    },
-    "key": "example-reactions-set-1"
-  });
+  const body: Models.SetReactions = {
+    "is_big": false,
+    "reactions": [{
+      "emoji": "👍",
+      "type": "emoji"
+    }]
+  };
+  const result = await bot.reactionsSet(chatId, messageId, { body, key: requestKey });
+  console.log(result);
 } finally {
   await bot.close();
 }
@@ -214,38 +228,39 @@ try {
 {% tab title="Python" %}
 
 ```python
-from arx_nexo import Client, Config
-from arx_nexo import models
+import os
+from arx_nexo import Client, Config, models
 
-with Client(Config(base_url="https://signal.arx.pro/bot-api/v1")) as bot:
-    body = models.SetReactions.model_validate({'is_big': False, 'reactions': [{'emoji': '👍', 'type': 'emoji'}]})
-    result = bot.reactions_set('4398046511200', '42', body=body, key='example-reactions-set-1')
+with Client(Config(token=os.environ["ARX_BOT_TOKEN"], base_url="https://signal.arx.pro/bot-api/v1")) as bot:
+    body = models.SetReactions(is_big=False, reactions=[models.Reaction(emoji='👍', type='emoji')])
+    result = bot.reactions_set(os.environ["CHAT_ID"], os.environ["MESSAGE_ID"], body=body, key=os.environ["REQUEST_KEY"])
+    print(result)
 ```
 
 {% endtab %}
 
 {% tab title="Rust" %}
 
-Add `serde_json = "1"` to your application's `[dependencies]` in `Cargo.toml`.
-
 ```rust
-use arx_nexo::{ Client, Config };
+use arx_nexo::{ Client, Config, models };
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let token = std::env::var("ARX_BOT_TOKEN")?;
-    let config = Config::new(token, "https://signal.arx.pro/bot-api/v1", false)?;
-    let bot = Client::new(config)?;
-    let body: arx_nexo::models::SetReactions = serde_json::from_value(serde_json::json!({
-      "is_big": false,
-      "reactions": [
-        {
-          "emoji": "👍",
-          "type": "emoji"
-        }
-      ]
-    }))?;
-    let result = bot.reactions_set("4398046511200", "42", &[], Some(&body), Some("example-reactions-set-1")).await?;
+    let arx_bot_token = std::env::var("ARX_BOT_TOKEN")?;
+    let chat_id = std::env::var("CHAT_ID")?;
+    let message_id = std::env::var("MESSAGE_ID")?;
+    let request_key = std::env::var("REQUEST_KEY")?;
+    let bot = Client::new(Config::new(arx_bot_token, "https://signal.arx.pro/bot-api/v1", false)?)?;
+    let body = models::SetReactions {
+        is_big: Some(false),
+        reactions: vec![models::Reaction {
+            emoji: "👍".to_owned(),
+            r#type: models::ReactionType::Emoji,
+        }],
+    };
+    let query = [];
+    let result = bot.reactions_set(&chat_id, &message_id, &query, Some(&body), Some(&request_key)).await?;
+    println!("{:?}", result);
     Ok(())
 }
 ```
@@ -256,9 +271,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 ```sh
 curl --fail-with-body --max-time 20 -X PUT \
-  "https://signal.arx.pro/bot-api/v1/chats/4398046511200/messages/42/my_reaction" \
+  "https://signal.arx.pro/bot-api/v1/chats/${CHAT_ID}/messages/${MESSAGE_ID}/my_reaction" \
   -H "Authorization: Bearer ${ARX_BOT_TOKEN}" \
-  -H "Idempotency-Key: example-reactions-set-1" \
+  -H "Idempotency-Key: ${REQUEST_KEY}" \
   -H "Content-Type: application/json" \
   --data '{"is_big": false, "reactions": [{"emoji": "👍", "type": "emoji"}]}'
 ```
@@ -314,7 +329,7 @@ HTTP 403 `access_restricted` means another author owns the poll. HTTP 409 `poll_
 
 ### Example <a href="#example-2" id="example-2"></a>
 
-Use a new idempotency key for each new action. Reuse the example key only when retrying this exact request.
+Set `ARX_BOT_TOKEN`, `CHAT_ID`, `POLL_MESSAGE_ID`, `POLL_OPTION_ID`, `REQUEST_KEY` before running this example.
 
 {% tabs %}
 
@@ -323,11 +338,19 @@ Use a new idempotency key for each new action. Reuse the example key only when r
 ```ts
 import { Client } from "@arx/nexo";
 
-const bot = new Client({ baseUrl: "https://signal.arx.pro/bot-api/v1" });
+const arxBotToken = process.env.ARX_BOT_TOKEN;
+const chatId = process.env.CHAT_ID;
+const pollMessageId = process.env.POLL_MESSAGE_ID;
+const pollOptionId = process.env.POLL_OPTION_ID;
+const requestKey = process.env.REQUEST_KEY;
+if (!arxBotToken || !chatId || !pollMessageId || !pollOptionId || !requestKey) {
+  throw new Error("Set ARX_BOT_TOKEN, CHAT_ID, POLL_MESSAGE_ID, POLL_OPTION_ID, REQUEST_KEY");
+}
+
+const bot = new Client({ token: arxBotToken, baseUrl: "https://signal.arx.pro/bot-api/v1" });
 try {
-  const result = await bot.messagesDeletePollOption("4398046511200", "42", "00000000-0000-4000-8000-000000000004", {
-    "key": "example-messages-delete_poll_option-1"
-  });
+  const result = await bot.messagesDeletePollOption(chatId, pollMessageId, pollOptionId, { key: requestKey });
+  console.log(result);
 } finally {
   await bot.close();
 }
@@ -338,10 +361,12 @@ try {
 {% tab title="Python" %}
 
 ```python
+import os
 from arx_nexo import Client, Config
 
-with Client(Config(base_url="https://signal.arx.pro/bot-api/v1")) as bot:
-    result = bot.messages_delete_poll_option('4398046511200', '42', '00000000-0000-4000-8000-000000000004', key='example-messages-delete_poll_option-1')
+with Client(Config(token=os.environ["ARX_BOT_TOKEN"], base_url="https://signal.arx.pro/bot-api/v1")) as bot:
+    result = bot.messages_delete_poll_option(os.environ["CHAT_ID"], os.environ["POLL_MESSAGE_ID"], os.environ["POLL_OPTION_ID"], key=os.environ["REQUEST_KEY"])
+    print(result)
 ```
 
 {% endtab %}
@@ -353,10 +378,15 @@ use arx_nexo::{ Client, Config };
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let token = std::env::var("ARX_BOT_TOKEN")?;
-    let config = Config::new(token, "https://signal.arx.pro/bot-api/v1", false)?;
-    let bot = Client::new(config)?;
-    let result = bot.messages_delete_poll_option("4398046511200", "42", "00000000-0000-4000-8000-000000000004", &[], None, Some("example-messages-delete_poll_option-1")).await?;
+    let arx_bot_token = std::env::var("ARX_BOT_TOKEN")?;
+    let chat_id = std::env::var("CHAT_ID")?;
+    let poll_message_id = std::env::var("POLL_MESSAGE_ID")?;
+    let poll_option_id = std::env::var("POLL_OPTION_ID")?;
+    let request_key = std::env::var("REQUEST_KEY")?;
+    let bot = Client::new(Config::new(arx_bot_token, "https://signal.arx.pro/bot-api/v1", false)?)?;
+    let query = [];
+    let result = bot.messages_delete_poll_option(&chat_id, &poll_message_id, &poll_option_id, &query, None, Some(&request_key)).await?;
+    println!("{:?}", result);
     Ok(())
 }
 ```
@@ -367,9 +397,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 ```sh
 curl --fail-with-body --max-time 20 -X DELETE \
-  "https://signal.arx.pro/bot-api/v1/chats/4398046511200/messages/42/poll_options/00000000-0000-4000-8000-000000000004" \
+  "https://signal.arx.pro/bot-api/v1/chats/${CHAT_ID}/messages/${POLL_MESSAGE_ID}/poll_options/${POLL_OPTION_ID}" \
   -H "Authorization: Bearer ${ARX_BOT_TOKEN}" \
-  -H "Idempotency-Key: example-messages-delete_poll_option-1"
+  -H "Idempotency-Key: ${REQUEST_KEY}"
 ```
 
 {% endtab %}
@@ -457,21 +487,28 @@ HTTP 404 `message_not_found` means the target is missing or inaccessible. HTTP 4
 
 ### Example <a href="#example-3" id="example-3"></a>
 
-Use a new idempotency key for each new action. Reuse the example key only when retrying this exact request.
+Set `ARX_BOT_TOKEN`, `CHAT_ID`, `LIVE_LOCATION_MESSAGE_ID`, `REQUEST_KEY` before running this example.
 
 {% tabs %}
 
 {% tab title="TypeScript" %}
 
 ```ts
-import { Client } from "@arx/nexo";
+import { Client, type Models } from "@arx/nexo";
 
-const bot = new Client({ baseUrl: "https://signal.arx.pro/bot-api/v1" });
+const arxBotToken = process.env.ARX_BOT_TOKEN;
+const chatId = process.env.CHAT_ID;
+const liveLocationMessageId = process.env.LIVE_LOCATION_MESSAGE_ID;
+const requestKey = process.env.REQUEST_KEY;
+if (!arxBotToken || !chatId || !liveLocationMessageId || !requestKey) {
+  throw new Error("Set ARX_BOT_TOKEN, CHAT_ID, LIVE_LOCATION_MESSAGE_ID, REQUEST_KEY");
+}
+
+const bot = new Client({ token: arxBotToken, baseUrl: "https://signal.arx.pro/bot-api/v1" });
 try {
-  const result = await bot.messagesStopLiveLocation("4398046511200", "42", {
-    "body": {},
-    "key": "example-messages-stop_live_location-1"
-  });
+  const body: Models.StopLiveLocation = {};
+  const result = await bot.messagesStopLiveLocation(chatId, liveLocationMessageId, { body, key: requestKey });
+  console.log(result);
 } finally {
   await bot.close();
 }
@@ -482,30 +519,35 @@ try {
 {% tab title="Python" %}
 
 ```python
-from arx_nexo import Client, Config
-from arx_nexo import models
+import os
+from arx_nexo import Client, Config, models
 
-with Client(Config(base_url="https://signal.arx.pro/bot-api/v1")) as bot:
-    body = models.StopLiveLocation.model_validate({})
-    result = bot.messages_stop_live_location('4398046511200', '42', body=body, key='example-messages-stop_live_location-1')
+with Client(Config(token=os.environ["ARX_BOT_TOKEN"], base_url="https://signal.arx.pro/bot-api/v1")) as bot:
+    body = models.StopLiveLocation()
+    result = bot.messages_stop_live_location(os.environ["CHAT_ID"], os.environ["LIVE_LOCATION_MESSAGE_ID"], body=body, key=os.environ["REQUEST_KEY"])
+    print(result)
 ```
 
 {% endtab %}
 
 {% tab title="Rust" %}
 
-Add `serde_json = "1"` to your application's `[dependencies]` in `Cargo.toml`.
-
 ```rust
-use arx_nexo::{ Client, Config };
+use arx_nexo::{ Client, Config, models };
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let token = std::env::var("ARX_BOT_TOKEN")?;
-    let config = Config::new(token, "https://signal.arx.pro/bot-api/v1", false)?;
-    let bot = Client::new(config)?;
-    let body: arx_nexo::models::StopLiveLocation = serde_json::from_value(serde_json::json!({}))?;
-    let result = bot.messages_stop_live_location("4398046511200", "42", &[], Some(&body), Some("example-messages-stop_live_location-1")).await?;
+    let arx_bot_token = std::env::var("ARX_BOT_TOKEN")?;
+    let chat_id = std::env::var("CHAT_ID")?;
+    let live_location_message_id = std::env::var("LIVE_LOCATION_MESSAGE_ID")?;
+    let request_key = std::env::var("REQUEST_KEY")?;
+    let bot = Client::new(Config::new(arx_bot_token, "https://signal.arx.pro/bot-api/v1", false)?)?;
+    let body = models::StopLiveLocation {
+        reply_markup: None,
+    };
+    let query = [];
+    let result = bot.messages_stop_live_location(&chat_id, &live_location_message_id, &query, Some(&body), Some(&request_key)).await?;
+    println!("{:?}", result);
     Ok(())
 }
 ```
@@ -516,9 +558,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 ```sh
 curl --fail-with-body --max-time 20 -X POST \
-  "https://signal.arx.pro/bot-api/v1/chats/4398046511200/messages/42/stop_live_location" \
+  "https://signal.arx.pro/bot-api/v1/chats/${CHAT_ID}/messages/${LIVE_LOCATION_MESSAGE_ID}/stop_live_location" \
   -H "Authorization: Bearer ${ARX_BOT_TOKEN}" \
-  -H "Idempotency-Key: example-messages-stop_live_location-1" \
+  -H "Idempotency-Key: ${REQUEST_KEY}" \
   -H "Content-Type: application/json" \
   --data '{}'
 ```
@@ -552,8 +594,8 @@ Example success response (HTTP 200). The SDK methods return `result`:
     "sender_user": {
       "id": "10000042",
       "is_bot": true,
-      "name": "Example",
-      "username": "EXAMPLEBOT"
+      "name": "Acme Support",
+      "username": "ACMESUPPORTBOT"
     },
     "sent_at": "2026-10-11T12:00:00Z",
     "silent": false,
@@ -601,21 +643,28 @@ HTTP 403 `access_restricted` means another author owns the poll. HTTP 409 `poll_
 
 ### Example <a href="#example-4" id="example-4"></a>
 
-Use a new idempotency key for each new action. Reuse the example key only when retrying this exact request.
+Set `ARX_BOT_TOKEN`, `CHAT_ID`, `POLL_MESSAGE_ID`, `REQUEST_KEY` before running this example.
 
 {% tabs %}
 
 {% tab title="TypeScript" %}
 
 ```ts
-import { Client } from "@arx/nexo";
+import { Client, type Models } from "@arx/nexo";
 
-const bot = new Client({ baseUrl: "https://signal.arx.pro/bot-api/v1" });
+const arxBotToken = process.env.ARX_BOT_TOKEN;
+const chatId = process.env.CHAT_ID;
+const pollMessageId = process.env.POLL_MESSAGE_ID;
+const requestKey = process.env.REQUEST_KEY;
+if (!arxBotToken || !chatId || !pollMessageId || !requestKey) {
+  throw new Error("Set ARX_BOT_TOKEN, CHAT_ID, POLL_MESSAGE_ID, REQUEST_KEY");
+}
+
+const bot = new Client({ token: arxBotToken, baseUrl: "https://signal.arx.pro/bot-api/v1" });
 try {
-  const result = await bot.messagesStopPoll("4398046511200", "42", {
-    "body": {},
-    "key": "example-messages-stop_poll-1"
-  });
+  const body: Models.StopPoll = {};
+  const result = await bot.messagesStopPoll(chatId, pollMessageId, { body, key: requestKey });
+  console.log(result);
 } finally {
   await bot.close();
 }
@@ -626,30 +675,35 @@ try {
 {% tab title="Python" %}
 
 ```python
-from arx_nexo import Client, Config
-from arx_nexo import models
+import os
+from arx_nexo import Client, Config, models
 
-with Client(Config(base_url="https://signal.arx.pro/bot-api/v1")) as bot:
-    body = models.StopPoll.model_validate({})
-    result = bot.messages_stop_poll('4398046511200', '42', body=body, key='example-messages-stop_poll-1')
+with Client(Config(token=os.environ["ARX_BOT_TOKEN"], base_url="https://signal.arx.pro/bot-api/v1")) as bot:
+    body = models.StopPoll()
+    result = bot.messages_stop_poll(os.environ["CHAT_ID"], os.environ["POLL_MESSAGE_ID"], body=body, key=os.environ["REQUEST_KEY"])
+    print(result)
 ```
 
 {% endtab %}
 
 {% tab title="Rust" %}
 
-Add `serde_json = "1"` to your application's `[dependencies]` in `Cargo.toml`.
-
 ```rust
-use arx_nexo::{ Client, Config };
+use arx_nexo::{ Client, Config, models };
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let token = std::env::var("ARX_BOT_TOKEN")?;
-    let config = Config::new(token, "https://signal.arx.pro/bot-api/v1", false)?;
-    let bot = Client::new(config)?;
-    let body: arx_nexo::models::StopPoll = serde_json::from_value(serde_json::json!({}))?;
-    let result = bot.messages_stop_poll("4398046511200", "42", &[], Some(&body), Some("example-messages-stop_poll-1")).await?;
+    let arx_bot_token = std::env::var("ARX_BOT_TOKEN")?;
+    let chat_id = std::env::var("CHAT_ID")?;
+    let poll_message_id = std::env::var("POLL_MESSAGE_ID")?;
+    let request_key = std::env::var("REQUEST_KEY")?;
+    let bot = Client::new(Config::new(arx_bot_token, "https://signal.arx.pro/bot-api/v1", false)?)?;
+    let body = models::StopPoll {
+        reply_markup: None,
+    };
+    let query = [];
+    let result = bot.messages_stop_poll(&chat_id, &poll_message_id, &query, Some(&body), Some(&request_key)).await?;
+    println!("{:?}", result);
     Ok(())
 }
 ```
@@ -660,9 +714,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 ```sh
 curl --fail-with-body --max-time 20 -X POST \
-  "https://signal.arx.pro/bot-api/v1/chats/4398046511200/messages/42/stop_poll" \
+  "https://signal.arx.pro/bot-api/v1/chats/${CHAT_ID}/messages/${POLL_MESSAGE_ID}/stop_poll" \
   -H "Authorization: Bearer ${ARX_BOT_TOKEN}" \
-  -H "Idempotency-Key: example-messages-stop_poll-1" \
+  -H "Idempotency-Key: ${REQUEST_KEY}" \
   -H "Content-Type: application/json" \
   --data '{}'
 ```
@@ -743,6 +797,8 @@ HTTP 400 `invalid_request` means the catalog request included a query or body. S
 
 ### Example <a href="#example-5" id="example-5"></a>
 
+Set `ARX_BOT_TOKEN` before running this example.
+
 {% tabs %}
 
 {% tab title="TypeScript" %}
@@ -750,9 +806,15 @@ HTTP 400 `invalid_request` means the catalog request included a query or body. S
 ```ts
 import { Client } from "@arx/nexo";
 
-const bot = new Client({ baseUrl: "https://signal.arx.pro/bot-api/v1" });
+const arxBotToken = process.env.ARX_BOT_TOKEN;
+if (!arxBotToken) {
+  throw new Error("Set ARX_BOT_TOKEN");
+}
+
+const bot = new Client({ token: arxBotToken, baseUrl: "https://signal.arx.pro/bot-api/v1" });
 try {
   const result = await bot.messageEffectsList();
+  console.log(result);
 } finally {
   await bot.close();
 }
@@ -763,10 +825,12 @@ try {
 {% tab title="Python" %}
 
 ```python
+import os
 from arx_nexo import Client, Config
 
-with Client(Config(base_url="https://signal.arx.pro/bot-api/v1")) as bot:
+with Client(Config(token=os.environ["ARX_BOT_TOKEN"], base_url="https://signal.arx.pro/bot-api/v1")) as bot:
     result = bot.message_effects_list()
+    print(result)
 ```
 
 {% endtab %}
@@ -778,10 +842,11 @@ use arx_nexo::{ Client, Config };
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let token = std::env::var("ARX_BOT_TOKEN")?;
-    let config = Config::new(token, "https://signal.arx.pro/bot-api/v1", false)?;
-    let bot = Client::new(config)?;
-    let result = bot.message_effects_list(&[], None, None).await?;
+    let arx_bot_token = std::env::var("ARX_BOT_TOKEN")?;
+    let bot = Client::new(Config::new(arx_bot_token, "https://signal.arx.pro/bot-api/v1", false)?)?;
+    let query = [];
+    let result = bot.message_effects_list(&query, None, None).await?;
+    println!("{:?}", result);
     Ok(())
 }
 ```

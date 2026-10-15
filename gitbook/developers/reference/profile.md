@@ -58,7 +58,7 @@ HTTP 400 `invalid_parameter` means the scope, language, or scope-specific IDs ar
 
 ### Example <a href="#example" id="example"></a>
 
-Use a new idempotency key for each new action. Reuse the example key only when retrying this exact request.
+Set `ARX_BOT_TOKEN`, `REQUEST_KEY` before running this example.
 
 {% tabs %}
 
@@ -67,11 +67,16 @@ Use a new idempotency key for each new action. Reuse the example key only when r
 ```ts
 import { Client } from "@arx/nexo";
 
-const bot = new Client({ baseUrl: "https://signal.arx.pro/bot-api/v1" });
+const arxBotToken = process.env.ARX_BOT_TOKEN;
+const requestKey = process.env.REQUEST_KEY;
+if (!arxBotToken || !requestKey) {
+  throw new Error("Set ARX_BOT_TOKEN, REQUEST_KEY");
+}
+
+const bot = new Client({ token: arxBotToken, baseUrl: "https://signal.arx.pro/bot-api/v1" });
 try {
-  const result = await bot.commandsDelete({
-    "key": "example-commands-delete-1"
-  });
+  const result = await bot.commandsDelete({ key: requestKey });
+  console.log(result);
 } finally {
   await bot.close();
 }
@@ -82,10 +87,12 @@ try {
 {% tab title="Python" %}
 
 ```python
+import os
 from arx_nexo import Client, Config
 
-with Client(Config(base_url="https://signal.arx.pro/bot-api/v1")) as bot:
-    result = bot.commands_delete(key='example-commands-delete-1')
+with Client(Config(token=os.environ["ARX_BOT_TOKEN"], base_url="https://signal.arx.pro/bot-api/v1")) as bot:
+    result = bot.commands_delete(key=os.environ["REQUEST_KEY"])
+    print(result)
 ```
 
 {% endtab %}
@@ -97,10 +104,12 @@ use arx_nexo::{ Client, Config };
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let token = std::env::var("ARX_BOT_TOKEN")?;
-    let config = Config::new(token, "https://signal.arx.pro/bot-api/v1", false)?;
-    let bot = Client::new(config)?;
-    let result = bot.commands_delete(&[], None, Some("example-commands-delete-1")).await?;
+    let arx_bot_token = std::env::var("ARX_BOT_TOKEN")?;
+    let request_key = std::env::var("REQUEST_KEY")?;
+    let bot = Client::new(Config::new(arx_bot_token, "https://signal.arx.pro/bot-api/v1", false)?)?;
+    let query = [];
+    let result = bot.commands_delete(&query, None, Some(&request_key)).await?;
+    println!("{:?}", result);
     Ok(())
 }
 ```
@@ -113,7 +122,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 curl --fail-with-body --max-time 20 -X DELETE \
   "https://signal.arx.pro/bot-api/v1/commands" \
   -H "Authorization: Bearer ${ARX_BOT_TOKEN}" \
-  -H "Idempotency-Key: example-commands-delete-1"
+  -H "Idempotency-Key: ${REQUEST_KEY}"
 ```
 
 {% endtab %}
@@ -162,6 +171,8 @@ HTTP 400 `invalid_parameter` means the scope or language is invalid, or a scope-
 
 ### Example <a href="#example-1" id="example-1"></a>
 
+Set `ARX_BOT_TOKEN` before running this example.
+
 {% tabs %}
 
 {% tab title="TypeScript" %}
@@ -169,9 +180,15 @@ HTTP 400 `invalid_parameter` means the scope or language is invalid, or a scope-
 ```ts
 import { Client } from "@arx/nexo";
 
-const bot = new Client({ baseUrl: "https://signal.arx.pro/bot-api/v1" });
+const arxBotToken = process.env.ARX_BOT_TOKEN;
+if (!arxBotToken) {
+  throw new Error("Set ARX_BOT_TOKEN");
+}
+
+const bot = new Client({ token: arxBotToken, baseUrl: "https://signal.arx.pro/bot-api/v1" });
 try {
   const result = await bot.commandsGet();
+  console.log(result);
 } finally {
   await bot.close();
 }
@@ -182,10 +199,12 @@ try {
 {% tab title="Python" %}
 
 ```python
+import os
 from arx_nexo import Client, Config
 
-with Client(Config(base_url="https://signal.arx.pro/bot-api/v1")) as bot:
+with Client(Config(token=os.environ["ARX_BOT_TOKEN"], base_url="https://signal.arx.pro/bot-api/v1")) as bot:
     result = bot.commands_get()
+    print(result)
 ```
 
 {% endtab %}
@@ -197,10 +216,11 @@ use arx_nexo::{ Client, Config };
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let token = std::env::var("ARX_BOT_TOKEN")?;
-    let config = Config::new(token, "https://signal.arx.pro/bot-api/v1", false)?;
-    let bot = Client::new(config)?;
-    let result = bot.commands_get(&[], None, None).await?;
+    let arx_bot_token = std::env::var("ARX_BOT_TOKEN")?;
+    let bot = Client::new(Config::new(arx_bot_token, "https://signal.arx.pro/bot-api/v1", false)?)?;
+    let query = [];
+    let result = bot.commands_get(&query, None, None).await?;
+    println!("{:?}", result);
     Ok(())
 }
 ```
@@ -281,29 +301,32 @@ HTTP 400 `invalid_parameter` means a command, scope, language, or scope-specific
 
 ### Example <a href="#example-2" id="example-2"></a>
 
-Use a new idempotency key for each new action. Reuse the example key only when retrying this exact request.
+Set `ARX_BOT_TOKEN`, `REQUEST_KEY` before running this example.
 
 {% tabs %}
 
 {% tab title="TypeScript" %}
 
 ```ts
-import { Client } from "@arx/nexo";
+import { Client, type Models } from "@arx/nexo";
 
-const bot = new Client({ baseUrl: "https://signal.arx.pro/bot-api/v1" });
+const arxBotToken = process.env.ARX_BOT_TOKEN;
+const requestKey = process.env.REQUEST_KEY;
+if (!arxBotToken || !requestKey) {
+  throw new Error("Set ARX_BOT_TOKEN, REQUEST_KEY");
+}
+
+const bot = new Client({ token: arxBotToken, baseUrl: "https://signal.arx.pro/bot-api/v1" });
 try {
-  const result = await bot.commandsSet({
-    "body": {
-      "commands": [
-        {
-          "command": "start",
-          "description": "Start",
-          "is_ephemeral": false
-        }
-      ]
-    },
-    "key": "example-commands-set-1"
-  });
+  const body: Models.SetCommands = {
+    "commands": [{
+      "command": "start",
+      "description": "Start",
+      "is_ephemeral": false
+    }]
+  };
+  const result = await bot.commandsSet({ body, key: requestKey });
+  console.log(result);
 } finally {
   await bot.close();
 }
@@ -314,38 +337,39 @@ try {
 {% tab title="Python" %}
 
 ```python
-from arx_nexo import Client, Config
-from arx_nexo import models
+import os
+from arx_nexo import Client, Config, models
 
-with Client(Config(base_url="https://signal.arx.pro/bot-api/v1")) as bot:
-    body = models.SetCommands.model_validate({'commands': [{'command': 'start', 'description': 'Start', 'is_ephemeral': False}]})
-    result = bot.commands_set(body=body, key='example-commands-set-1')
+with Client(Config(token=os.environ["ARX_BOT_TOKEN"], base_url="https://signal.arx.pro/bot-api/v1")) as bot:
+    body = models.SetCommands(
+        commands=[models.Command(command='start', description='Start', is_ephemeral=False)],
+    )
+    result = bot.commands_set(body=body, key=os.environ["REQUEST_KEY"])
+    print(result)
 ```
 
 {% endtab %}
 
 {% tab title="Rust" %}
 
-Add `serde_json = "1"` to your application's `[dependencies]` in `Cargo.toml`.
-
 ```rust
-use arx_nexo::{ Client, Config };
+use arx_nexo::{ Client, Config, models };
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let token = std::env::var("ARX_BOT_TOKEN")?;
-    let config = Config::new(token, "https://signal.arx.pro/bot-api/v1", false)?;
-    let bot = Client::new(config)?;
-    let body: arx_nexo::models::SetCommands = serde_json::from_value(serde_json::json!({
-      "commands": [
-        {
-          "command": "start",
-          "description": "Start",
-          "is_ephemeral": false
-        }
-      ]
-    }))?;
-    let result = bot.commands_set(&[], Some(&body), Some("example-commands-set-1")).await?;
+    let arx_bot_token = std::env::var("ARX_BOT_TOKEN")?;
+    let request_key = std::env::var("REQUEST_KEY")?;
+    let bot = Client::new(Config::new(arx_bot_token, "https://signal.arx.pro/bot-api/v1", false)?)?;
+    let body = models::SetCommands {
+        commands: vec![models::Command {
+            command: "start".to_owned(),
+            description: "Start".to_owned(),
+            is_ephemeral: Some(false),
+        }],
+    };
+    let query = [];
+    let result = bot.commands_set(&query, Some(&body), Some(&request_key)).await?;
+    println!("{:?}", result);
     Ok(())
 }
 ```
@@ -358,7 +382,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 curl --fail-with-body --max-time 20 -X PUT \
   "https://signal.arx.pro/bot-api/v1/commands" \
   -H "Authorization: Bearer ${ARX_BOT_TOKEN}" \
-  -H "Idempotency-Key: example-commands-set-1" \
+  -H "Idempotency-Key: ${REQUEST_KEY}" \
   -H "Content-Type: application/json" \
   --data '{"commands": [{"command": "start", "description": "Start", "is_ephemeral": false}]}'
 ```
@@ -424,6 +448,8 @@ HTTP 400 `invalid_parameter` means a user ID, chat ID, or language is invalid. U
 
 ### Example <a href="#example-3" id="example-3"></a>
 
+Set `ARX_BOT_TOKEN`, `CHAT_ID`, `USER_ID` before running this example.
+
 {% tabs %}
 
 {% tab title="TypeScript" %}
@@ -431,15 +457,21 @@ HTTP 400 `invalid_parameter` means a user ID, chat ID, or language is invalid. U
 ```ts
 import { Client } from "@arx/nexo";
 
-const bot = new Client({ baseUrl: "https://signal.arx.pro/bot-api/v1" });
+const arxBotToken = process.env.ARX_BOT_TOKEN;
+const chatId = process.env.CHAT_ID;
+const userId = process.env.USER_ID;
+if (!arxBotToken || !chatId || !userId) {
+  throw new Error("Set ARX_BOT_TOKEN, CHAT_ID, USER_ID");
+}
+
+const bot = new Client({ token: arxBotToken, baseUrl: "https://signal.arx.pro/bot-api/v1" });
 try {
-  const result = await bot.commandsResolve({
-    "query": {
-      "chat_id": "4398046511200",
-      "user_id": "10000043",
-      "language_code": "en"
-    }
-  });
+  const result = await bot.commandsResolve({ query: {
+    "chat_id": chatId,
+    "user_id": userId,
+    "language_code": "en"
+  } });
+  console.log(result);
 } finally {
   await bot.close();
 }
@@ -450,10 +482,12 @@ try {
 {% tab title="Python" %}
 
 ```python
+import os
 from arx_nexo import Client, Config
 
-with Client(Config(base_url="https://signal.arx.pro/bot-api/v1")) as bot:
-    result = bot.commands_resolve(query={'chat_id': '4398046511200', 'user_id': '10000043', 'language_code': 'en'})
+with Client(Config(token=os.environ["ARX_BOT_TOKEN"], base_url="https://signal.arx.pro/bot-api/v1")) as bot:
+    result = bot.commands_resolve(query={'chat_id': os.environ["CHAT_ID"], 'user_id': os.environ["USER_ID"], 'language_code': 'en'})
+    print(result)
 ```
 
 {% endtab %}
@@ -465,10 +499,13 @@ use arx_nexo::{ Client, Config };
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let token = std::env::var("ARX_BOT_TOKEN")?;
-    let config = Config::new(token, "https://signal.arx.pro/bot-api/v1", false)?;
-    let bot = Client::new(config)?;
-    let result = bot.commands_resolve(&[("chat_id", "4398046511200"), ("user_id", "10000043"), ("language_code", "en")], None, None).await?;
+    let arx_bot_token = std::env::var("ARX_BOT_TOKEN")?;
+    let chat_id = std::env::var("CHAT_ID")?;
+    let user_id = std::env::var("USER_ID")?;
+    let bot = Client::new(Config::new(arx_bot_token, "https://signal.arx.pro/bot-api/v1", false)?)?;
+    let query = [("chat_id", chat_id.as_str()), ("user_id", user_id.as_str()), ("language_code", "en")];
+    let result = bot.commands_resolve(&query, None, None).await?;
+    println!("{:?}", result);
     Ok(())
 }
 ```
@@ -479,7 +516,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 ```sh
 curl --fail-with-body --max-time 20 -X GET \
-  "https://signal.arx.pro/bot-api/v1/commands/resolve?chat_id=4398046511200&user_id=10000043&language_code=en" \
+  "https://signal.arx.pro/bot-api/v1/commands/resolve?chat_id=${CHAT_ID}&user_id=${USER_ID}&language_code=en" \
   -H "Authorization: Bearer ${ARX_BOT_TOKEN}"
 ```
 
@@ -536,6 +573,8 @@ HTTP 400 `invalid_parameter` means `target` is invalid. Use `groups` or `channel
 
 ### Example <a href="#example-4" id="example-4"></a>
 
+Set `ARX_BOT_TOKEN` before running this example.
+
 {% tabs %}
 
 {% tab title="TypeScript" %}
@@ -543,13 +582,17 @@ HTTP 400 `invalid_parameter` means `target` is invalid. Use `groups` or `channel
 ```ts
 import { Client } from "@arx/nexo";
 
-const bot = new Client({ baseUrl: "https://signal.arx.pro/bot-api/v1" });
+const arxBotToken = process.env.ARX_BOT_TOKEN;
+if (!arxBotToken) {
+  throw new Error("Set ARX_BOT_TOKEN");
+}
+
+const bot = new Client({ token: arxBotToken, baseUrl: "https://signal.arx.pro/bot-api/v1" });
 try {
-  const result = await bot.defaultAdminRightsGet({
-    "query": {
-      "target": "groups"
-    }
-  });
+  const result = await bot.defaultAdminRightsGet({ query: {
+    "target": "groups"
+  } });
+  console.log(result);
 } finally {
   await bot.close();
 }
@@ -560,10 +603,12 @@ try {
 {% tab title="Python" %}
 
 ```python
+import os
 from arx_nexo import Client, Config
 
-with Client(Config(base_url="https://signal.arx.pro/bot-api/v1")) as bot:
+with Client(Config(token=os.environ["ARX_BOT_TOKEN"], base_url="https://signal.arx.pro/bot-api/v1")) as bot:
     result = bot.default_admin_rights_get(query={'target': 'groups'})
+    print(result)
 ```
 
 {% endtab %}
@@ -575,10 +620,11 @@ use arx_nexo::{ Client, Config };
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let token = std::env::var("ARX_BOT_TOKEN")?;
-    let config = Config::new(token, "https://signal.arx.pro/bot-api/v1", false)?;
-    let bot = Client::new(config)?;
-    let result = bot.default_admin_rights_get(&[("target", "groups")], None, None).await?;
+    let arx_bot_token = std::env::var("ARX_BOT_TOKEN")?;
+    let bot = Client::new(Config::new(arx_bot_token, "https://signal.arx.pro/bot-api/v1", false)?)?;
+    let query = [("target", "groups")];
+    let result = bot.default_admin_rights_get(&query, None, None).await?;
+    println!("{:?}", result);
     Ok(())
 }
 ```
@@ -644,28 +690,32 @@ HTTP 400 `invalid_parameter` means the target or rights are invalid. Check the a
 
 ### Example <a href="#example-5" id="example-5"></a>
 
-Use a new idempotency key for each new action. Reuse the example key only when retrying this exact request.
+Set `ARX_BOT_TOKEN`, `REQUEST_KEY` before running this example.
 
 {% tabs %}
 
 {% tab title="TypeScript" %}
 
 ```ts
-import { Client } from "@arx/nexo";
+import { Client, type Models } from "@arx/nexo";
 
-const bot = new Client({ baseUrl: "https://signal.arx.pro/bot-api/v1" });
+const arxBotToken = process.env.ARX_BOT_TOKEN;
+const requestKey = process.env.REQUEST_KEY;
+if (!arxBotToken || !requestKey) {
+  throw new Error("Set ARX_BOT_TOKEN, REQUEST_KEY");
+}
+
+const bot = new Client({ token: arxBotToken, baseUrl: "https://signal.arx.pro/bot-api/v1" });
 try {
-  const result = await bot.defaultAdminRightsSet({
-    "query": {
-      "target": "groups"
-    },
-    "body": {
-      "rights": {
-        "can_delete_messages": true
-      }
-    },
-    "key": "example-default_admin_rights-set-1"
-  });
+  const body: Models.SetAdminRights = {
+    "rights": {
+      "can_delete_messages": true
+    }
+  };
+  const result = await bot.defaultAdminRightsSet({ query: {
+    "target": "groups"
+  }, body, key: requestKey });
+  console.log(result);
 } finally {
   await bot.close();
 }
@@ -676,34 +726,54 @@ try {
 {% tab title="Python" %}
 
 ```python
-from arx_nexo import Client, Config
-from arx_nexo import models
+import os
+from arx_nexo import Client, Config, models
 
-with Client(Config(base_url="https://signal.arx.pro/bot-api/v1")) as bot:
-    body = models.SetAdminRights.model_validate({'rights': {'can_delete_messages': True}})
-    result = bot.default_admin_rights_set(query={'target': 'groups'}, body=body, key='example-default_admin_rights-set-1')
+with Client(Config(token=os.environ["ARX_BOT_TOKEN"], base_url="https://signal.arx.pro/bot-api/v1")) as bot:
+    body = models.SetAdminRights(
+        rights=models.AdminRights(root=models.AdminRightsValue(can_delete_messages=True)),
+    )
+    result = bot.default_admin_rights_set(query={'target': 'groups'}, body=body, key=os.environ["REQUEST_KEY"])
+    print(result)
 ```
 
 {% endtab %}
 
 {% tab title="Rust" %}
 
-Add `serde_json = "1"` to your application's `[dependencies]` in `Cargo.toml`.
-
 ```rust
-use arx_nexo::{ Client, Config };
+use arx_nexo::{ Client, Config, models };
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let token = std::env::var("ARX_BOT_TOKEN")?;
-    let config = Config::new(token, "https://signal.arx.pro/bot-api/v1", false)?;
-    let bot = Client::new(config)?;
-    let body: arx_nexo::models::SetAdminRights = serde_json::from_value(serde_json::json!({
-      "rights": {
-        "can_delete_messages": true
-      }
-    }))?;
-    let result = bot.default_admin_rights_set(&[("target", "groups")], Some(&body), Some("example-default_admin_rights-set-1")).await?;
+    let arx_bot_token = std::env::var("ARX_BOT_TOKEN")?;
+    let request_key = std::env::var("REQUEST_KEY")?;
+    let bot = Client::new(Config::new(arx_bot_token, "https://signal.arx.pro/bot-api/v1", false)?)?;
+    let body = models::SetAdminRights {
+        rights: Some(models::AdminRightsValue {
+            can_change_info: None,
+            can_delete_messages: Some(true),
+            can_delete_stories: None,
+            can_edit_messages: None,
+            can_edit_stories: None,
+            can_invite_users: None,
+            can_manage_chat: None,
+            can_manage_direct_messages: None,
+            can_manage_tags: None,
+            can_manage_topics: None,
+            can_manage_video_chats: None,
+            can_pin_messages: None,
+            can_post_messages: None,
+            can_post_stories: None,
+            can_promote_members: None,
+            can_restrict_members: None,
+            can_send_welcome_messages: None,
+            is_anonymous: None,
+        }),
+    };
+    let query = [("target", "groups")];
+    let result = bot.default_admin_rights_set(&query, Some(&body), Some(&request_key)).await?;
+    println!("{:?}", result);
     Ok(())
 }
 ```
@@ -716,7 +786,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 curl --fail-with-body --max-time 20 -X PUT \
   "https://signal.arx.pro/bot-api/v1/default_admin_rights?target=groups" \
   -H "Authorization: Bearer ${ARX_BOT_TOKEN}" \
-  -H "Idempotency-Key: example-default_admin_rights-set-1" \
+  -H "Idempotency-Key: ${REQUEST_KEY}" \
   -H "Content-Type: application/json" \
   --data '{"rights": {"can_delete_messages": true}}'
 ```
@@ -764,6 +834,8 @@ HTTP 400 `invalid_parameter` means the chat selection is invalid. HTTP 404 `chat
 
 ### Example <a href="#example-6" id="example-6"></a>
 
+Set `ARX_BOT_TOKEN` before running this example.
+
 {% tabs %}
 
 {% tab title="TypeScript" %}
@@ -771,9 +843,15 @@ HTTP 400 `invalid_parameter` means the chat selection is invalid. HTTP 404 `chat
 ```ts
 import { Client } from "@arx/nexo";
 
-const bot = new Client({ baseUrl: "https://signal.arx.pro/bot-api/v1" });
+const arxBotToken = process.env.ARX_BOT_TOKEN;
+if (!arxBotToken) {
+  throw new Error("Set ARX_BOT_TOKEN");
+}
+
+const bot = new Client({ token: arxBotToken, baseUrl: "https://signal.arx.pro/bot-api/v1" });
 try {
   const result = await bot.menuButtonGet();
+  console.log(result);
 } finally {
   await bot.close();
 }
@@ -784,10 +862,12 @@ try {
 {% tab title="Python" %}
 
 ```python
+import os
 from arx_nexo import Client, Config
 
-with Client(Config(base_url="https://signal.arx.pro/bot-api/v1")) as bot:
+with Client(Config(token=os.environ["ARX_BOT_TOKEN"], base_url="https://signal.arx.pro/bot-api/v1")) as bot:
     result = bot.menu_button_get()
+    print(result)
 ```
 
 {% endtab %}
@@ -799,10 +879,11 @@ use arx_nexo::{ Client, Config };
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let token = std::env::var("ARX_BOT_TOKEN")?;
-    let config = Config::new(token, "https://signal.arx.pro/bot-api/v1", false)?;
-    let bot = Client::new(config)?;
-    let result = bot.menu_button_get(&[], None, None).await?;
+    let arx_bot_token = std::env::var("ARX_BOT_TOKEN")?;
+    let bot = Client::new(Config::new(arx_bot_token, "https://signal.arx.pro/bot-api/v1", false)?)?;
+    let query = [];
+    let result = bot.menu_button_get(&query, None, None).await?;
+    println!("{:?}", result);
     Ok(())
 }
 ```
@@ -870,23 +951,28 @@ HTTP 400 `invalid_parameter` means the menu type or chat selection is invalid. H
 
 ### Example <a href="#example-7" id="example-7"></a>
 
-Use a new idempotency key for each new action. Reuse the example key only when retrying this exact request.
+Set `ARX_BOT_TOKEN`, `REQUEST_KEY` before running this example.
 
 {% tabs %}
 
 {% tab title="TypeScript" %}
 
 ```ts
-import { Client } from "@arx/nexo";
+import { Client, type Models } from "@arx/nexo";
 
-const bot = new Client({ baseUrl: "https://signal.arx.pro/bot-api/v1" });
+const arxBotToken = process.env.ARX_BOT_TOKEN;
+const requestKey = process.env.REQUEST_KEY;
+if (!arxBotToken || !requestKey) {
+  throw new Error("Set ARX_BOT_TOKEN, REQUEST_KEY");
+}
+
+const bot = new Client({ token: arxBotToken, baseUrl: "https://signal.arx.pro/bot-api/v1" });
 try {
-  const result = await bot.menuButtonSet({
-    "body": {
-      "type": "commands"
-    },
-    "key": "example-menu_button-set-1"
-  });
+  const body: Models.MenuButton = {
+    "type": "commands"
+  };
+  const result = await bot.menuButtonSet({ body, key: requestKey });
+  console.log(result);
 } finally {
   await bot.close();
 }
@@ -897,32 +983,33 @@ try {
 {% tab title="Python" %}
 
 ```python
-from arx_nexo import Client, Config
-from arx_nexo import models
+import os
+from arx_nexo import Client, Config, models
 
-with Client(Config(base_url="https://signal.arx.pro/bot-api/v1")) as bot:
-    body = models.MenuButton.model_validate({'type': 'commands'})
-    result = bot.menu_button_set(body=body, key='example-menu_button-set-1')
+with Client(Config(token=os.environ["ARX_BOT_TOKEN"], base_url="https://signal.arx.pro/bot-api/v1")) as bot:
+    body = models.MenuButton(type='commands')
+    result = bot.menu_button_set(body=body, key=os.environ["REQUEST_KEY"])
+    print(result)
 ```
 
 {% endtab %}
 
 {% tab title="Rust" %}
 
-Add `serde_json = "1"` to your application's `[dependencies]` in `Cargo.toml`.
-
 ```rust
-use arx_nexo::{ Client, Config };
+use arx_nexo::{ Client, Config, models };
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let token = std::env::var("ARX_BOT_TOKEN")?;
-    let config = Config::new(token, "https://signal.arx.pro/bot-api/v1", false)?;
-    let bot = Client::new(config)?;
-    let body: arx_nexo::models::MenuButton = serde_json::from_value(serde_json::json!({
-      "type": "commands"
-    }))?;
-    let result = bot.menu_button_set(&[], Some(&body), Some("example-menu_button-set-1")).await?;
+    let arx_bot_token = std::env::var("ARX_BOT_TOKEN")?;
+    let request_key = std::env::var("REQUEST_KEY")?;
+    let bot = Client::new(Config::new(arx_bot_token, "https://signal.arx.pro/bot-api/v1", false)?)?;
+    let body = models::MenuButton {
+        r#type: models::MenuButtonType::Commands,
+    };
+    let query = [];
+    let result = bot.menu_button_set(&query, Some(&body), Some(&request_key)).await?;
+    println!("{:?}", result);
     Ok(())
 }
 ```
@@ -935,7 +1022,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 curl --fail-with-body --max-time 20 -X PUT \
   "https://signal.arx.pro/bot-api/v1/menu_button" \
   -H "Authorization: Bearer ${ARX_BOT_TOKEN}" \
-  -H "Idempotency-Key: example-menu_button-set-1" \
+  -H "Idempotency-Key: ${REQUEST_KEY}" \
   -H "Content-Type: application/json" \
   --data '{"type": "commands"}'
 ```
@@ -983,6 +1070,8 @@ HTTP 400 `invalid_parameter` can identify an invalid `language_code`. Use a vali
 
 ### Example <a href="#example-8" id="example-8"></a>
 
+Set `ARX_BOT_TOKEN` before running this example.
+
 {% tabs %}
 
 {% tab title="TypeScript" %}
@@ -990,9 +1079,15 @@ HTTP 400 `invalid_parameter` can identify an invalid `language_code`. Use a vali
 ```ts
 import { Client } from "@arx/nexo";
 
-const bot = new Client({ baseUrl: "https://signal.arx.pro/bot-api/v1" });
+const arxBotToken = process.env.ARX_BOT_TOKEN;
+if (!arxBotToken) {
+  throw new Error("Set ARX_BOT_TOKEN");
+}
+
+const bot = new Client({ token: arxBotToken, baseUrl: "https://signal.arx.pro/bot-api/v1" });
 try {
   const result = await bot.profileGet();
+  console.log(result);
 } finally {
   await bot.close();
 }
@@ -1003,10 +1098,12 @@ try {
 {% tab title="Python" %}
 
 ```python
+import os
 from arx_nexo import Client, Config
 
-with Client(Config(base_url="https://signal.arx.pro/bot-api/v1")) as bot:
+with Client(Config(token=os.environ["ARX_BOT_TOKEN"], base_url="https://signal.arx.pro/bot-api/v1")) as bot:
     result = bot.profile_get()
+    print(result)
 ```
 
 {% endtab %}
@@ -1018,10 +1115,11 @@ use arx_nexo::{ Client, Config };
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let token = std::env::var("ARX_BOT_TOKEN")?;
-    let config = Config::new(token, "https://signal.arx.pro/bot-api/v1", false)?;
-    let bot = Client::new(config)?;
-    let result = bot.profile_get(&[], None, None).await?;
+    let arx_bot_token = std::env::var("ARX_BOT_TOKEN")?;
+    let bot = Client::new(Config::new(arx_bot_token, "https://signal.arx.pro/bot-api/v1", false)?)?;
+    let query = [];
+    let result = bot.profile_get(&query, None, None).await?;
+    println!("{:?}", result);
     Ok(())
 }
 ```
@@ -1047,13 +1145,13 @@ Example success response (HTTP 200). The SDK methods return `result`:
   "ok": true,
   "result": {
     "default": {
-      "description": "Example bot",
-      "name": "Example",
+      "description": "Acme Support",
+      "name": "Acme Support",
       "short_description": ""
     },
     "localizations": {
       "en": {
-        "description": "Example bot",
+        "description": "Acme Support",
         "name": null,
         "short_description": null
       }
@@ -1103,24 +1201,29 @@ HTTP 400 `invalid_parameter` identifies an invalid language or text field. Keep 
 
 ### Example <a href="#example-9" id="example-9"></a>
 
-Use a new idempotency key for each new action. Reuse the example key only when retrying this exact request.
+Set `ARX_BOT_TOKEN`, `REQUEST_KEY` before running this example.
 
 {% tabs %}
 
 {% tab title="TypeScript" %}
 
 ```ts
-import { Client } from "@arx/nexo";
+import { Client, type Models } from "@arx/nexo";
 
-const bot = new Client({ baseUrl: "https://signal.arx.pro/bot-api/v1" });
+const arxBotToken = process.env.ARX_BOT_TOKEN;
+const requestKey = process.env.REQUEST_KEY;
+if (!arxBotToken || !requestKey) {
+  throw new Error("Set ARX_BOT_TOKEN, REQUEST_KEY");
+}
+
+const bot = new Client({ token: arxBotToken, baseUrl: "https://signal.arx.pro/bot-api/v1" });
 try {
-  const result = await bot.profileUpdate({
-    "body": {
-      "language_code": "en",
-      "description": "Example bot"
-    },
-    "key": "example-profile-update-1"
-  });
+  const body: Models.PatchProfile = {
+    "language_code": "en",
+    "description": "Acme Support"
+  };
+  const result = await bot.profileUpdate({ body, key: requestKey });
+  console.log(result);
 } finally {
   await bot.close();
 }
@@ -1131,33 +1234,36 @@ try {
 {% tab title="Python" %}
 
 ```python
-from arx_nexo import Client, Config
-from arx_nexo import models
+import os
+from arx_nexo import Client, Config, models
 
-with Client(Config(base_url="https://signal.arx.pro/bot-api/v1")) as bot:
-    body = models.PatchProfile.model_validate({'language_code': 'en', 'description': 'Example bot'})
-    result = bot.profile_update(body=body, key='example-profile-update-1')
+with Client(Config(token=os.environ["ARX_BOT_TOKEN"], base_url="https://signal.arx.pro/bot-api/v1")) as bot:
+    body = models.PatchProfile(language_code='en', description='Acme Support')
+    result = bot.profile_update(body=body, key=os.environ["REQUEST_KEY"])
+    print(result)
 ```
 
 {% endtab %}
 
 {% tab title="Rust" %}
 
-Add `serde_json = "1"` to your application's `[dependencies]` in `Cargo.toml`.
-
 ```rust
-use arx_nexo::{ Client, Config };
+use arx_nexo::{ Client, Config, models };
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let token = std::env::var("ARX_BOT_TOKEN")?;
-    let config = Config::new(token, "https://signal.arx.pro/bot-api/v1", false)?;
-    let bot = Client::new(config)?;
-    let body: arx_nexo::models::PatchProfile = serde_json::from_value(serde_json::json!({
-      "language_code": "en",
-      "description": "Example bot"
-    }))?;
-    let result = bot.profile_update(&[], Some(&body), Some("example-profile-update-1")).await?;
+    let arx_bot_token = std::env::var("ARX_BOT_TOKEN")?;
+    let request_key = std::env::var("REQUEST_KEY")?;
+    let bot = Client::new(Config::new(arx_bot_token, "https://signal.arx.pro/bot-api/v1", false)?)?;
+    let body = models::PatchProfile {
+        description: arx_nexo::presence::Presence::Value("Acme Support".to_owned()),
+        language_code: Some("en".to_owned()),
+        name: arx_nexo::presence::Presence::Unset,
+        short_description: arx_nexo::presence::Presence::Unset,
+    };
+    let query = [];
+    let result = bot.profile_update(&query, Some(&body), Some(&request_key)).await?;
+    println!("{:?}", result);
     Ok(())
 }
 ```
@@ -1170,9 +1276,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 curl --fail-with-body --max-time 20 -X PATCH \
   "https://signal.arx.pro/bot-api/v1/profile" \
   -H "Authorization: Bearer ${ARX_BOT_TOKEN}" \
-  -H "Idempotency-Key: example-profile-update-1" \
+  -H "Idempotency-Key: ${REQUEST_KEY}" \
   -H "Content-Type: application/json" \
-  --data '{"language_code": "en", "description": "Example bot"}'
+  --data '{"language_code": "en", "description": "Acme Support"}'
 ```
 
 {% endtab %}
@@ -1186,7 +1292,7 @@ Example success response (HTTP 200). The SDK methods return `result`:
   "ok": true,
   "result": {
     "config_version": "2",
-    "description": "Example bot",
+    "description": "Acme Support",
     "language_code": "en",
     "name": null,
     "profile_version": "2",
@@ -1229,21 +1335,26 @@ HTTP 403 `owner_not_eligible` means the bot owner must resolve their account eli
 
 ### Example <a href="#example-10" id="example-10"></a>
 
-Use a new idempotency key for each new action. Reuse the example key only when retrying this exact request.
+Set `ARX_BOT_TOKEN`, `REQUEST_KEY` before running this example.
 
 {% tabs %}
 
 {% tab title="TypeScript" %}
 
 ```ts
-import { Client } from "@arx/nexo";
+import { Client, type Models } from "@arx/nexo";
 
-const bot = new Client({ baseUrl: "https://signal.arx.pro/bot-api/v1" });
+const arxBotToken = process.env.ARX_BOT_TOKEN;
+const requestKey = process.env.REQUEST_KEY;
+if (!arxBotToken || !requestKey) {
+  throw new Error("Set ARX_BOT_TOKEN, REQUEST_KEY");
+}
+
+const bot = new Client({ token: arxBotToken, baseUrl: "https://signal.arx.pro/bot-api/v1" });
 try {
-  const result = await bot.profileDeletePhoto({
-    "body": {},
-    "key": "example-profile-delete_photo-1"
-  });
+  const body: Models.Empty = {};
+  const result = await bot.profileDeletePhoto({ body, key: requestKey });
+  console.log(result);
 } finally {
   await bot.close();
 }
@@ -1254,30 +1365,31 @@ try {
 {% tab title="Python" %}
 
 ```python
-from arx_nexo import Client, Config
-from arx_nexo import models
+import os
+from arx_nexo import Client, Config, models
 
-with Client(Config(base_url="https://signal.arx.pro/bot-api/v1")) as bot:
-    body = models.Empty.model_validate({})
-    result = bot.profile_delete_photo(body=body, key='example-profile-delete_photo-1')
+with Client(Config(token=os.environ["ARX_BOT_TOKEN"], base_url="https://signal.arx.pro/bot-api/v1")) as bot:
+    body = models.Empty(root={})
+    result = bot.profile_delete_photo(body=body, key=os.environ["REQUEST_KEY"])
+    print(result)
 ```
 
 {% endtab %}
 
 {% tab title="Rust" %}
 
-Add `serde_json = "1"` to your application's `[dependencies]` in `Cargo.toml`.
-
 ```rust
-use arx_nexo::{ Client, Config };
+use arx_nexo::{ Client, Config, models };
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let token = std::env::var("ARX_BOT_TOKEN")?;
-    let config = Config::new(token, "https://signal.arx.pro/bot-api/v1", false)?;
-    let bot = Client::new(config)?;
-    let body: arx_nexo::models::Empty = serde_json::from_value(serde_json::json!({}))?;
-    let result = bot.profile_delete_photo(&[], Some(&body), Some("example-profile-delete_photo-1")).await?;
+    let arx_bot_token = std::env::var("ARX_BOT_TOKEN")?;
+    let request_key = std::env::var("REQUEST_KEY")?;
+    let bot = Client::new(Config::new(arx_bot_token, "https://signal.arx.pro/bot-api/v1", false)?)?;
+    let body = std::collections::BTreeMap::new();
+    let query = [];
+    let result = bot.profile_delete_photo(&query, Some(&body), Some(&request_key)).await?;
+    println!("{:?}", result);
     Ok(())
 }
 ```
@@ -1290,7 +1402,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 curl --fail-with-body --max-time 20 -X DELETE \
   "https://signal.arx.pro/bot-api/v1/profile/photo" \
   -H "Authorization: Bearer ${ARX_BOT_TOKEN}" \
-  -H "Idempotency-Key: example-profile-delete_photo-1" \
+  -H "Idempotency-Key: ${REQUEST_KEY}" \
   -H "Content-Type: application/json" \
   --data '{}'
 ```
@@ -1346,27 +1458,32 @@ HTTP 413 `file_too_large` means the avatar exceeds its size limit. HTTP 400 `fil
 
 ### Example <a href="#example-11" id="example-11"></a>
 
-Use your own local file at the path shown below. The SDK sends a JSON `payload` part and the named binary part in one multipart request. Use a new idempotency key for each new action. Reuse the example key only when retrying this exact request.
+Set `ARX_BOT_TOKEN`, `FILE_PATH`, `REQUEST_KEY` before running this example. Set `FILE_PATH` to a PNG avatar you own.
 
 {% tabs %}
 
 {% tab title="TypeScript" %}
 
 ```ts
-import { Client, UploadSource } from "@arx/nexo";
+import { Client, type Models, UploadSource } from "@arx/nexo";
 
-const bot = new Client({ baseUrl: "https://signal.arx.pro/bot-api/v1" });
+const arxBotToken = process.env.ARX_BOT_TOKEN;
+const filePath = process.env.FILE_PATH;
+const requestKey = process.env.REQUEST_KEY;
+if (!arxBotToken || !filePath || !requestKey) {
+  throw new Error("Set ARX_BOT_TOKEN, FILE_PATH, REQUEST_KEY");
+}
+
+const bot = new Client({ token: arxBotToken, baseUrl: "https://signal.arx.pro/bot-api/v1" });
 try {
-  const result = await bot.profileSetPhoto({
-    body: {
-      "type": "static",
-      "photo": {
-        "attach": "photo"
-      }
-    },
-    files: { "photo": UploadSource.fromPath("./avatar.png", { contentType: "image/png" }) },
-    key: "example-profile-set_photo-1",
-  });
+  const body: Models.SetProfilePhoto = {
+    "type": "static",
+    "photo": {
+      "attach": "photo"
+    }
+  };
+  const result = await bot.profileSetPhoto({ body, files: { "photo": UploadSource.fromPath(filePath, { contentType: "image/png" }) }, key: requestKey });
+  console.log(result);
 } finally {
   await bot.close();
 }
@@ -1377,35 +1494,41 @@ try {
 {% tab title="Python" %}
 
 ```python
-from arx_nexo import Client, Config, UploadSource
-from arx_nexo import models
+import os
+from arx_nexo import Client, Config, models, UploadSource
 
-with Client(Config(base_url="https://signal.arx.pro/bot-api/v1")) as bot:
-    body = models.SetProfilePhoto.model_validate({'type': 'static', 'photo': {'attach': 'photo'}})
-    result = bot.profile_set_photo(body=body, files={'photo': UploadSource.from_path('./avatar.png', content_type='image/png')}, key='example-profile-set_photo-1')
+with Client(Config(token=os.environ["ARX_BOT_TOKEN"], base_url="https://signal.arx.pro/bot-api/v1")) as bot:
+    body = models.SetProfilePhoto(
+        root=models.SetProfilePhotoVariant1(
+            type='static',
+            photo=models.SetProfilePhotoVariant1Photo(attach='photo'),
+        ),
+    )
+    result = bot.profile_set_photo(body=body, files={'photo': UploadSource.from_path(os.environ["FILE_PATH"], content_type='image/png')}, key=os.environ["REQUEST_KEY"])
+    print(result)
 ```
 
 {% endtab %}
 
 {% tab title="Rust" %}
 
-Add `serde_json = "1"` to your application's `[dependencies]` in `Cargo.toml`.
-
 ```rust
-use arx_nexo::{ Client, Config, UploadSource, UploadPart };
+use arx_nexo::{ Client, Config, models, UploadSource, UploadPart };
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let token = std::env::var("ARX_BOT_TOKEN")?;
-    let config = Config::new(token, "https://signal.arx.pro/bot-api/v1", false)?;
-    let bot = Client::new(config)?;
-    let body: arx_nexo::models::SetProfilePhoto = serde_json::from_value(serde_json::json!({
-      "type": "static",
-      "photo": {
-        "attach": "photo"
-      }
-    }))?;
-    let result = bot.profile_set_photo(&body, vec![UploadPart::new("photo", UploadSource::from_path("./avatar.png")?.with_content_type("image/png")?)?], Some("example-profile-set_photo-1")).await?;
+    let arx_bot_token = std::env::var("ARX_BOT_TOKEN")?;
+    let file_path = std::env::var("FILE_PATH")?;
+    let request_key = std::env::var("REQUEST_KEY")?;
+    let bot = Client::new(Config::new(arx_bot_token, "https://signal.arx.pro/bot-api/v1", false)?)?;
+    let body = models::SetProfilePhoto::SetProfilePhotoVariant1(Box::new(models::SetProfilePhotoVariant1 {
+        photo: models::SetProfilePhotoVariant1Photo {
+            attach: "photo".to_owned(),
+        },
+        r#type: models::SetProfilePhotoVariant1Type::Static,
+    }));
+    let result = bot.profile_set_photo(&body, vec![UploadPart::new("photo", UploadSource::from_path(&file_path)?.with_content_type("image/png")?)?], Some(&request_key)).await?;
+    println!("{:?}", result);
     Ok(())
 }
 ```
@@ -1418,9 +1541,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 curl --fail-with-body --max-time 3600 -X PUT \
   "https://signal.arx.pro/bot-api/v1/profile/photo" \
   -H "Authorization: Bearer ${ARX_BOT_TOKEN}" \
-  -H "Idempotency-Key: example-profile-set_photo-1" \
+  -H "Idempotency-Key: ${REQUEST_KEY}" \
   -F 'payload={"type": "static", "photo": {"attach": "photo"}};type=application/json' \
-  -F 'photo=@./avatar.png;type=image/png'
+  -F "photo=@${FILE_PATH};type=image/png"
 ```
 
 {% endtab %}

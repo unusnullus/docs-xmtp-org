@@ -45,6 +45,8 @@ HTTP 409 `polling_conflict` means another poll is active. HTTP 409 `webhook_acti
 
 ### Example <a href="#example" id="example"></a>
 
+Set `ARX_BOT_TOKEN` before running this example.
+
 {% tabs %}
 
 {% tab title="TypeScript" %}
@@ -52,14 +54,18 @@ HTTP 409 `polling_conflict` means another poll is active. HTTP 409 `webhook_acti
 ```ts
 import { Client } from "@arx/nexo";
 
-const bot = new Client({ baseUrl: "https://signal.arx.pro/bot-api/v1" });
+const arxBotToken = process.env.ARX_BOT_TOKEN;
+if (!arxBotToken) {
+  throw new Error("Set ARX_BOT_TOKEN");
+}
+
+const bot = new Client({ token: arxBotToken, baseUrl: "https://signal.arx.pro/bot-api/v1" });
 try {
-  const result = await bot.updatesGet({
-    "query": {
-      "timeout_seconds": 30,
-      "limit": 100
-    }
-  });
+  const result = await bot.updatesGet({ query: {
+    "timeout_seconds": 30,
+    "limit": 100
+  } });
+  console.log(result);
 } finally {
   await bot.close();
 }
@@ -70,10 +76,12 @@ try {
 {% tab title="Python" %}
 
 ```python
+import os
 from arx_nexo import Client, Config
 
-with Client(Config(base_url="https://signal.arx.pro/bot-api/v1")) as bot:
+with Client(Config(token=os.environ["ARX_BOT_TOKEN"], base_url="https://signal.arx.pro/bot-api/v1")) as bot:
     result = bot.updates_get(timeout_seconds=30, limit=100)
+    print(result)
 ```
 
 {% endtab %}
@@ -85,10 +93,11 @@ use arx_nexo::{ Client, Config };
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let token = std::env::var("ARX_BOT_TOKEN")?;
-    let config = Config::new(token, "https://signal.arx.pro/bot-api/v1", false)?;
-    let bot = Client::new(config)?;
-    let result = bot.updates_get(&[("timeout_seconds", "30"), ("limit", "100")], None, None).await?;
+    let arx_bot_token = std::env::var("ARX_BOT_TOKEN")?;
+    let bot = Client::new(Config::new(arx_bot_token, "https://signal.arx.pro/bot-api/v1", false)?)?;
+    let query = [("timeout_seconds", "30"), ("limit", "100")];
+    let result = bot.updates_get(&query, None, None).await?;
+    println!("{:?}", result);
     Ok(())
 }
 ```
@@ -134,8 +143,8 @@ Example success response (HTTP 200). The SDK methods return `result`:
           "sender_user": {
             "id": "10000043",
             "is_bot": false,
-            "name": "Example user",
-            "username": "EXAMPLEUSER"
+            "name": "Ana López",
+            "username": "ANALOPEZ"
           },
           "sent_at": "2026-10-11T12:00:00Z",
           "silent": false,
@@ -179,7 +188,7 @@ HTTP 409 `idempotency_key_reused` means the same key was used for different webh
 
 ### Example <a href="#example-1" id="example-1"></a>
 
-Use a new idempotency key for each new action. Reuse the example key only when retrying this exact request.
+Set `ARX_BOT_TOKEN`, `REQUEST_KEY` before running this example.
 
 {% tabs %}
 
@@ -188,11 +197,16 @@ Use a new idempotency key for each new action. Reuse the example key only when r
 ```ts
 import { Client } from "@arx/nexo";
 
-const bot = new Client({ baseUrl: "https://signal.arx.pro/bot-api/v1" });
+const arxBotToken = process.env.ARX_BOT_TOKEN;
+const requestKey = process.env.REQUEST_KEY;
+if (!arxBotToken || !requestKey) {
+  throw new Error("Set ARX_BOT_TOKEN, REQUEST_KEY");
+}
+
+const bot = new Client({ token: arxBotToken, baseUrl: "https://signal.arx.pro/bot-api/v1" });
 try {
-  const result = await bot.webhookDelete({
-    "key": "example-webhook-delete-1"
-  });
+  const result = await bot.webhookDelete({ key: requestKey });
+  console.log(result);
 } finally {
   await bot.close();
 }
@@ -203,10 +217,12 @@ try {
 {% tab title="Python" %}
 
 ```python
+import os
 from arx_nexo import Client, Config
 
-with Client(Config(base_url="https://signal.arx.pro/bot-api/v1")) as bot:
-    result = bot.webhook_delete(key='example-webhook-delete-1')
+with Client(Config(token=os.environ["ARX_BOT_TOKEN"], base_url="https://signal.arx.pro/bot-api/v1")) as bot:
+    result = bot.webhook_delete(key=os.environ["REQUEST_KEY"])
+    print(result)
 ```
 
 {% endtab %}
@@ -218,10 +234,12 @@ use arx_nexo::{ Client, Config };
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let token = std::env::var("ARX_BOT_TOKEN")?;
-    let config = Config::new(token, "https://signal.arx.pro/bot-api/v1", false)?;
-    let bot = Client::new(config)?;
-    let result = bot.webhook_delete(&[], None, Some("example-webhook-delete-1")).await?;
+    let arx_bot_token = std::env::var("ARX_BOT_TOKEN")?;
+    let request_key = std::env::var("REQUEST_KEY")?;
+    let bot = Client::new(Config::new(arx_bot_token, "https://signal.arx.pro/bot-api/v1", false)?)?;
+    let query = [];
+    let result = bot.webhook_delete(&query, None, Some(&request_key)).await?;
+    println!("{:?}", result);
     Ok(())
 }
 ```
@@ -234,7 +252,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 curl --fail-with-body --max-time 20 -X DELETE \
   "https://signal.arx.pro/bot-api/v1/webhook" \
   -H "Authorization: Bearer ${ARX_BOT_TOKEN}" \
-  -H "Idempotency-Key: example-webhook-delete-1"
+  -H "Idempotency-Key: ${REQUEST_KEY}"
 ```
 
 {% endtab %}
@@ -278,6 +296,8 @@ HTTP 400 `invalid_parameter` means the status request included an unsupported qu
 
 ### Example <a href="#example-2" id="example-2"></a>
 
+Set `ARX_BOT_TOKEN` before running this example.
+
 {% tabs %}
 
 {% tab title="TypeScript" %}
@@ -285,9 +305,15 @@ HTTP 400 `invalid_parameter` means the status request included an unsupported qu
 ```ts
 import { Client } from "@arx/nexo";
 
-const bot = new Client({ baseUrl: "https://signal.arx.pro/bot-api/v1" });
+const arxBotToken = process.env.ARX_BOT_TOKEN;
+if (!arxBotToken) {
+  throw new Error("Set ARX_BOT_TOKEN");
+}
+
+const bot = new Client({ token: arxBotToken, baseUrl: "https://signal.arx.pro/bot-api/v1" });
 try {
   const result = await bot.webhookGet();
+  console.log(result);
 } finally {
   await bot.close();
 }
@@ -298,10 +324,12 @@ try {
 {% tab title="Python" %}
 
 ```python
+import os
 from arx_nexo import Client, Config
 
-with Client(Config(base_url="https://signal.arx.pro/bot-api/v1")) as bot:
+with Client(Config(token=os.environ["ARX_BOT_TOKEN"], base_url="https://signal.arx.pro/bot-api/v1")) as bot:
     result = bot.webhook_get()
+    print(result)
 ```
 
 {% endtab %}
@@ -313,10 +341,11 @@ use arx_nexo::{ Client, Config };
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let token = std::env::var("ARX_BOT_TOKEN")?;
-    let config = Config::new(token, "https://signal.arx.pro/bot-api/v1", false)?;
-    let bot = Client::new(config)?;
-    let result = bot.webhook_get(&[], None, None).await?;
+    let arx_bot_token = std::env::var("ARX_BOT_TOKEN")?;
+    let bot = Client::new(Config::new(arx_bot_token, "https://signal.arx.pro/bot-api/v1", false)?)?;
+    let query = [];
+    let result = bot.webhook_get(&query, None, None).await?;
+    println!("{:?}", result);
     Ok(())
 }
 ```
@@ -409,24 +438,30 @@ HTTP 400 `invalid_parameter` can identify an invalid URL, address, certificate, 
 
 ### Example <a href="#example-3" id="example-3"></a>
 
-Use a new idempotency key for each new action. Reuse the example key only when retrying this exact request.
+Set `ARX_BOT_TOKEN`, `REQUEST_KEY`, `WEBHOOK_URL` before running this example.
 
 {% tabs %}
 
 {% tab title="TypeScript" %}
 
 ```ts
-import { Client } from "@arx/nexo";
+import { Client, type Models } from "@arx/nexo";
 
-const bot = new Client({ baseUrl: "https://signal.arx.pro/bot-api/v1" });
+const arxBotToken = process.env.ARX_BOT_TOKEN;
+const requestKey = process.env.REQUEST_KEY;
+const webhookUrl = process.env.WEBHOOK_URL;
+if (!arxBotToken || !requestKey || !webhookUrl) {
+  throw new Error("Set ARX_BOT_TOKEN, REQUEST_KEY, WEBHOOK_URL");
+}
+
+const bot = new Client({ token: arxBotToken, baseUrl: "https://signal.arx.pro/bot-api/v1" });
 try {
-  const result = await bot.webhookSet({
-    "body": {
-      "max_connections": 40,
-      "url": "https://example.com/updates"
-    },
-    "key": "example-webhook-set-1"
-  });
+  const body: Models.SetWebhook = {
+    "max_connections": 40,
+    "url": webhookUrl
+  };
+  const result = await bot.webhookSet({ body, key: requestKey });
+  console.log(result);
 } finally {
   await bot.close();
 }
@@ -437,33 +472,41 @@ try {
 {% tab title="Python" %}
 
 ```python
-from arx_nexo import Client, Config
-from arx_nexo import models
+import os
+from arx_nexo import Client, Config, models
 
-with Client(Config(base_url="https://signal.arx.pro/bot-api/v1")) as bot:
-    body = models.SetWebhook.model_validate({'max_connections': 40, 'url': 'https://example.com/updates'})
-    result = bot.webhook_set(body=body, key='example-webhook-set-1')
+with Client(Config(token=os.environ["ARX_BOT_TOKEN"], base_url="https://signal.arx.pro/bot-api/v1")) as bot:
+    body = models.SetWebhook(max_connections=40, url=os.environ["WEBHOOK_URL"])
+    result = bot.webhook_set(body=body, key=os.environ["REQUEST_KEY"])
+    print(result)
 ```
 
 {% endtab %}
 
 {% tab title="Rust" %}
 
-Add `serde_json = "1"` to your application's `[dependencies]` in `Cargo.toml`.
-
 ```rust
-use arx_nexo::{ Client, Config };
+use arx_nexo::{ Client, Config, models };
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let token = std::env::var("ARX_BOT_TOKEN")?;
-    let config = Config::new(token, "https://signal.arx.pro/bot-api/v1", false)?;
-    let bot = Client::new(config)?;
-    let body: arx_nexo::models::SetWebhook = serde_json::from_value(serde_json::json!({
-      "max_connections": 40,
-      "url": "https://example.com/updates"
-    }))?;
-    let result = bot.webhook_set(&[], Some(&body), Some("example-webhook-set-1")).await?;
+    let arx_bot_token = std::env::var("ARX_BOT_TOKEN")?;
+    let request_key = std::env::var("REQUEST_KEY")?;
+    let webhook_url = std::env::var("WEBHOOK_URL")?;
+    let bot = Client::new(Config::new(arx_bot_token, "https://signal.arx.pro/bot-api/v1", false)?)?;
+    let body = models::SetWebhook {
+        allowed_updates: None,
+        certificate: None,
+        drop_pending_updates: None,
+        ip_address: None,
+        max_connections: Some(40),
+        reply_operations_enabled: None,
+        secret_token: None,
+        url: webhook_url,
+    };
+    let query = [];
+    let result = bot.webhook_set(&query, Some(&body), Some(&request_key)).await?;
+    println!("{:?}", result);
     Ok(())
 }
 ```
@@ -473,12 +516,19 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 {% tab title="HTTP" %}
 
 ```sh
+payload=$(python3 - <<'PY'
+import json
+import os
+print(json.dumps({'max_connections': 40, 'url': os.environ['WEBHOOK_URL']}))
+PY
+)
+
 curl --fail-with-body --max-time 20 -X PUT \
   "https://signal.arx.pro/bot-api/v1/webhook" \
   -H "Authorization: Bearer ${ARX_BOT_TOKEN}" \
-  -H "Idempotency-Key: example-webhook-set-1" \
+  -H "Idempotency-Key: ${REQUEST_KEY}" \
   -H "Content-Type: application/json" \
-  --data '{"max_connections": 40, "url": "https://example.com/updates"}'
+  --data "${payload}"
 ```
 
 {% endtab %}
@@ -541,7 +591,7 @@ HTTP 400 `invalid_parameter` means you should check your webhook settings. See [
 
 ### Example <a href="#example-4" id="example-4"></a>
 
-Use a new idempotency key for each new action. Reuse the example key only when retrying this exact request.
+Set `ARX_BOT_TOKEN`, `REQUEST_KEY` before running this example.
 
 {% tabs %}
 
@@ -550,11 +600,16 @@ Use a new idempotency key for each new action. Reuse the example key only when r
 ```ts
 import { Client } from "@arx/nexo";
 
-const bot = new Client({ baseUrl: "https://signal.arx.pro/bot-api/v1" });
+const arxBotToken = process.env.ARX_BOT_TOKEN;
+const requestKey = process.env.REQUEST_KEY;
+if (!arxBotToken || !requestKey) {
+  throw new Error("Set ARX_BOT_TOKEN, REQUEST_KEY");
+}
+
+const bot = new Client({ token: arxBotToken, baseUrl: "https://signal.arx.pro/bot-api/v1" });
 try {
-  const result = await bot.webhookTest({
-    "key": "example-webhook-test-1"
-  });
+  const result = await bot.webhookTest({ key: requestKey });
+  console.log(result);
 } finally {
   await bot.close();
 }
@@ -565,10 +620,12 @@ try {
 {% tab title="Python" %}
 
 ```python
+import os
 from arx_nexo import Client, Config
 
-with Client(Config(base_url="https://signal.arx.pro/bot-api/v1")) as bot:
-    result = bot.webhook_test(key='example-webhook-test-1')
+with Client(Config(token=os.environ["ARX_BOT_TOKEN"], base_url="https://signal.arx.pro/bot-api/v1")) as bot:
+    result = bot.webhook_test(key=os.environ["REQUEST_KEY"])
+    print(result)
 ```
 
 {% endtab %}
@@ -580,10 +637,12 @@ use arx_nexo::{ Client, Config };
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let token = std::env::var("ARX_BOT_TOKEN")?;
-    let config = Config::new(token, "https://signal.arx.pro/bot-api/v1", false)?;
-    let bot = Client::new(config)?;
-    let result = bot.webhook_test(&[], None, Some("example-webhook-test-1")).await?;
+    let arx_bot_token = std::env::var("ARX_BOT_TOKEN")?;
+    let request_key = std::env::var("REQUEST_KEY")?;
+    let bot = Client::new(Config::new(arx_bot_token, "https://signal.arx.pro/bot-api/v1", false)?)?;
+    let query = [];
+    let result = bot.webhook_test(&query, None, Some(&request_key)).await?;
+    println!("{:?}", result);
     Ok(())
 }
 ```
@@ -596,7 +655,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 curl --fail-with-body --max-time 55 -X POST \
   "https://signal.arx.pro/bot-api/v1/webhook/test" \
   -H "Authorization: Bearer ${ARX_BOT_TOKEN}" \
-  -H "Idempotency-Key: example-webhook-test-1"
+  -H "Idempotency-Key: ${REQUEST_KEY}"
 ```
 
 {% endtab %}

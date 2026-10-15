@@ -12,7 +12,7 @@ Each `InputFile` contains exactly one source:
 
 | Source | Input | When to use it |
 | --- | --- | --- |
-| Existing file | `{"file_id":"FILE_ID"}` | Reuse a file that this bot can access, with the same media type. |
+| Existing file | `file_id` from an upload or a readable message. | Reuse a file that this bot can access, with the same media type. |
 | New attachment | `{"attach":"picture"}` | Reference a named binary part in the same multipart request. |
 | Public URL | `{"url":"https://example.com/image.jpg"}` | Fetch a supported type from a publicly reachable HTTP(S) source. |
 
@@ -24,7 +24,7 @@ For a multipart message, put the complete message body in the JSON `payload` par
 
 ## Upload and send a document <a href="#upload-and-send-a-document" id="upload-and-send-a-document"></a>
 
-The following example uploads a small text document, waits for processing and sends it to a chat that the user has already started. Set `ARX_BOT_TOKEN` and `CHAT_ID` in your environment. Use `REQUEST_KEY` for the send and a separate `UPLOAD_REQUEST_KEY` for the upload. Keep those keys when retrying the same actions.
+The following example uploads a small text document, waits for processing and sends it to a chat that the user has already started. Set `ARX_BOT_TOKEN` and `CHAT_ID` in your environment. Use the chat ID from an incoming message update as `CHAT_ID`. Use `REQUEST_KEY` for the send and a separate `UPLOAD_REQUEST_KEY` for the upload. Choose new keys for a new upload or send, and keep them when retrying the same actions.
 
 Install the [SDK for your language](sdks.md) before running the example.
 
@@ -32,7 +32,7 @@ Install the [SDK for your language](sdks.md) before running the example.
 {% tab title="TypeScript" %}
 
 ```typescript
-import { Client, UploadSource } from "@arx/nexo";
+import { Client, FileInput, UploadSource } from "@arx/nexo";
 
 const bot = new Client({
   token: process.env.ARX_BOT_TOKEN!,
@@ -51,7 +51,7 @@ const uploaded = await bot.filesUpload(
 const ready = await bot.waitFileReady(uploaded.file_id);
 const message = await bot.messagesSend(process.env.CHAT_ID!, {
   body: {
-    content: { type: "document", document: { file_id: ready.file_id } },
+    content: { type: "document", document: FileInput.fromId(ready.file_id) },
   },
   key: process.env.REQUEST_KEY!,
 });
@@ -64,7 +64,7 @@ console.log(message.message_id);
 ```python
 import os
 
-from arx_nexo import Client, Config, UploadSource, models
+from arx_nexo import Client, Config, FileInput, UploadSource, models
 
 with Client(Config(base_url="https://signal.arx.pro/bot-api/v1")) as bot:
     uploaded = bot.files_upload(
@@ -77,9 +77,13 @@ with Client(Config(base_url="https://signal.arx.pro/bot-api/v1")) as bot:
     ready = bot.wait_file_ready(uploaded.file_id)
     message = bot.messages_send(
         os.environ["CHAT_ID"],
-        body=models.SendMessage.model_validate({
-            "content": {"type": "document", "document": {"file_id": ready.file_id}}
-        }),
+        body=models.SendMessage(
+            content=models.InputContent(
+                root=models.InputDocument(
+                    type="document", document=FileInput.from_id(ready.file_id)
+                )
+            )
+        ),
         key=os.environ["REQUEST_KEY"],
     )
     print(message.message_id)
@@ -89,30 +93,49 @@ with Client(Config(base_url="https://signal.arx.pro/bot-api/v1")) as bot:
 {% tab title="Rust" %}
 
 ```rust
-use arx_nexo::{Client, Config, UploadSource, models};
+use arx_nexo::{Client, Config, FileInput, UploadSource, models, presence::Presence};
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let bot = Client::new(Config::new(
-        std::env::var("ARX_BOT_TOKEN")?, "https://signal.arx.pro/bot-api/v1", false,
+        std::env::var("ARX_BOT_TOKEN")?,
+        "https://signal.arx.pro/bot-api/v1",
+        false,
     )?)?;
+    let chat_id = std::env::var("CHAT_ID")?;
     let upload_key = std::env::var("UPLOAD_REQUEST_KEY")?;
     let send_key = std::env::var("REQUEST_KEY")?;
     let source = UploadSource::from_bytes(b"Meeting notes.\n".to_vec())?
         .with_filename("notes.txt")?
         .with_content_type("text/plain")?;
-    let uploaded = bot.files_upload(source, &models::UploadFile {
+    let upload = models::UploadFile {
         kind: models::UploadFileKind::Document,
         file_name: Some("notes.txt".into()),
-    }, Some(&upload_key)).await?;
+    };
+    let uploaded = bot.files_upload(source, &upload, Some(&upload_key)).await?;
     let ready = bot.wait_file_ready(&uploaded.file_id, None).await?;
-    let body: models::SendMessage = serde_json::from_value(serde_json::json!({
-        "content": {"type": "document", "document": {"file_id": ready.file_id}}
-    }))?;
-    let message = bot.messages_send(
-        &std::env::var("CHAT_ID")?, &[], Some(&body), Some(&send_key),
-    ).await?;
-    println!("{}", message.message_id);
+    let body = models::SendMessage {
+        content: models::InputContent::InputDocument(Box::new(models::InputDocument {
+            r#type: models::InputDocumentType::Document,
+            document: FileInput::from_id(ready.file_id)?,
+            caption: None,
+            caption_entities: None,
+            caption_format: None,
+            disable_content_type_detection: None,
+            thumbnail: None,
+        })),
+        effect_id: None,
+        link_preview: Presence::Unset,
+        protect_content: None,
+        reply_markup: None,
+        reply_to: None,
+        silent: None,
+    };
+    let query = [];
+    let message = bot
+        .messages_send(&chat_id, &query, Some(&body), Some(&send_key))
+        .await?;
+    println!("{}", message.message_id());
     Ok(())
 }
 ```

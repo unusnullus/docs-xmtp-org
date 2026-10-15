@@ -10,7 +10,7 @@ You can show a temporary preview while your bot prepares a reply, then publish t
 
 Call `drafts.set` with a `draft_id` that identifies this generation. Reuse that ID for each replacement, and use a different idempotency key for each changed chunk.
 
-Set `ARX_BOT_TOKEN`, `CHAT_ID` and `REQUEST_KEY` before running the example. Use a private chat that the user has started. See [Making requests](making-requests.md) for choosing keys and retrying requests.
+Set `ARX_BOT_TOKEN`, `CHAT_ID` and `REQUEST_KEY` before running the example. Set `DRAFT_ID` to a new ID for this generation, and keep it for later chunks. Use a private chat that the user has started. See [Making requests](making-requests.md) for choosing keys and retrying requests.
 
 {% tabs %}
 {% tab title="TypeScript" %}
@@ -21,12 +21,13 @@ import { Client } from "@arx/nexo";
 const token = process.env.ARX_BOT_TOKEN;
 const key = process.env.REQUEST_KEY;
 const chatId = process.env.CHAT_ID;
-if (!token || !key || !chatId) {
-	throw new Error("Set ARX_BOT_TOKEN, REQUEST_KEY, CHAT_ID");
+const draftId = process.env.DRAFT_ID;
+if (!token || !key || !chatId || !draftId) {
+	throw new Error("Set ARX_BOT_TOKEN, REQUEST_KEY, CHAT_ID, DRAFT_ID");
 }
 const bot = new Client({ token, baseUrl: "https://signal.arx.pro/bot-api/v1" });
 try {
-	const result = await bot.draftsSet(chatId, "reply-1", {
+	const result = await bot.draftsSet(chatId, draftId, {
 		key,
 		body: {
 			text: "Checking the available options",
@@ -48,18 +49,19 @@ import os
 from arx_nexo import Client, Config, models
 
 chat_id = os.environ["CHAT_ID"]
-request = models.SetDraft.model_validate(
-    {"text": "Checking the available options", "can_stop": True, "keep_on_stop": True}
-)
+draft_id = os.environ["DRAFT_ID"]
 with Client(
     Config(
         token=os.environ["ARX_BOT_TOKEN"],
         base_url="https://signal.arx.pro/bot-api/v1",
     )
 ) as bot:
+    request = models.SetDraft(
+        text="Checking the available options", can_stop=True, keep_on_stop=True
+    )
     result = bot.drafts_set(
         chat_id,
-        "reply-1",
+        draft_id,
         body=request,
         key=os.environ["REQUEST_KEY"],
     )
@@ -77,16 +79,21 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let token = std::env::var("ARX_BOT_TOKEN")?;
     let key = std::env::var("REQUEST_KEY")?;
     let chat_id = std::env::var("CHAT_ID")?;
+    let draft_id = std::env::var("DRAFT_ID")?;
     let bot = Client::new(Config::new(token, "https://signal.arx.pro/bot-api/v1", false)?)?;
-    let request: models::SetDraft = serde_json::from_value(serde_json::json!({
-      "text": "Checking the available options",
-      "can_stop": true,
-      "keep_on_stop": true
-    }))?;
+    let query = [];
+    let request = models::SetDraft {
+        can_stop: Some(true),
+        entities: None,
+        format: None,
+        keep_on_stop: Some(true),
+        rich: None,
+        text: Some("Checking the available options".into()),
+    };
     let result = bot
-        .drafts_set(&chat_id, "reply-1", &[], Some(&request), Some(&key))
+        .drafts_set(&chat_id, &draft_id, &query, Some(&request), Some(&key))
         .await?;
-    println!("{}", serde_json::to_string(&result)?);
+    println!("{result:?}");
     Ok(())
 }
 ```

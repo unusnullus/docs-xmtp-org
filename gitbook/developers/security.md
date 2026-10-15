@@ -8,7 +8,7 @@ You can protect your bot's credentials and limit the data your service retains. 
 
 ## Protect your bot token <a href="#protect-your-bot-token" id="protect-your-bot-token"></a>
 
-Load the token from a secret manager or an environment variable on your server. Send it in the `Authorization: Bearer ...` header to the API base URL for your environment, over HTTPS. Disable redirects on authenticated requests. Use HTTP only for a local emulator, with loopback access explicitly enabled.
+Load the token from a secret manager or an environment variable on your server. Send it in the `Authorization` header using the `Bearer` scheme, to the API base URL for your environment over HTTPS. Disable redirects on authenticated requests. Use HTTP only for a local emulator, with loopback access explicitly enabled.
 
 Keep tokens out of browser code, URLs, repositories, analytics and exception messages. Your bot does not need your ARX session. Signed file URLs also grant access, so keep them out of logs and send no bot token when using them.
 
@@ -16,7 +16,7 @@ The credential reveal is single use and expires after 60 minutes by default. Thi
 
 ## Rotate a token <a href="#rotate-a-token" id="rotate-a-token"></a>
 
-1. Open `@NEXOCREATOR` with your ARX account (the bot owner's) and send `/token`. Select your bot, or use `/token @HANDLE`.
+1. Open `@NEXOCREATOR` with your ARX account (the bot owner's) and send `/token`. Select your bot.
 2. Choose rotation with delivery continuing or paused. Pausing is useful when you need time to update your webhook verifier or deployment.
 3. Review and confirm the change. The old token stops authenticating new requests immediately, so expect a brief interruption while you replace it. Requests the API already accepted may still complete.
 4. Open the credential reveal and save the replacement in your secret manager. Update every worker and your webhook verification key, then restart the affected processes.

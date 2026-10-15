@@ -44,6 +44,8 @@ HTTP 404 `chat_not_found` means the chat is missing or is not visible to your bo
 
 ### Example <a href="#example" id="example"></a>
 
+Set `ARX_BOT_TOKEN`, `CHAT_ID` before running this example.
+
 {% tabs %}
 
 {% tab title="TypeScript" %}
@@ -51,9 +53,16 @@ HTTP 404 `chat_not_found` means the chat is missing or is not visible to your bo
 ```ts
 import { Client } from "@arx/nexo";
 
-const bot = new Client({ baseUrl: "https://signal.arx.pro/bot-api/v1" });
+const arxBotToken = process.env.ARX_BOT_TOKEN;
+const chatId = process.env.CHAT_ID;
+if (!arxBotToken || !chatId) {
+  throw new Error("Set ARX_BOT_TOKEN, CHAT_ID");
+}
+
+const bot = new Client({ token: arxBotToken, baseUrl: "https://signal.arx.pro/bot-api/v1" });
 try {
-  const result = await bot.chatsGet("4398046511200");
+  const result = await bot.chatsGet(chatId);
+  console.log(result);
 } finally {
   await bot.close();
 }
@@ -64,10 +73,12 @@ try {
 {% tab title="Python" %}
 
 ```python
+import os
 from arx_nexo import Client, Config
 
-with Client(Config(base_url="https://signal.arx.pro/bot-api/v1")) as bot:
-    result = bot.chats_get('4398046511200')
+with Client(Config(token=os.environ["ARX_BOT_TOKEN"], base_url="https://signal.arx.pro/bot-api/v1")) as bot:
+    result = bot.chats_get(os.environ["CHAT_ID"])
+    print(result)
 ```
 
 {% endtab %}
@@ -79,10 +90,12 @@ use arx_nexo::{ Client, Config };
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let token = std::env::var("ARX_BOT_TOKEN")?;
-    let config = Config::new(token, "https://signal.arx.pro/bot-api/v1", false)?;
-    let bot = Client::new(config)?;
-    let result = bot.chats_get("4398046511200", &[], None, None).await?;
+    let arx_bot_token = std::env::var("ARX_BOT_TOKEN")?;
+    let chat_id = std::env::var("CHAT_ID")?;
+    let bot = Client::new(Config::new(arx_bot_token, "https://signal.arx.pro/bot-api/v1", false)?)?;
+    let query = [];
+    let result = bot.chats_get(&chat_id, &query, None, None).await?;
+    println!("{:?}", result);
     Ok(())
 }
 ```
@@ -93,7 +106,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 ```sh
 curl --fail-with-body --max-time 20 -X GET \
-  "https://signal.arx.pro/bot-api/v1/chats/4398046511200" \
+  "https://signal.arx.pro/bot-api/v1/chats/${CHAT_ID}" \
   -H "Authorization: Bearer ${ARX_BOT_TOKEN}"
 ```
 
@@ -114,8 +127,8 @@ Example success response (HTTP 200). The SDK methods return `result`:
       "has_photo": false,
       "id": "10000043",
       "is_bot": false,
-      "name": "EXAMPLEUSER",
-      "username": "EXAMPLEUSER"
+      "name": "Ana López",
+      "username": "ANALOPEZ"
     }
   }
 }
@@ -149,6 +162,8 @@ HTTP 403 `bot_suspended` means your bot cannot make API calls while suspended. T
 
 ### Example <a href="#example-1" id="example-1"></a>
 
+Set `ARX_BOT_TOKEN` before running this example.
+
 {% tabs %}
 
 {% tab title="TypeScript" %}
@@ -156,9 +171,15 @@ HTTP 403 `bot_suspended` means your bot cannot make API calls while suspended. T
 ```ts
 import { Client } from "@arx/nexo";
 
-const bot = new Client({ baseUrl: "https://signal.arx.pro/bot-api/v1" });
+const arxBotToken = process.env.ARX_BOT_TOKEN;
+if (!arxBotToken) {
+  throw new Error("Set ARX_BOT_TOKEN");
+}
+
+const bot = new Client({ token: arxBotToken, baseUrl: "https://signal.arx.pro/bot-api/v1" });
 try {
   const result = await bot.meGet();
+  console.log(result);
 } finally {
   await bot.close();
 }
@@ -169,10 +190,12 @@ try {
 {% tab title="Python" %}
 
 ```python
+import os
 from arx_nexo import Client, Config
 
-with Client(Config(base_url="https://signal.arx.pro/bot-api/v1")) as bot:
+with Client(Config(token=os.environ["ARX_BOT_TOKEN"], base_url="https://signal.arx.pro/bot-api/v1")) as bot:
     result = bot.me_get()
+    print(result)
 ```
 
 {% endtab %}
@@ -184,10 +207,11 @@ use arx_nexo::{ Client, Config };
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let token = std::env::var("ARX_BOT_TOKEN")?;
-    let config = Config::new(token, "https://signal.arx.pro/bot-api/v1", false)?;
-    let bot = Client::new(config)?;
-    let result = bot.me_get(&[], None, None).await?;
+    let arx_bot_token = std::env::var("ARX_BOT_TOKEN")?;
+    let bot = Client::new(Config::new(arx_bot_token, "https://signal.arx.pro/bot-api/v1", false)?)?;
+    let query = [];
+    let result = bot.me_get(&query, None, None).await?;
+    println!("{:?}", result);
     Ok(())
 }
 ```
@@ -218,12 +242,12 @@ Example success response (HTTP 200). The SDK methods return `result`:
     "id": "10000042",
     "is_bot": true,
     "is_test": false,
-    "name": "Example",
+    "name": "Acme Support",
     "official_role": null,
     "settings": {
       "can_join_groups": true
     },
-    "username": "EXAMPLEBOT",
+    "username": "ACMESUPPORTBOT",
     "verification_status": "unverified"
   }
 }
@@ -257,6 +281,8 @@ HTTP 503 `upstream_unavailable` means the document could not be retrieved becaus
 
 ### Example <a href="#example-2" id="example-2"></a>
 
+Set `ARX_BOT_TOKEN` before running this example.
+
 {% tabs %}
 
 {% tab title="TypeScript" %}
@@ -264,9 +290,15 @@ HTTP 503 `upstream_unavailable` means the document could not be retrieved becaus
 ```ts
 import { Client } from "@arx/nexo";
 
-const bot = new Client({ baseUrl: "https://signal.arx.pro/bot-api/v1" });
+const arxBotToken = process.env.ARX_BOT_TOKEN;
+if (!arxBotToken) {
+  throw new Error("Set ARX_BOT_TOKEN");
+}
+
+const bot = new Client({ token: arxBotToken, baseUrl: "https://signal.arx.pro/bot-api/v1" });
 try {
   const result = await bot.openapiGet();
+  console.log(result);
 } finally {
   await bot.close();
 }
@@ -277,10 +309,12 @@ try {
 {% tab title="Python" %}
 
 ```python
+import os
 from arx_nexo import Client, Config
 
-with Client(Config(base_url="https://signal.arx.pro/bot-api/v1")) as bot:
+with Client(Config(token=os.environ["ARX_BOT_TOKEN"], base_url="https://signal.arx.pro/bot-api/v1")) as bot:
     result = bot.openapi_get()
+    print(result)
 ```
 
 {% endtab %}
@@ -292,10 +326,11 @@ use arx_nexo::{ Client, Config };
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let token = std::env::var("ARX_BOT_TOKEN")?;
-    let config = Config::new(token, "https://signal.arx.pro/bot-api/v1", false)?;
-    let bot = Client::new(config)?;
-    let result = bot.openapi_get(&[], None, None).await?;
+    let arx_bot_token = std::env::var("ARX_BOT_TOKEN")?;
+    let bot = Client::new(Config::new(arx_bot_token, "https://signal.arx.pro/bot-api/v1", false)?)?;
+    let query = [];
+    let result = bot.openapi_get(&query, None, None).await?;
+    println!("{:?}", result);
     Ok(())
 }
 ```
@@ -313,7 +348,7 @@ curl --fail-with-body --max-time 20 -X GET \
 
 {% endtabs %}
 
-The response is the complete OpenAPI JSON document, without an `ok` or `result` wrapper. It starts with the `openapi` and `info` fields; use this response to inspect the API with your own tooling.
+The response is the complete OpenAPI JSON document, without an `ok` or `result` wrapper.
 
 ## platform.get <a href="#operation-platform-get" id="operation-platform-get"></a>
 
@@ -345,6 +380,8 @@ HTTP 400 `invalid_request` means you sent query parameters or a request body. Om
 
 ### Example <a href="#example-3" id="example-3"></a>
 
+Set `ARX_BOT_TOKEN` before running this example.
+
 {% tabs %}
 
 {% tab title="TypeScript" %}
@@ -352,9 +389,15 @@ HTTP 400 `invalid_request` means you sent query parameters or a request body. Om
 ```ts
 import { Client } from "@arx/nexo";
 
-const bot = new Client({ baseUrl: "https://signal.arx.pro/bot-api/v1" });
+const arxBotToken = process.env.ARX_BOT_TOKEN;
+if (!arxBotToken) {
+  throw new Error("Set ARX_BOT_TOKEN");
+}
+
+const bot = new Client({ token: arxBotToken, baseUrl: "https://signal.arx.pro/bot-api/v1" });
 try {
   const result = await bot.platformGet();
+  console.log(result);
 } finally {
   await bot.close();
 }
@@ -365,10 +408,12 @@ try {
 {% tab title="Python" %}
 
 ```python
+import os
 from arx_nexo import Client, Config
 
-with Client(Config(base_url="https://signal.arx.pro/bot-api/v1")) as bot:
+with Client(Config(token=os.environ["ARX_BOT_TOKEN"], base_url="https://signal.arx.pro/bot-api/v1")) as bot:
     result = bot.platform_get()
+    print(result)
 ```
 
 {% endtab %}
@@ -380,10 +425,11 @@ use arx_nexo::{ Client, Config };
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let token = std::env::var("ARX_BOT_TOKEN")?;
-    let config = Config::new(token, "https://signal.arx.pro/bot-api/v1", false)?;
-    let bot = Client::new(config)?;
-    let result = bot.platform_get(&[], None, None).await?;
+    let arx_bot_token = std::env::var("ARX_BOT_TOKEN")?;
+    let bot = Client::new(Config::new(arx_bot_token, "https://signal.arx.pro/bot-api/v1", false)?)?;
+    let query = [];
+    let result = bot.platform_get(&query, None, None).await?;
+    println!("{:?}", result);
     Ok(())
 }
 ```
@@ -615,7 +661,7 @@ HTTP 401 `unauthorized` means this token is already invalid or revoked. It canno
 
 ### Example <a href="#example-4" id="example-4"></a>
 
-Use a new idempotency key for each new action. Reuse the example key only when retrying this exact request.
+Set `ARX_BOT_TOKEN`, `REQUEST_KEY` before running this example.
 
 {% tabs %}
 
@@ -624,11 +670,16 @@ Use a new idempotency key for each new action. Reuse the example key only when r
 ```ts
 import { Client } from "@arx/nexo";
 
-const bot = new Client({ baseUrl: "https://signal.arx.pro/bot-api/v1" });
+const arxBotToken = process.env.ARX_BOT_TOKEN;
+const requestKey = process.env.REQUEST_KEY;
+if (!arxBotToken || !requestKey) {
+  throw new Error("Set ARX_BOT_TOKEN, REQUEST_KEY");
+}
+
+const bot = new Client({ token: arxBotToken, baseUrl: "https://signal.arx.pro/bot-api/v1" });
 try {
-  const result = await bot.tokenRevoke({
-    "key": "example-token-revoke-1"
-  });
+  const result = await bot.tokenRevoke({ key: requestKey });
+  console.log(result);
 } finally {
   await bot.close();
 }
@@ -639,10 +690,12 @@ try {
 {% tab title="Python" %}
 
 ```python
+import os
 from arx_nexo import Client, Config
 
-with Client(Config(base_url="https://signal.arx.pro/bot-api/v1")) as bot:
-    result = bot.token_revoke(key='example-token-revoke-1')
+with Client(Config(token=os.environ["ARX_BOT_TOKEN"], base_url="https://signal.arx.pro/bot-api/v1")) as bot:
+    result = bot.token_revoke(key=os.environ["REQUEST_KEY"])
+    print(result)
 ```
 
 {% endtab %}
@@ -654,10 +707,12 @@ use arx_nexo::{ Client, Config };
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let token = std::env::var("ARX_BOT_TOKEN")?;
-    let config = Config::new(token, "https://signal.arx.pro/bot-api/v1", false)?;
-    let bot = Client::new(config)?;
-    let result = bot.token_revoke(&[], None, Some("example-token-revoke-1")).await?;
+    let arx_bot_token = std::env::var("ARX_BOT_TOKEN")?;
+    let request_key = std::env::var("REQUEST_KEY")?;
+    let bot = Client::new(Config::new(arx_bot_token, "https://signal.arx.pro/bot-api/v1", false)?)?;
+    let query = [];
+    let result = bot.token_revoke(&query, None, Some(&request_key)).await?;
+    println!("{:?}", result);
     Ok(())
 }
 ```
@@ -670,7 +725,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 curl --fail-with-body --max-time 20 -X POST \
   "https://signal.arx.pro/bot-api/v1/token/revoke" \
   -H "Authorization: Bearer ${ARX_BOT_TOKEN}" \
-  -H "Idempotency-Key: example-token-revoke-1"
+  -H "Idempotency-Key: ${REQUEST_KEY}"
 ```
 
 {% endtab %}
@@ -716,6 +771,8 @@ HTTP 404 `chat_not_found` means the chat is missing or inaccessible to your bot.
 
 ### Example <a href="#example-5" id="example-5"></a>
 
+Set `ARX_BOT_TOKEN`, `USER_ID` before running this example.
+
 {% tabs %}
 
 {% tab title="TypeScript" %}
@@ -723,9 +780,16 @@ HTTP 404 `chat_not_found` means the chat is missing or inaccessible to your bot.
 ```ts
 import { Client } from "@arx/nexo";
 
-const bot = new Client({ baseUrl: "https://signal.arx.pro/bot-api/v1" });
+const arxBotToken = process.env.ARX_BOT_TOKEN;
+const userId = process.env.USER_ID;
+if (!arxBotToken || !userId) {
+  throw new Error("Set ARX_BOT_TOKEN, USER_ID");
+}
+
+const bot = new Client({ token: arxBotToken, baseUrl: "https://signal.arx.pro/bot-api/v1" });
 try {
-  const result = await bot.usersGetChat("10000043");
+  const result = await bot.usersGetChat(userId);
+  console.log(result);
 } finally {
   await bot.close();
 }
@@ -736,10 +800,12 @@ try {
 {% tab title="Python" %}
 
 ```python
+import os
 from arx_nexo import Client, Config
 
-with Client(Config(base_url="https://signal.arx.pro/bot-api/v1")) as bot:
-    result = bot.users_get_chat('10000043')
+with Client(Config(token=os.environ["ARX_BOT_TOKEN"], base_url="https://signal.arx.pro/bot-api/v1")) as bot:
+    result = bot.users_get_chat(os.environ["USER_ID"])
+    print(result)
 ```
 
 {% endtab %}
@@ -751,10 +817,12 @@ use arx_nexo::{ Client, Config };
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let token = std::env::var("ARX_BOT_TOKEN")?;
-    let config = Config::new(token, "https://signal.arx.pro/bot-api/v1", false)?;
-    let bot = Client::new(config)?;
-    let result = bot.users_get_chat("10000043", &[], None, None).await?;
+    let arx_bot_token = std::env::var("ARX_BOT_TOKEN")?;
+    let user_id = std::env::var("USER_ID")?;
+    let bot = Client::new(Config::new(arx_bot_token, "https://signal.arx.pro/bot-api/v1", false)?)?;
+    let query = [];
+    let result = bot.users_get_chat(&user_id, &query, None, None).await?;
+    println!("{:?}", result);
     Ok(())
 }
 ```
@@ -765,7 +833,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 ```sh
 curl --fail-with-body --max-time 20 -X GET \
-  "https://signal.arx.pro/bot-api/v1/users/10000043/chat" \
+  "https://signal.arx.pro/bot-api/v1/users/${USER_ID}/chat" \
   -H "Authorization: Bearer ${ARX_BOT_TOKEN}"
 ```
 
@@ -786,8 +854,8 @@ Example success response (HTTP 200). The SDK methods return `result`:
       "has_photo": false,
       "id": "10000043",
       "is_bot": false,
-      "name": "EXAMPLEUSER",
-      "username": "EXAMPLEUSER"
+      "name": "Ana López",
+      "username": "ANALOPEZ"
     }
   }
 }
@@ -827,6 +895,8 @@ HTTP 404 `user_not_found` means your bot cannot access the user. HTTP 400 `inval
 
 ### Example <a href="#example-6" id="example-6"></a>
 
+Set `ARX_BOT_TOKEN`, `USER_ID` before running this example.
+
 {% tabs %}
 
 {% tab title="TypeScript" %}
@@ -834,9 +904,16 @@ HTTP 404 `user_not_found` means your bot cannot access the user. HTTP 400 `inval
 ```ts
 import { Client } from "@arx/nexo";
 
-const bot = new Client({ baseUrl: "https://signal.arx.pro/bot-api/v1" });
+const arxBotToken = process.env.ARX_BOT_TOKEN;
+const userId = process.env.USER_ID;
+if (!arxBotToken || !userId) {
+  throw new Error("Set ARX_BOT_TOKEN, USER_ID");
+}
+
+const bot = new Client({ token: arxBotToken, baseUrl: "https://signal.arx.pro/bot-api/v1" });
 try {
-  const result = await bot.usersListProfilePhotos("10000043");
+  const result = await bot.usersListProfilePhotos(userId);
+  console.log(result);
 } finally {
   await bot.close();
 }
@@ -847,10 +924,12 @@ try {
 {% tab title="Python" %}
 
 ```python
+import os
 from arx_nexo import Client, Config
 
-with Client(Config(base_url="https://signal.arx.pro/bot-api/v1")) as bot:
-    result = bot.users_list_profile_photos('10000043')
+with Client(Config(token=os.environ["ARX_BOT_TOKEN"], base_url="https://signal.arx.pro/bot-api/v1")) as bot:
+    result = bot.users_list_profile_photos(os.environ["USER_ID"])
+    print(result)
 ```
 
 {% endtab %}
@@ -862,10 +941,12 @@ use arx_nexo::{ Client, Config };
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let token = std::env::var("ARX_BOT_TOKEN")?;
-    let config = Config::new(token, "https://signal.arx.pro/bot-api/v1", false)?;
-    let bot = Client::new(config)?;
-    let result = bot.users_list_profile_photos("10000043", &[], None, None).await?;
+    let arx_bot_token = std::env::var("ARX_BOT_TOKEN")?;
+    let user_id = std::env::var("USER_ID")?;
+    let bot = Client::new(Config::new(arx_bot_token, "https://signal.arx.pro/bot-api/v1", false)?)?;
+    let query = [];
+    let result = bot.users_list_profile_photos(&user_id, &query, None, None).await?;
+    println!("{:?}", result);
     Ok(())
 }
 ```
@@ -876,7 +957,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 ```sh
 curl --fail-with-body --max-time 20 -X GET \
-  "https://signal.arx.pro/bot-api/v1/users/10000043/profile_photos" \
+  "https://signal.arx.pro/bot-api/v1/users/${USER_ID}/profile_photos" \
   -H "Authorization: Bearer ${ARX_BOT_TOKEN}"
 ```
 

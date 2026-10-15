@@ -10,14 +10,14 @@ Use the Bot API to read your bot's state and change its conversations. The SDKs 
 
 Use the configured base URL, `https://signal.arx.pro/bot-api/v1`, with the operation path. Send JSON with `Content-Type: application/json`, except when an upload operation requires multipart data. Include your [bot token](authentication.md) in the Authorization header.
 
-For example, send a reply to a chat that the user has started. Set `CHAT_ID` from `message.chat.id` in an incoming update:
+For example, send a reply to a chat that the user has started. Prepare `ARX_BOT_TOKEN` and `ARX_BOT_API_BASE_URL` with the [quickstart setup](quickstart.md#create-the-bot). Set `CHAT_ID` from `message.chat.id` in an incoming update, and save a `REQUEST_KEY` for this send:
 
 ```sh
 curl --fail-with-body --max-time 30 -X POST \
   "$ARX_BOT_API_BASE_URL/chats/${CHAT_ID}/messages" \
   -H "Authorization: Bearer ${ARX_BOT_TOKEN}" \
   -H 'Content-Type: application/json' \
-  -H 'Idempotency-Key: saved-note-1' \
+  -H "Idempotency-Key: ${REQUEST_KEY}" \
   --data '{"content":{"type":"text","text":"Your note is saved."}}'
 ```
 
@@ -39,7 +39,7 @@ An error has `ok: false` and an `error` object. The required fields are `code`, 
   "error": {
     "code": "invalid_parameter",
     "message": "invalid_parameter",
-    "request_id": "example-request",
+    "request_id": "01935f42-7b80-7a11-8b22-334455667788",
     "field": "content"
   }
 }

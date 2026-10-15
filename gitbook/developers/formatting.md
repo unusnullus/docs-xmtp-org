@@ -8,7 +8,7 @@ You can format a message with ARX Markdown, HTML or explicit entities. Use rich 
 
 ## Send formatted text <a href="#send-formatted-text" id="send-formatted-text"></a>
 
-Set `content.format` to `plain`, `markdown` or `html`. Omit it for plain text. This example makes the heading bold and disables the link preview.
+Set `content.format` to `plain`, `markdown` or `html` when you supply markup. Omit it for plain text. You can also use the formatting helpers below to build entities. This example makes the heading bold and disables the link preview.
 
 Set `ARX_BOT_TOKEN`, `CHAT_ID` and `REQUEST_KEY` before running the example. Use a private chat that the user has started. See [Making requests](making-requests.md) for choosing keys and retrying requests.
 
@@ -16,7 +16,7 @@ Set `ARX_BOT_TOKEN`, `CHAT_ID` and `REQUEST_KEY` before running the example. Use
 {% tab title="TypeScript" %}
 
 ```ts
-import { Client } from "@arx/nexo";
+import { Client, FormattedText } from "@arx/nexo";
 
 const token = process.env.ARX_BOT_TOKEN;
 const key = process.env.REQUEST_KEY;
@@ -29,14 +29,11 @@ try {
 	const result = await bot.messagesSend(chatId, {
 		key,
 		body: {
-			content: {
-				type: "text",
-				text: "__Meeting notes__\nhttps://example.com/notes",
-				format: "markdown",
-			},
-			link_preview: {
-				disabled: true,
-			},
+			content: FormattedText.join(
+				FormattedText.bold("Meeting notes"),
+				"\nhttps://example.com/notes",
+			).build(),
+			link_preview: { disabled: true },
 		},
 	});
 	console.log(result);
@@ -50,25 +47,21 @@ try {
 
 ```python
 import os
-from arx_nexo import Client, Config, models
+from arx_nexo import Client, Config, models, FormattedText
 
 chat_id = os.environ["CHAT_ID"]
-request = models.SendMessage.model_validate(
-    {
-        "content": {
-            "type": "text",
-            "text": "__Meeting notes__\nhttps://example.com/notes",
-            "format": "markdown",
-        },
-        "link_preview": {"disabled": True},
-    }
-)
 with Client(
     Config(
         token=os.environ["ARX_BOT_TOKEN"],
         base_url="https://signal.arx.pro/bot-api/v1",
     )
 ) as bot:
+    request = models.SendMessage(
+        content=FormattedText.join(
+            FormattedText.bold("Meeting notes"), "\nhttps://example.com/notes"
+        ).content(),
+        link_preview=models.InputLinkPreview(disabled=True),
+    )
     result = bot.messages_send(
         chat_id,
         body=request,
@@ -81,7 +74,7 @@ with Client(
 {% tab title="Rust" %}
 
 ```rust
-use arx_nexo::{Client, Config, models};
+use arx_nexo::{Client, Config, FormattedText, models, presence::Presence};
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -89,20 +82,28 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let key = std::env::var("REQUEST_KEY")?;
     let chat_id = std::env::var("CHAT_ID")?;
     let bot = Client::new(Config::new(token, "https://signal.arx.pro/bot-api/v1", false)?)?;
-    let request: models::SendMessage = serde_json::from_value(serde_json::json!({
-      "content": {
-        "type": "text",
-        "text": "__Meeting notes__\nhttps://example.com/notes",
-        "format": "markdown"
-      },
-      "link_preview": {
-        "disabled": true
-      }
-    }))?;
+    let query = [];
+    let heading = FormattedText::bold("Meeting notes")?;
+    let text = FormattedText::join(&[(&heading).into(), "\nhttps://example.com/notes".into()])?;
+    let request = models::SendMessage {
+        content: text.content()?,
+        effect_id: None,
+        link_preview: Presence::Value(models::InputLinkPreview {
+            disabled: Some(true),
+            prefer_large_media: None,
+            prefer_small_media: None,
+            show_above_text: None,
+            url: None,
+        }),
+        protect_content: None,
+        reply_markup: None,
+        reply_to: None,
+        silent: None,
+    };
     let result = bot
-        .messages_send(&chat_id, &[], Some(&request), Some(&key))
+        .messages_send(&chat_id, &query, Some(&request), Some(&key))
         .await?;
-    println!("{}", serde_json::to_string(&result)?);
+    println!("{result:?}");
     Ok(())
 }
 ```
@@ -128,7 +129,7 @@ For caption-only edits, keep the caption fields at the top level of `messages.ed
 
 ## UTF-16 offsets <a href="#utf-16-offsets" id="utf-16-offsets"></a>
 
-Entity `offset` and `length` count UTF-16 units in the parsed text. In `🧭 North`, the emoji occupies two units and the space one, so `North` begins at offset 3:
+Entity `offset` and `length` count UTF-16 units in the parsed text. In `🧭 North`, the emoji occupies two units and the space one, so `North` begins at offset 3. Its HTTP request body is:
 
 ```json
 {
@@ -181,7 +182,7 @@ ARX Markdown follows CommonMark inline rules with these additions. Unclosed deli
 
 ## ARX HTML <a href="#arx-html" id="arx-html"></a>
 
-Set `format: html` and place the markup in `text`:
+For HTTP, set `format: html` and place the markup in `text`:
 
 ```json
 {
@@ -206,7 +207,7 @@ Unknown or mismatched HTML tags return HTTP 400 `invalid_parameter` with `reason
 
 ## Rich messages <a href="#rich-messages" id="rich-messages"></a>
 
-Set `content.type` to `rich`. Inside `content.rich`, provide exactly one of `markdown`, `html` or `blocks`:
+Set `content.type` to `rich`. Inside `content.rich`, provide exactly one of `markdown`, `html` or `blocks`. For HTTP:
 
 ```json
 {
@@ -236,20 +237,111 @@ An oversized rich document returns HTTP 400 `invalid_parameter` with `reason: ri
 
 ## Files in rich content <a href="#files-in-rich-content" id="files-in-rich-content"></a>
 
-A structured media block uses `file`, or a `media_id` that refers to an entry in the rich document's `media` array. Choose one source per block:
+A structured media block uses `file`, or a `media_id` that refers to an entry in the rich document's `media` array. Choose one source per block.
 
-```json
-{
-  "content": {
-    "type": "rich",
-    "rich": {
-      "blocks": [{"type":"photo","file":{"file_id":"YOUR_PHOTO_FILE_ID"}}]
-    }
-  }
+Set `PHOTO_FILE_ID` to a ready photo returned by [Files](files.md), along with `ARX_BOT_TOKEN`, `CHAT_ID` and a new `REQUEST_KEY`. The SDK file helpers reuse that photo in a rich message:
+
+{% tabs %}
+{% tab title="TypeScript" %}
+
+```ts
+import { Client, FileInput, RichBlocks, RichMessage } from "@arx/nexo";
+
+const token = process.env.ARX_BOT_TOKEN;
+const key = process.env.REQUEST_KEY;
+const chatId = process.env.CHAT_ID;
+const photoFileId = process.env.PHOTO_FILE_ID;
+if (!token || !key || !chatId || !photoFileId) {
+	throw new Error("Set ARX_BOT_TOKEN, REQUEST_KEY, CHAT_ID, PHOTO_FILE_ID");
+}
+const bot = new Client({ token, baseUrl: "https://signal.arx.pro/bot-api/v1" });
+try {
+	const result = await bot.messagesSend(chatId, {
+		key,
+		body: {
+			content: new RichMessage([
+				RichBlocks.media("photo", FileInput.fromId(photoFileId)),
+			]).content(),
+		},
+	});
+	console.log(result);
+} finally {
+	await bot.close();
 }
 ```
 
-For the dictionary form, each `media` entry requires a unique `id` and a `file`, such as `{"id":"cover","file":{"file_id":"YOUR_PHOTO_FILE_ID"}}`. Reference it from a block with `media_id: cover`, or from markup with `aerx://media?id=cover`. Each use counts toward the media limit, even when you reuse the same file.
+{% endtab %}
+{% tab title="Python" %}
+
+```python
+import os
+from arx_nexo import Client, Config, models, FileInput, RichBlocks, RichMessage
+
+chat_id = os.environ["CHAT_ID"]
+photo_file_id = os.environ["PHOTO_FILE_ID"]
+with Client(
+    Config(
+        token=os.environ["ARX_BOT_TOKEN"],
+        base_url="https://signal.arx.pro/bot-api/v1",
+    )
+) as bot:
+    request = models.SendMessage(
+        content=RichMessage(
+            [RichBlocks.media("photo", FileInput.from_id(photo_file_id))]
+        ).content(),
+    )
+    result = bot.messages_send(
+        chat_id,
+        body=request,
+        key=os.environ["REQUEST_KEY"],
+    )
+    print(result)
+```
+
+{% endtab %}
+{% tab title="Rust" %}
+
+```rust
+use arx_nexo::{
+    Client, Config, FileInput, MediaKind, RichBlocks, RichMediaOptions, RichMessage,
+    RichMessageOptions, models, presence::Presence,
+};
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let token = std::env::var("ARX_BOT_TOKEN")?;
+    let key = std::env::var("REQUEST_KEY")?;
+    let chat_id = std::env::var("CHAT_ID")?;
+    let photo_file_id = std::env::var("PHOTO_FILE_ID")?;
+    let bot = Client::new(Config::new(token, "https://signal.arx.pro/bot-api/v1", false)?)?;
+    let query = [];
+    let photo = RichBlocks::media(
+        MediaKind::Photo,
+        FileInput::from_id(photo_file_id)?,
+        RichMediaOptions::default(),
+    )?;
+    let rich = RichMessage::new(vec![photo], RichMessageOptions::default())?;
+    let request = models::SendMessage {
+        content: rich.content()?,
+        effect_id: None,
+        link_preview: Presence::Unset,
+        protect_content: None,
+        reply_markup: None,
+        reply_to: None,
+        silent: None,
+    };
+    let result = bot
+        .messages_send(&chat_id, &query, Some(&request), Some(&key))
+        .await?;
+    println!("{result:?}");
+    Ok(())
+}
+```
+
+{% endtab %}
+{% endtabs %}
+
+For the dictionary form, each `media` entry requires a unique `id` and a `file` source. For an entry whose `id` is `cover`, reference it from a block with `media_id: cover`, or from markup with `aerx://media?id=cover`. Each use counts toward the media limit, even when you reuse the same file.
 
 `file` is an input source with exactly one of `file_id`, `url` or `attach`. Uploads and URL imports follow the rules in [Files](files.md). [Drafts](drafts.md) accept existing file IDs only. The response contains resolved media instead of input source descriptors.
 
