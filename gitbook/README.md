@@ -88,3 +88,4 @@ It starts with foundation support and transitions toward full community control.
 * PoS + PoR mechanics: [5.3 Network layer](home/5-system-architecture/5.3-network-layer.md)
 * Incentives: [8.3 Proof-of-Relay Rewards Distribution](home/8-economic-model/8.3-proof-of-relay-rewards-distribution.md)
 * Governance details: [9 Governance model](home/9-governance-model/)
+* Build a bot: [Nexo bot developer docs](https://docs.arx.pro/developers)
