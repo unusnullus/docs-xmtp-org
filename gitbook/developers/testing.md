@@ -19,7 +19,13 @@ The command prints one JSON line with `base_url`, `ui` and `credentials`. Open t
 ```sh
 export ARX_BOT_API_BASE_URL='http://127.0.0.1:18092/bot-api/v1'
 export ARX_BOT_TOKEN="$(python -c 'from arx_nexo.emulator import emulator_token; print(emulator_token())')"
-export CHAT_ID="$(python -c 'from arx_nexo.testing import EmulatorControl; c = EmulatorControl("http://127.0.0.1:18092"); print(c.start_chat()); c.close()')"
+export CHAT_ID="$(python - <<'PY'
+from arx_nexo.testing import EmulatorControl
+
+with EmulatorControl("http://127.0.0.1:18092") as control:
+    print(control.start_chat(username="ANALOPEZ"))
+PY
+)"
 ```
 
 This token is a fixed emulator credential. Never use a real token for local tests. Enable insecure loopback access explicitly in your client and keep that permission out of your live configuration.
@@ -81,7 +87,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         &std::env::var("ARX_BOT_API_BASE_URL")?,
         true,
     )?)?;
-    bot.me_get(&[], None, None).await?;
+    let query = [];
+    bot.me_get(&query, None, None).await?;
     let message = bot.send_text(
         &std::env::var("CHAT_ID")?, "Local test", Some("local-test-1"),
     ).await?;
@@ -106,7 +113,7 @@ from arx_nexo.testing import EmulatorControl
 
 with Emulator(port=0) as emulator:
     with EmulatorControl(emulator.origin) as control:
-        chat_id = control.start_chat()
+        chat_id = control.start_chat(username="ANALOPEZ")
         with Client(Config(
             token=emulator_token(),
             base_url=emulator.base_url,
@@ -121,7 +128,7 @@ The TypeScript and Rust clients can connect to the same HTTP emulator during the
 
 ## TESTBOT <a href="#testbot" id="testbot"></a>
 
-Create a TESTBOT with `/newtestbot` in NexoCreator, then manage invited testers with `/testers`. Your bot owner account and up to 50 invited testers can interact with it. Other users cannot discover or start it.
+Create a TESTBOT with `/newtestbot` in NexoCreator, then manage invited testers with `/testers`. A test version of Acme Support could use the handle `ACMESUPPORTTESTBOT`, if it is available. Your bot owner account and up to 50 invited testers can interact with it. Other users cannot discover or start it.
 
 Use the environment's normal Bot API endpoint with the TESTBOT's own token. It has no `/test` URL prefix. Its effective sending limits and HTTPS webhook requirements still apply. A TESTBOT cannot become a regular bot, and another bot cannot reuse its file IDs. See [Environments](environments.md) when preparing a regular bot.
 

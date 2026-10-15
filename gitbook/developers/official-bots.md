@@ -54,14 +54,14 @@ Trivia stores quiz progress and scores, including the user identity needed to aw
 
 ## Reminders <a href="#reminders" id="reminders"></a>
 
-| Command | Example |
+| Command | How to use it |
 | --- | --- |
 | `/remind` | `/remind +10m Review the draft` |
 | `/reminders` | List your unfinished reminders in this chat, ten per page. |
-| `/edit` | `/edit ID +1h Review the revised draft` |
-| `/delete` | `/delete ID` |
+| `/edit` | Send the reminder ID, new time and replacement text, or use Change time beside it in `/reminders`. |
+| `/delete` | Send the reminder ID, or use Delete beside it in `/reminders`. |
 
-Replace `ID` with an identifier from your reminder list. Relative times use a positive whole number followed by `s`, `m`, `h` or `d`. You can also use a date such as `/remind 2026-12-01T09:00:00-06:00 Team meeting`. Absolute times require an explicit offset or `Z` and whole-second precision. Confirmations and lists display UTC.
+Use the buttons beside a reminder in `/reminders` to change its time or delete it without typing an ID. Relative times use a positive whole number followed by `s`, `m`, `h` or `d`. For an absolute reminder, use a future RFC3339 timestamp with an explicit offset or `Z` and whole-second precision. Confirmations and lists display UTC.
 
 The default allowance is 100 open reminders per user for the bot, with a maximum delay of 365 days. Reminder text allows 1,000 Unicode characters and at most 4,000 UTF-8 bytes. You can manage only your own reminders in the current chat. Edit or cancel before delivery begins.
 

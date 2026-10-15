@@ -51,22 +51,22 @@ import os
 from arx_nexo import Client, Config, models
 
 chat_id = os.environ["CHAT_ID"]
-request = models.SendMessage.model_validate(
-    {
-        "content": {
-            "type": "location",
-            "latitude": 14.62,
-            "longitude": -90.52,
-            "horizontal_accuracy": 25,
-        }
-    }
-)
 with Client(
     Config(
         token=os.environ["ARX_BOT_TOKEN"],
         base_url="https://signal.arx.pro/bot-api/v1",
     )
 ) as bot:
+    request = models.SendMessage(
+        content=models.InputContent(
+            root=models.InputLocation(
+                type="location",
+                latitude=14.62,
+                longitude=-90.52,
+                horizontal_accuracy=25.0,
+            )
+        ),
+    )
     result = bot.messages_send(
         chat_id,
         body=request,
@@ -79,7 +79,7 @@ with Client(
 {% tab title="Rust" %}
 
 ```rust
-use arx_nexo::{Client, Config, models};
+use arx_nexo::{Client, Config, models, presence::Presence};
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -87,18 +87,26 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let key = std::env::var("REQUEST_KEY")?;
     let chat_id = std::env::var("CHAT_ID")?;
     let bot = Client::new(Config::new(token, "https://signal.arx.pro/bot-api/v1", false)?)?;
-    let request: models::SendMessage = serde_json::from_value(serde_json::json!({
-      "content": {
-        "type": "location",
-        "latitude": 14.62,
-        "longitude": -90.52,
-        "horizontal_accuracy": 25
-      }
-    }))?;
+    let query = [];
+    let request = models::SendMessage {
+        content: models::InputContent::InputLocation(Box::new(models::InputLocation {
+            horizontal_accuracy: Some(25.0),
+            latitude: 14.62,
+            live: None,
+            longitude: -90.52,
+            r#type: models::InputLocationType::Location,
+        })),
+        effect_id: None,
+        link_preview: Presence::Unset,
+        protect_content: None,
+        reply_markup: None,
+        reply_to: None,
+        silent: None,
+    };
     let result = bot
-        .messages_send(&chat_id, &[], Some(&request), Some(&key))
+        .messages_send(&chat_id, &query, Some(&request), Some(&key))
         .await?;
-    println!("{}", serde_json::to_string(&result)?);
+    println!("{result:?}");
     Ok(())
 }
 ```
@@ -116,7 +124,7 @@ The accepted message contains `content.location` with the resolved location fiel
 
 ## Send a venue <a href="#send-a-venue" id="send-a-venue"></a>
 
-A venue adds a required `title` and `address` to coordinates. Its title contains 1 to 256 UTF-16 units and its address 1 to 1,024. Neither can be blank or contain only whitespace. `provider` is optional, but when you include it, all three of `name`, `place_id` and `place_type` are required:
+A venue adds a required `title` and `address` to coordinates. Its title contains 1 to 256 UTF-16 units and its address 1 to 1,024. Neither can be blank or contain only whitespace. `provider` is optional, but when you include it, all three of `name`, `place_id` and `place_type` are required. For HTTP:
 
 ```json
 {
@@ -139,7 +147,7 @@ A venue adds a required `title` and `address` to coordinates. Its title contains
 
 ## Start a live location <a href="#start-a-live-location" id="start-a-live-location"></a>
 
-Add `live` to a location:
+For HTTP, add `live` to a location:
 
 ```json
 {
@@ -166,7 +174,7 @@ ARX returns `expires_at`, which is null for an indefinite location. Do not submi
 
 ## Update or stop a live location <a href="#update-or-stop-a-live-location" id="update-or-stop-a-live-location"></a>
 
-Call `messages.edit` for your bot's active live location. Use the last returned `revision` as `expected_revision` and provide both coordinates:
+Call `messages.edit` for your bot's active live location. Use the last returned `revision` as `expected_revision` and provide both coordinates. This HTTP body updates a message at revision `1`:
 
 ```json
 {
@@ -179,7 +187,7 @@ Call `messages.edit` for your bot's active live location. Use the last returned 
 }
 ```
 
-The typed methods are `messagesEdit` in TypeScript and `messages_edit` in Python and Rust. Replace the illustrative revision above with the one your send or last edit returned. A stale edit returns HTTP 409 `revision_conflict`.
+The typed methods are `messagesEdit` in TypeScript and `messages_edit` in Python and Rust. Use the `revision` returned by your send or last edit for the next request. A stale edit returns HTTP 409 `revision_conflict`.
 
 Omitting accuracy, heading, proximity radius or duration keeps its accepted value. You can make one changed live edit per five seconds per message, in addition to the normal [edit limits](limits.md). A faster change returns `rate_limited` with a retry delay. An identical edit keeps the revision and does not consume that live edit allowance.
 
@@ -191,7 +199,7 @@ Copying or forwarding a live location creates a static location. Retrying an acc
 
 ## Request an ARX card with consent <a href="#request-an-arx-card-with-consent" id="request-an-arx-card-with-consent"></a>
 
-Send a `request_contact` reply button so the user can choose to share their own ARX card:
+Send a `request_contact` reply button so the user can choose to share their own ARX card. The HTTP body is:
 
 ```json
 {
@@ -212,7 +220,7 @@ Your bot can send an ARX account card for:
 - A user who has started a chat with it.
 - A user shared through a `request_users` selection while that sharing consent remains valid.
 
-For a test bot, the chat or selection must come from the bot owner or a current tester. Send the account's user ID:
+For a test bot, the chat or selection must come from the bot owner or a current tester. Include the account's user ID. For HTTP, a contact body looks like this:
 
 ```json
 {"content":{"type":"contact","user_id":"4398046511100"}}
@@ -222,13 +230,13 @@ ARX resolves the name and handle. Supplying a name cannot override that identity
 
 ## Send a manual card <a href="#send-a-manual-card" id="send-a-manual-card"></a>
 
-A manual contact is text supplied by your bot, without a verified ARX identity:
+A manual contact is text supplied by your bot, without a verified ARX identity. For HTTP:
 
 ```json
 {
   "content": {
     "type": "contact",
-    "name": "Meeting desk",
+    "name": "Ana López",
     "phone_number": "+50255550100"
   }
 }

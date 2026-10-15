@@ -8,7 +8,7 @@ Create a bot that replies "Hello from Nexo!" when you send it a message. You nee
 
 ## Create the bot <a href="#create-the-bot" id="create-the-bot"></a>
 
-Open `@NEXOCREATOR` in Messenger and send `/newbot`. Read and accept the developer terms shown there, then choose a display name and an available handle. NexoCreator checks the name and handle for you. See [NexoCreator](nexocreator.md) for account requirements and creation limits.
+Open `@NEXOCREATOR` in Messenger and send `/newbot`. Read and accept the developer terms shown there, then choose a display name and an available handle. For example, a support bot could be named **Acme Support** with the handle `ACMESUPPORTBOT`. NexoCreator checks the name and handle for you. See [NexoCreator](nexocreator.md) for account requirements and creation limits.
 
 Choose **View token** and save the credential immediately. You can reveal it only once, within 3,600 seconds (60 minutes) by default. This is the reveal window, not the token's lifetime. If you miss it or lose the credential, rotate the token in NexoCreator. [Authentication & tokens](authentication.md) explains storage and replacement.
 
@@ -71,7 +71,7 @@ import os
 from arx_nexo import Client, Config
 
 with Client(Config(base_url=os.environ["ARX_BOT_API_BASE_URL"])) as bot:
-    offset = None
+    offset: str | None = None
     while True:
         batch = bot.updates_get(offset=offset, timeout_seconds=30)
         for update in batch.updates:

@@ -48,23 +48,29 @@ HTTP 403 `bot_blocked_by_user` means you should stop sending to that user. See [
 
 ### Example <a href="#example" id="example"></a>
 
-Use a new idempotency key for each new action. Reuse the example key only when retrying this exact request.
+Set `ARX_BOT_TOKEN`, `CHAT_ID`, `REQUEST_KEY` before running this example.
 
 {% tabs %}
 
 {% tab title="TypeScript" %}
 
 ```ts
-import { Client } from "@arx/nexo";
+import { Client, type Models } from "@arx/nexo";
 
-const bot = new Client({ baseUrl: "https://signal.arx.pro/bot-api/v1" });
+const arxBotToken = process.env.ARX_BOT_TOKEN;
+const chatId = process.env.CHAT_ID;
+const requestKey = process.env.REQUEST_KEY;
+if (!arxBotToken || !chatId || !requestKey) {
+  throw new Error("Set ARX_BOT_TOKEN, CHAT_ID, REQUEST_KEY");
+}
+
+const bot = new Client({ token: arxBotToken, baseUrl: "https://signal.arx.pro/bot-api/v1" });
 try {
-  const result = await bot.chatsSendAction("4398046511200", {
-    "body": {
-      "action": "typing"
-    },
-    "key": "example-chats-send_action-1"
-  });
+  const body: Models.SendAction = {
+    "action": "typing"
+  };
+  const result = await bot.chatsSendAction(chatId, { body, key: requestKey });
+  console.log(result);
 } finally {
   await bot.close();
 }
@@ -75,32 +81,34 @@ try {
 {% tab title="Python" %}
 
 ```python
-from arx_nexo import Client, Config
-from arx_nexo import models
+import os
+from arx_nexo import Client, Config, models
 
-with Client(Config(base_url="https://signal.arx.pro/bot-api/v1")) as bot:
-    body = models.SendAction.model_validate({'action': 'typing'})
-    result = bot.chats_send_action('4398046511200', body=body, key='example-chats-send_action-1')
+with Client(Config(token=os.environ["ARX_BOT_TOKEN"], base_url="https://signal.arx.pro/bot-api/v1")) as bot:
+    body = models.SendAction(action='typing')
+    result = bot.chats_send_action(os.environ["CHAT_ID"], body=body, key=os.environ["REQUEST_KEY"])
+    print(result)
 ```
 
 {% endtab %}
 
 {% tab title="Rust" %}
 
-Add `serde_json = "1"` to your application's `[dependencies]` in `Cargo.toml`.
-
 ```rust
-use arx_nexo::{ Client, Config };
+use arx_nexo::{ Client, Config, models };
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let token = std::env::var("ARX_BOT_TOKEN")?;
-    let config = Config::new(token, "https://signal.arx.pro/bot-api/v1", false)?;
-    let bot = Client::new(config)?;
-    let body: arx_nexo::models::SendAction = serde_json::from_value(serde_json::json!({
-      "action": "typing"
-    }))?;
-    let result = bot.chats_send_action("4398046511200", &[], Some(&body), Some("example-chats-send_action-1")).await?;
+    let arx_bot_token = std::env::var("ARX_BOT_TOKEN")?;
+    let chat_id = std::env::var("CHAT_ID")?;
+    let request_key = std::env::var("REQUEST_KEY")?;
+    let bot = Client::new(Config::new(arx_bot_token, "https://signal.arx.pro/bot-api/v1", false)?)?;
+    let body = models::SendAction {
+        action: models::SendActionAction::Typing,
+    };
+    let query = [];
+    let result = bot.chats_send_action(&chat_id, &query, Some(&body), Some(&request_key)).await?;
+    println!("{:?}", result);
     Ok(())
 }
 ```
@@ -111,9 +119,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 ```sh
 curl --fail-with-body --max-time 20 -X POST \
-  "https://signal.arx.pro/bot-api/v1/chats/4398046511200/actions" \
+  "https://signal.arx.pro/bot-api/v1/chats/${CHAT_ID}/actions" \
   -H "Authorization: Bearer ${ARX_BOT_TOKEN}" \
-  -H "Idempotency-Key: example-chats-send_action-1" \
+  -H "Idempotency-Key: ${REQUEST_KEY}" \
   -H "Content-Type: application/json" \
   --data '{"action": "typing"}'
 ```
@@ -162,7 +170,7 @@ HTTP 404 `chat_not_found` means the chat is missing or inaccessible. HTTP 403 `b
 
 ### Example <a href="#example-1" id="example-1"></a>
 
-Use a new idempotency key for each new action. Reuse the example key only when retrying this exact request.
+Set `ARX_BOT_TOKEN`, `CHAT_ID`, `DRAFT_ID`, `REQUEST_KEY` before running this example.
 
 {% tabs %}
 
@@ -171,11 +179,18 @@ Use a new idempotency key for each new action. Reuse the example key only when r
 ```ts
 import { Client } from "@arx/nexo";
 
-const bot = new Client({ baseUrl: "https://signal.arx.pro/bot-api/v1" });
+const arxBotToken = process.env.ARX_BOT_TOKEN;
+const chatId = process.env.CHAT_ID;
+const draftId = process.env.DRAFT_ID;
+const requestKey = process.env.REQUEST_KEY;
+if (!arxBotToken || !chatId || !draftId || !requestKey) {
+  throw new Error("Set ARX_BOT_TOKEN, CHAT_ID, DRAFT_ID, REQUEST_KEY");
+}
+
+const bot = new Client({ token: arxBotToken, baseUrl: "https://signal.arx.pro/bot-api/v1" });
 try {
-  const result = await bot.draftsDelete("4398046511200", "reply-1", {
-    "key": "example-drafts-delete-1"
-  });
+  const result = await bot.draftsDelete(chatId, draftId, { key: requestKey });
+  console.log(result);
 } finally {
   await bot.close();
 }
@@ -186,10 +201,12 @@ try {
 {% tab title="Python" %}
 
 ```python
+import os
 from arx_nexo import Client, Config
 
-with Client(Config(base_url="https://signal.arx.pro/bot-api/v1")) as bot:
-    result = bot.drafts_delete('4398046511200', 'reply-1', key='example-drafts-delete-1')
+with Client(Config(token=os.environ["ARX_BOT_TOKEN"], base_url="https://signal.arx.pro/bot-api/v1")) as bot:
+    result = bot.drafts_delete(os.environ["CHAT_ID"], os.environ["DRAFT_ID"], key=os.environ["REQUEST_KEY"])
+    print(result)
 ```
 
 {% endtab %}
@@ -201,10 +218,14 @@ use arx_nexo::{ Client, Config };
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let token = std::env::var("ARX_BOT_TOKEN")?;
-    let config = Config::new(token, "https://signal.arx.pro/bot-api/v1", false)?;
-    let bot = Client::new(config)?;
-    let result = bot.drafts_delete("4398046511200", "reply-1", &[], None, Some("example-drafts-delete-1")).await?;
+    let arx_bot_token = std::env::var("ARX_BOT_TOKEN")?;
+    let chat_id = std::env::var("CHAT_ID")?;
+    let draft_id = std::env::var("DRAFT_ID")?;
+    let request_key = std::env::var("REQUEST_KEY")?;
+    let bot = Client::new(Config::new(arx_bot_token, "https://signal.arx.pro/bot-api/v1", false)?)?;
+    let query = [];
+    let result = bot.drafts_delete(&chat_id, &draft_id, &query, None, Some(&request_key)).await?;
+    println!("{:?}", result);
     Ok(())
 }
 ```
@@ -215,9 +236,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 ```sh
 curl --fail-with-body --max-time 20 -X DELETE \
-  "https://signal.arx.pro/bot-api/v1/chats/4398046511200/drafts/reply-1" \
+  "https://signal.arx.pro/bot-api/v1/chats/${CHAT_ID}/drafts/${DRAFT_ID}" \
   -H "Authorization: Bearer ${ARX_BOT_TOKEN}" \
-  -H "Idempotency-Key: example-drafts-delete-1"
+  -H "Idempotency-Key: ${REQUEST_KEY}"
 ```
 
 {% endtab %}
@@ -283,25 +304,32 @@ HTTP 409 `version_conflict` with reason `draft_retired` means this generation ha
 
 ### Example <a href="#example-2" id="example-2"></a>
 
-Use a new idempotency key for each new action. Reuse the example key only when retrying this exact request.
+Set `ARX_BOT_TOKEN`, `CHAT_ID`, `DRAFT_ID`, `REQUEST_KEY` before running this example.
 
 {% tabs %}
 
 {% tab title="TypeScript" %}
 
 ```ts
-import { Client } from "@arx/nexo";
+import { Client, type Models } from "@arx/nexo";
 
-const bot = new Client({ baseUrl: "https://signal.arx.pro/bot-api/v1" });
+const arxBotToken = process.env.ARX_BOT_TOKEN;
+const chatId = process.env.CHAT_ID;
+const draftId = process.env.DRAFT_ID;
+const requestKey = process.env.REQUEST_KEY;
+if (!arxBotToken || !chatId || !draftId || !requestKey) {
+  throw new Error("Set ARX_BOT_TOKEN, CHAT_ID, DRAFT_ID, REQUEST_KEY");
+}
+
+const bot = new Client({ token: arxBotToken, baseUrl: "https://signal.arx.pro/bot-api/v1" });
 try {
-  const result = await bot.draftsSet("4398046511200", "reply-1", {
-    "body": {
-      "can_stop": true,
-      "keep_on_stop": false,
-      "text": "Working…"
-    },
-    "key": "example-drafts-set-1"
-  });
+  const body: Models.SetDraft = {
+    "can_stop": true,
+    "keep_on_stop": false,
+    "text": "Working…"
+  };
+  const result = await bot.draftsSet(chatId, draftId, { body, key: requestKey });
+  console.log(result);
 } finally {
   await bot.close();
 }
@@ -312,34 +340,40 @@ try {
 {% tab title="Python" %}
 
 ```python
-from arx_nexo import Client, Config
-from arx_nexo import models
+import os
+from arx_nexo import Client, Config, models
 
-with Client(Config(base_url="https://signal.arx.pro/bot-api/v1")) as bot:
-    body = models.SetDraft.model_validate({'can_stop': True, 'keep_on_stop': False, 'text': 'Working…'})
-    result = bot.drafts_set('4398046511200', 'reply-1', body=body, key='example-drafts-set-1')
+with Client(Config(token=os.environ["ARX_BOT_TOKEN"], base_url="https://signal.arx.pro/bot-api/v1")) as bot:
+    body = models.SetDraft(can_stop=True, keep_on_stop=False, text='Working…')
+    result = bot.drafts_set(os.environ["CHAT_ID"], os.environ["DRAFT_ID"], body=body, key=os.environ["REQUEST_KEY"])
+    print(result)
 ```
 
 {% endtab %}
 
 {% tab title="Rust" %}
 
-Add `serde_json = "1"` to your application's `[dependencies]` in `Cargo.toml`.
-
 ```rust
-use arx_nexo::{ Client, Config };
+use arx_nexo::{ Client, Config, models };
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let token = std::env::var("ARX_BOT_TOKEN")?;
-    let config = Config::new(token, "https://signal.arx.pro/bot-api/v1", false)?;
-    let bot = Client::new(config)?;
-    let body: arx_nexo::models::SetDraft = serde_json::from_value(serde_json::json!({
-      "can_stop": true,
-      "keep_on_stop": false,
-      "text": "Working…"
-    }))?;
-    let result = bot.drafts_set("4398046511200", "reply-1", &[], Some(&body), Some("example-drafts-set-1")).await?;
+    let arx_bot_token = std::env::var("ARX_BOT_TOKEN")?;
+    let chat_id = std::env::var("CHAT_ID")?;
+    let draft_id = std::env::var("DRAFT_ID")?;
+    let request_key = std::env::var("REQUEST_KEY")?;
+    let bot = Client::new(Config::new(arx_bot_token, "https://signal.arx.pro/bot-api/v1", false)?)?;
+    let body = models::SetDraft {
+        can_stop: Some(true),
+        entities: None,
+        format: None,
+        keep_on_stop: Some(false),
+        rich: None,
+        text: Some("Working…".to_owned()),
+    };
+    let query = [];
+    let result = bot.drafts_set(&chat_id, &draft_id, &query, Some(&body), Some(&request_key)).await?;
+    println!("{:?}", result);
     Ok(())
 }
 ```
@@ -350,9 +384,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 ```sh
 curl --fail-with-body --max-time 20 -X PUT \
-  "https://signal.arx.pro/bot-api/v1/chats/4398046511200/drafts/reply-1" \
+  "https://signal.arx.pro/bot-api/v1/chats/${CHAT_ID}/drafts/${DRAFT_ID}" \
   -H "Authorization: Bearer ${ARX_BOT_TOKEN}" \
-  -H "Idempotency-Key: example-drafts-set-1" \
+  -H "Idempotency-Key: ${REQUEST_KEY}" \
   -H "Content-Type: application/json" \
   --data '{"can_stop": true, "keep_on_stop": false, "text": "Working…"}'
 ```

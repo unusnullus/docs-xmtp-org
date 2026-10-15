@@ -32,10 +32,7 @@ try {
 	const result = await bot.messagesSend(chatId, {
 		key,
 		body: {
-			content: {
-				type: "text",
-				text: "Trail saved.",
-			},
+			content: { type: "text", text: "Trail saved." },
 			effect_id: effect.effect_id,
 		},
 	});
@@ -50,7 +47,7 @@ try {
 
 ```python
 import os
-from arx_nexo import Client, Config, models
+from arx_nexo import Client, Config, models, FormattedText
 
 chat_id = os.environ["CHAT_ID"]
 with Client(
@@ -65,11 +62,9 @@ with Client(
     )
     if effect is None:
         raise RuntimeError("No private-chat effect is available")
-    request = models.SendMessage.model_validate(
-        {
-            "content": {"type": "text", "text": "Trail saved."},
-            "effect_id": effect.effect_id,
-        }
+    request = models.SendMessage(
+        content=FormattedText("Trail saved.").content(),
+        effect_id=effect.effect_id,
     )
     result = bot.messages_send(
         chat_id,
@@ -83,7 +78,7 @@ with Client(
 {% tab title="Rust" %}
 
 ```rust
-use arx_nexo::{Client, Config, models};
+use arx_nexo::{Client, Config, FormattedText, models, presence::Presence};
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -91,7 +86,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let key = std::env::var("REQUEST_KEY")?;
     let chat_id = std::env::var("CHAT_ID")?;
     let bot = Client::new(Config::new(token, "https://signal.arx.pro/bot-api/v1", false)?)?;
-    let catalog = bot.message_effects_list(&[], None, None).await?;
+    let query = [];
+    let catalog = bot.message_effects_list(&query, None, None).await?;
     let effect = catalog
         .items
         .iter()
@@ -101,17 +97,19 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 .any(|kind| matches!(kind, models::MessageEffectAvailableInItem::Private))
         })
         .ok_or("No private-chat effect is available")?;
-    let request: models::SendMessage = serde_json::from_value(serde_json::json!({
-      "content": {
-        "type": "text",
-        "text": "Trail saved."
-      },
-      "effect_id": effect.effect_id
-    }))?;
+    let request = models::SendMessage {
+        content: FormattedText::new("Trail saved.", vec![])?.content()?,
+        effect_id: Some(effect.effect_id.clone()),
+        link_preview: Presence::Unset,
+        protect_content: None,
+        reply_markup: None,
+        reply_to: None,
+        silent: None,
+    };
     let result = bot
-        .messages_send(&chat_id, &[], Some(&request), Some(&key))
+        .messages_send(&chat_id, &query, Some(&request), Some(&key))
         .await?;
-    println!("{}", serde_json::to_string(&result)?);
+    println!("{result:?}");
     Ok(())
 }
 ```

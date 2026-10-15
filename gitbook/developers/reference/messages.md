@@ -71,7 +71,7 @@ HTTP 403 `chat_not_started`, `bot_blocked_by_user`, or `user_deactivated` means 
 
 ### Example <a href="#example" id="example"></a>
 
-Use a new idempotency key for each new action. Reuse the example key only when retrying this exact request.
+Set `ARX_BOT_TOKEN`, `CHAT_ID`, `REQUEST_KEY` before running this example.
 
 {% tabs %}
 
@@ -80,18 +80,17 @@ Use a new idempotency key for each new action. Reuse the example key only when r
 ```ts
 import { Client } from "@arx/nexo";
 
-const bot = new Client({ baseUrl: "https://signal.arx.pro/bot-api/v1" });
+const arxBotToken = process.env.ARX_BOT_TOKEN;
+const chatId = process.env.CHAT_ID;
+const requestKey = process.env.REQUEST_KEY;
+if (!arxBotToken || !chatId || !requestKey) {
+  throw new Error("Set ARX_BOT_TOKEN, CHAT_ID, REQUEST_KEY");
+}
+
+const bot = new Client({ token: arxBotToken, baseUrl: "https://signal.arx.pro/bot-api/v1" });
 try {
-  const result = await bot.messagesSend("4398046511200", {
-    "body": {
-      "content": {
-        "format": "plain",
-        "text": "Hello",
-        "type": "text"
-      }
-    },
-    "key": "example-messages-send-1"
-  });
+  const result = await bot.sendText(chatId, "Hello", { key: requestKey });
+  console.log(result);
 } finally {
   await bot.close();
 }
@@ -102,36 +101,29 @@ try {
 {% tab title="Python" %}
 
 ```python
+import os
 from arx_nexo import Client, Config
-from arx_nexo import models
 
-with Client(Config(base_url="https://signal.arx.pro/bot-api/v1")) as bot:
-    body = models.SendMessage.model_validate({'content': {'format': 'plain', 'text': 'Hello', 'type': 'text'}})
-    result = bot.messages_send('4398046511200', body=body, key='example-messages-send-1')
+with Client(Config(token=os.environ["ARX_BOT_TOKEN"], base_url="https://signal.arx.pro/bot-api/v1")) as bot:
+    result = bot.send_text(os.environ["CHAT_ID"], 'Hello', key=os.environ["REQUEST_KEY"])
+    print(result)
 ```
 
 {% endtab %}
 
 {% tab title="Rust" %}
 
-Add `serde_json = "1"` to your application's `[dependencies]` in `Cargo.toml`.
-
 ```rust
 use arx_nexo::{ Client, Config };
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let token = std::env::var("ARX_BOT_TOKEN")?;
-    let config = Config::new(token, "https://signal.arx.pro/bot-api/v1", false)?;
-    let bot = Client::new(config)?;
-    let body: arx_nexo::models::SendMessage = serde_json::from_value(serde_json::json!({
-      "content": {
-        "format": "plain",
-        "text": "Hello",
-        "type": "text"
-      }
-    }))?;
-    let result = bot.messages_send("4398046511200", &[], Some(&body), Some("example-messages-send-1")).await?;
+    let arx_bot_token = std::env::var("ARX_BOT_TOKEN")?;
+    let chat_id = std::env::var("CHAT_ID")?;
+    let request_key = std::env::var("REQUEST_KEY")?;
+    let bot = Client::new(Config::new(arx_bot_token, "https://signal.arx.pro/bot-api/v1", false)?)?;
+    let result = bot.send_text(&chat_id, "Hello", Some(&request_key)).await?;
+    println!("{:?}", result);
     Ok(())
 }
 ```
@@ -142,9 +134,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 ```sh
 curl --fail-with-body --max-time 20 -X POST \
-  "https://signal.arx.pro/bot-api/v1/chats/4398046511200/messages" \
+  "https://signal.arx.pro/bot-api/v1/chats/${CHAT_ID}/messages" \
   -H "Authorization: Bearer ${ARX_BOT_TOKEN}" \
-  -H "Idempotency-Key: example-messages-send-1" \
+  -H "Idempotency-Key: ${REQUEST_KEY}" \
   -H "Content-Type: application/json" \
   --data '{"content": {"format": "plain", "text": "Hello", "type": "text"}}'
 ```
@@ -176,8 +168,8 @@ Example success response (HTTP 200). The SDK methods return `result`:
     "sender_user": {
       "id": "10000042",
       "is_bot": true,
-      "name": "Example",
-      "username": "EXAMPLEBOT"
+      "name": "Acme Support",
+      "username": "ACMESUPPORTBOT"
     },
     "sent_at": "2026-10-11T12:00:00Z",
     "silent": false,
@@ -238,36 +230,37 @@ HTTP 400 `album_type_mismatch` means you must use a supported combination of ite
 
 ### Example <a href="#example-1" id="example-1"></a>
 
-Replace the two example file IDs with ready photos from your bot's library. Use a new idempotency key for each new action. Reuse the example key only when retrying this exact request.
+Set `ARX_BOT_TOKEN`, `CHAT_ID`, `PHOTO_FILE_ID`, `REQUEST_KEY`, `SECOND_PHOTO_FILE_ID` before running this example.
 
 {% tabs %}
 
 {% tab title="TypeScript" %}
 
 ```ts
-import { Client } from "@arx/nexo";
+import { Client, type Models, FileInput } from "@arx/nexo";
 
-const bot = new Client({ baseUrl: "https://signal.arx.pro/bot-api/v1" });
+const arxBotToken = process.env.ARX_BOT_TOKEN;
+const chatId = process.env.CHAT_ID;
+const photoFileId = process.env.PHOTO_FILE_ID;
+const requestKey = process.env.REQUEST_KEY;
+const secondPhotoFileId = process.env.SECOND_PHOTO_FILE_ID;
+if (!arxBotToken || !chatId || !photoFileId || !requestKey || !secondPhotoFileId) {
+  throw new Error("Set ARX_BOT_TOKEN, CHAT_ID, PHOTO_FILE_ID, REQUEST_KEY, SECOND_PHOTO_FILE_ID");
+}
+
+const bot = new Client({ token: arxBotToken, baseUrl: "https://signal.arx.pro/bot-api/v1" });
 try {
-  const result = await bot.messagesSendAlbum("4398046511200", {
-    "body": {
-      "items": [
-        {
-          "type": "photo",
-          "media": {
-            "file_id": "example-photo-file-1"
-          }
-        },
-        {
-          "type": "photo",
-          "media": {
-            "file_id": "example-photo-file-2"
-          }
-        }
-      ]
-    },
-    "key": "example-messages-send_album-1"
-  });
+  const body: Models.SendAlbum = {
+    "items": [{
+      "type": "photo",
+      "media": FileInput.fromId(photoFileId)
+    }, {
+      "type": "photo",
+      "media": FileInput.fromId(secondPhotoFileId)
+    }]
+  };
+  const result = await bot.messagesSendAlbum(chatId, { body, key: requestKey });
+  console.log(result);
 } finally {
   await bot.close();
 }
@@ -278,45 +271,65 @@ try {
 {% tab title="Python" %}
 
 ```python
-from arx_nexo import Client, Config
-from arx_nexo import models
+import os
+from arx_nexo import Client, Config, models, FileInput
 
-with Client(Config(base_url="https://signal.arx.pro/bot-api/v1")) as bot:
-    body = models.SendAlbum.model_validate({'items': [{'type': 'photo', 'media': {'file_id': 'example-photo-file-1'}}, {'type': 'photo', 'media': {'file_id': 'example-photo-file-2'}}]})
-    result = bot.messages_send_album('4398046511200', body=body, key='example-messages-send_album-1')
+with Client(Config(token=os.environ["ARX_BOT_TOKEN"], base_url="https://signal.arx.pro/bot-api/v1")) as bot:
+    body = models.SendAlbum(
+        items=[models.AlbumItem(
+            root=models.AlbumPhoto(type='photo', media=FileInput.from_id(os.environ["PHOTO_FILE_ID"])),
+        ), models.AlbumItem(
+            root=models.AlbumPhoto(
+                type='photo',
+                media=FileInput.from_id(os.environ["SECOND_PHOTO_FILE_ID"]),
+            ),
+        )],
+    )
+    result = bot.messages_send_album(os.environ["CHAT_ID"], body=body, key=os.environ["REQUEST_KEY"])
+    print(result)
 ```
 
 {% endtab %}
 
 {% tab title="Rust" %}
 
-Add `serde_json = "1"` to your application's `[dependencies]` in `Cargo.toml`.
-
 ```rust
-use arx_nexo::{ Client, Config };
+use arx_nexo::{ Client, Config, models, FileInput };
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let token = std::env::var("ARX_BOT_TOKEN")?;
-    let config = Config::new(token, "https://signal.arx.pro/bot-api/v1", false)?;
-    let bot = Client::new(config)?;
-    let body: arx_nexo::models::SendAlbum = serde_json::from_value(serde_json::json!({
-      "items": [
-        {
-          "type": "photo",
-          "media": {
-            "file_id": "example-photo-file-1"
-          }
-        },
-        {
-          "type": "photo",
-          "media": {
-            "file_id": "example-photo-file-2"
-          }
-        }
-      ]
-    }))?;
-    let result = bot.messages_send_album("4398046511200", &[], Some(&body), Some("example-messages-send_album-1")).await?;
+    let arx_bot_token = std::env::var("ARX_BOT_TOKEN")?;
+    let chat_id = std::env::var("CHAT_ID")?;
+    let photo_file_id = std::env::var("PHOTO_FILE_ID")?;
+    let request_key = std::env::var("REQUEST_KEY")?;
+    let second_photo_file_id = std::env::var("SECOND_PHOTO_FILE_ID")?;
+    let bot = Client::new(Config::new(arx_bot_token, "https://signal.arx.pro/bot-api/v1", false)?)?;
+    let body = models::SendAlbum {
+        effect_id: None,
+        items: vec![models::AlbumItem::AlbumPhoto(Box::new(models::AlbumPhoto {
+            caption: None,
+            caption_above_media: None,
+            caption_entities: None,
+            caption_format: None,
+            has_spoiler: None,
+            media: FileInput::from_id(photo_file_id)?,
+            r#type: models::AlbumPhotoType::Photo,
+        })), models::AlbumItem::AlbumPhoto(Box::new(models::AlbumPhoto {
+            caption: None,
+            caption_above_media: None,
+            caption_entities: None,
+            caption_format: None,
+            has_spoiler: None,
+            media: FileInput::from_id(second_photo_file_id)?,
+            r#type: models::AlbumPhotoType::Photo,
+        }))],
+        protect_content: None,
+        reply_to: None,
+        silent: None,
+    };
+    let query = [];
+    let result = bot.messages_send_album(&chat_id, &query, Some(&body), Some(&request_key)).await?;
+    println!("{:?}", result);
     Ok(())
 }
 ```
@@ -326,12 +339,19 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 {% tab title="HTTP" %}
 
 ```sh
+payload=$(python3 - <<'PY'
+import json
+import os
+print(json.dumps({'items': [{'type': 'photo', 'media': {'file_id': os.environ['PHOTO_FILE_ID']}}, {'type': 'photo', 'media': {'file_id': os.environ['SECOND_PHOTO_FILE_ID']}}]}))
+PY
+)
+
 curl --fail-with-body --max-time 20 -X POST \
-  "https://signal.arx.pro/bot-api/v1/chats/4398046511200/messages/album" \
+  "https://signal.arx.pro/bot-api/v1/chats/${CHAT_ID}/messages/album" \
   -H "Authorization: Bearer ${ARX_BOT_TOKEN}" \
-  -H "Idempotency-Key: example-messages-send_album-1" \
+  -H "Idempotency-Key: ${REQUEST_KEY}" \
   -H "Content-Type: application/json" \
-  --data '{"items": [{"type": "photo", "media": {"file_id": "example-photo-file-1"}}, {"type": "photo", "media": {"file_id": "example-photo-file-2"}}]}'
+  --data "${payload}"
 ```
 
 {% endtab %}
@@ -353,9 +373,9 @@ Example success response (HTTP 200). The SDK methods return `result`:
         "content": {
           "photo": [
             {
-              "file_id": "example-photo-file-1",
+              "file_id": "rt1.c2FtcGxlLXBob3RvLTE.QMCkB_dy7FgONBWySzPfghEC-zlXOqY6sGXdKhXzr5k",
               "file_size": 1024,
-              "file_unique_id": "example-photo-unique-1",
+              "file_unique_id": "FdwQp33nil58WVXrOLvLDYRDqfQQ-McJommfhZbxoZQ",
               "height": 480,
               "mime": "image/jpeg",
               "width": 640
@@ -372,8 +392,8 @@ Example success response (HTTP 200). The SDK methods return `result`:
         "sender_user": {
           "id": "10000042",
           "is_bot": true,
-          "name": "Example",
-          "username": "EXAMPLEBOT"
+          "name": "Acme Support",
+          "username": "ACMESUPPORTBOT"
         },
         "sent_at": "2026-10-11T12:00:00Z",
         "silent": false,
@@ -387,9 +407,9 @@ Example success response (HTTP 200). The SDK methods return `result`:
         "content": {
           "photo": [
             {
-              "file_id": "example-photo-file-2",
+              "file_id": "rt1.c2FtcGxlLXBob3RvLTI.NPSV1aJC5gQA1kySsvwknIqBlvaDMszdv5WEy00RXRE",
               "file_size": 1024,
-              "file_unique_id": "example-photo-unique-2",
+              "file_unique_id": "PgFBmbHreTP5gfMJLkST7yVTqfezFcscJC4xkWMgGy4",
               "height": 480,
               "mime": "image/jpeg",
               "width": 640
@@ -406,8 +426,8 @@ Example success response (HTTP 200). The SDK methods return `result`:
         "sender_user": {
           "id": "10000042",
           "is_bot": true,
-          "name": "Example",
-          "username": "EXAMPLEBOT"
+          "name": "Acme Support",
+          "username": "ACMESUPPORTBOT"
         },
         "sent_at": "2026-10-11T12:00:00Z",
         "silent": false,
@@ -471,26 +491,33 @@ If no eligible messages remain, HTTP 403 `protected_content` means at least one 
 
 ### Example <a href="#example-2" id="example-2"></a>
 
-This example copies a text message whose content is "Hello". Use a new idempotency key for each new action. Reuse the example key only when retrying this exact request.
+Set `ARX_BOT_TOKEN`, `CHAT_ID`, `MESSAGE_IDS`, `REQUEST_KEY`, `SOURCE_CHAT_ID` before running this example. Use a comma-separated, strictly increasing list for `MESSAGE_IDS`.
 
 {% tabs %}
 
 {% tab title="TypeScript" %}
 
 ```ts
-import { Client } from "@arx/nexo";
+import { Client, type Models } from "@arx/nexo";
 
-const bot = new Client({ baseUrl: "https://signal.arx.pro/bot-api/v1" });
+const arxBotToken = process.env.ARX_BOT_TOKEN;
+const chatId = process.env.CHAT_ID;
+const messageIdsInput = process.env.MESSAGE_IDS;
+const requestKey = process.env.REQUEST_KEY;
+const sourceChatId = process.env.SOURCE_CHAT_ID;
+if (!arxBotToken || !chatId || !messageIdsInput || !requestKey || !sourceChatId) {
+  throw new Error("Set ARX_BOT_TOKEN, CHAT_ID, MESSAGE_IDS, REQUEST_KEY, SOURCE_CHAT_ID");
+}
+const messageIds = messageIdsInput.split(",");
+
+const bot = new Client({ token: arxBotToken, baseUrl: "https://signal.arx.pro/bot-api/v1" });
 try {
-  const result = await bot.messagesCopy("4398046511201", {
-    "body": {
-      "from_chat_id": "4398046511200",
-      "message_ids": [
-        "42"
-      ]
-    },
-    "key": "example-messages-copy-1"
-  });
+  const body: Models.CopyMessages = {
+    "from_chat_id": sourceChatId,
+    "message_ids": messageIds
+  };
+  const result = await bot.messagesCopy(chatId, { body, key: requestKey });
+  console.log(result);
 } finally {
   await bot.close();
 }
@@ -501,35 +528,51 @@ try {
 {% tab title="Python" %}
 
 ```python
-from arx_nexo import Client, Config
-from arx_nexo import models
+import os
+from arx_nexo import Client, Config, models
 
-with Client(Config(base_url="https://signal.arx.pro/bot-api/v1")) as bot:
-    body = models.CopyMessages.model_validate({'from_chat_id': '4398046511200', 'message_ids': ['42']})
-    result = bot.messages_copy('4398046511201', body=body, key='example-messages-copy-1')
+with Client(Config(token=os.environ["ARX_BOT_TOKEN"], base_url="https://signal.arx.pro/bot-api/v1")) as bot:
+    body = models.CopyMessages(
+        from_chat_id=os.environ["SOURCE_CHAT_ID"],
+        message_ids=os.environ["MESSAGE_IDS"].split(","),
+    )
+    result = bot.messages_copy(os.environ["CHAT_ID"], body=body, key=os.environ["REQUEST_KEY"])
+    print(result)
 ```
 
 {% endtab %}
 
 {% tab title="Rust" %}
 
-Add `serde_json = "1"` to your application's `[dependencies]` in `Cargo.toml`.
-
 ```rust
-use arx_nexo::{ Client, Config };
+use arx_nexo::{ Client, Config, models };
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let token = std::env::var("ARX_BOT_TOKEN")?;
-    let config = Config::new(token, "https://signal.arx.pro/bot-api/v1", false)?;
-    let bot = Client::new(config)?;
-    let body: arx_nexo::models::CopyMessages = serde_json::from_value(serde_json::json!({
-      "from_chat_id": "4398046511200",
-      "message_ids": [
-        "42"
-      ]
-    }))?;
-    let result = bot.messages_copy("4398046511201", &[], Some(&body), Some("example-messages-copy-1")).await?;
+    let arx_bot_token = std::env::var("ARX_BOT_TOKEN")?;
+    let chat_id = std::env::var("CHAT_ID")?;
+    let message_ids : Vec<String> = std::env::var("MESSAGE_IDS")?.split(',').map(str::to_owned).collect();
+    let request_key = std::env::var("REQUEST_KEY")?;
+    let source_chat_id = std::env::var("SOURCE_CHAT_ID")?;
+    let bot = Client::new(Config::new(arx_bot_token, "https://signal.arx.pro/bot-api/v1", false)?)?;
+    let body = models::CopyMessages {
+        caption: None,
+        caption_above_media: None,
+        caption_entities: None,
+        caption_format: None,
+        effect_id: None,
+        from_chat_id: source_chat_id,
+        message_ids: message_ids,
+        protect_content: None,
+        remove_caption: None,
+        reply_markup: None,
+        reply_to: None,
+        silent: None,
+        video_start_seconds: None,
+    };
+    let query = [];
+    let result = bot.messages_copy(&chat_id, &query, Some(&body), Some(&request_key)).await?;
+    println!("{:?}", result);
     Ok(())
 }
 ```
@@ -539,12 +582,19 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 {% tab title="HTTP" %}
 
 ```sh
+payload=$(python3 - <<'PY'
+import json
+import os
+print(json.dumps({'from_chat_id': os.environ['SOURCE_CHAT_ID'], 'message_ids': os.environ['MESSAGE_IDS'].split(",")}))
+PY
+)
+
 curl --fail-with-body --max-time 20 -X POST \
-  "https://signal.arx.pro/bot-api/v1/chats/4398046511201/messages/copy" \
+  "https://signal.arx.pro/bot-api/v1/chats/${CHAT_ID}/messages/copy" \
   -H "Authorization: Bearer ${ARX_BOT_TOKEN}" \
-  -H "Idempotency-Key: example-messages-copy-1" \
+  -H "Idempotency-Key: ${REQUEST_KEY}" \
   -H "Content-Type: application/json" \
-  --data '{"from_chat_id": "4398046511200", "message_ids": ["42"]}'
+  --data "${payload}"
 ```
 
 {% endtab %}
@@ -576,8 +626,8 @@ Example success response (HTTP 200). The SDK methods return `result`:
         "sender_user": {
           "id": "10000042",
           "is_bot": true,
-          "name": "Example",
-          "username": "EXAMPLEBOT"
+          "name": "Acme Support",
+          "username": "ACMESUPPORTBOT"
         },
         "sent_at": "2026-10-11T12:00:00Z",
         "silent": false,
@@ -628,26 +678,31 @@ HTTP 400 `invalid_request` means the message list is invalid. On success, inspec
 
 ### Example <a href="#example-3" id="example-3"></a>
 
-Use a new idempotency key for each new action. Reuse the example key only when retrying this exact request.
+Set `ARX_BOT_TOKEN`, `CHAT_ID`, `MESSAGE_IDS`, `REQUEST_KEY` before running this example. Use a comma-separated, strictly increasing list for `MESSAGE_IDS`.
 
 {% tabs %}
 
 {% tab title="TypeScript" %}
 
 ```ts
-import { Client } from "@arx/nexo";
+import { Client, type Models } from "@arx/nexo";
 
-const bot = new Client({ baseUrl: "https://signal.arx.pro/bot-api/v1" });
+const arxBotToken = process.env.ARX_BOT_TOKEN;
+const chatId = process.env.CHAT_ID;
+const messageIdsInput = process.env.MESSAGE_IDS;
+const requestKey = process.env.REQUEST_KEY;
+if (!arxBotToken || !chatId || !messageIdsInput || !requestKey) {
+  throw new Error("Set ARX_BOT_TOKEN, CHAT_ID, MESSAGE_IDS, REQUEST_KEY");
+}
+const messageIds = messageIdsInput.split(",");
+
+const bot = new Client({ token: arxBotToken, baseUrl: "https://signal.arx.pro/bot-api/v1" });
 try {
-  const result = await bot.messagesDeleteBatch("4398046511200", {
-    "body": {
-      "message_ids": [
-        "42",
-        "43"
-      ]
-    },
-    "key": "example-messages-delete_batch-1"
-  });
+  const body: Models.DeleteMessages = {
+    "message_ids": messageIds
+  };
+  const result = await bot.messagesDeleteBatch(chatId, { body, key: requestKey });
+  console.log(result);
 } finally {
   await bot.close();
 }
@@ -658,35 +713,35 @@ try {
 {% tab title="Python" %}
 
 ```python
-from arx_nexo import Client, Config
-from arx_nexo import models
+import os
+from arx_nexo import Client, Config, models
 
-with Client(Config(base_url="https://signal.arx.pro/bot-api/v1")) as bot:
-    body = models.DeleteMessages.model_validate({'message_ids': ['42', '43']})
-    result = bot.messages_delete_batch('4398046511200', body=body, key='example-messages-delete_batch-1')
+with Client(Config(token=os.environ["ARX_BOT_TOKEN"], base_url="https://signal.arx.pro/bot-api/v1")) as bot:
+    body = models.DeleteMessages(message_ids=os.environ["MESSAGE_IDS"].split(","))
+    result = bot.messages_delete_batch(os.environ["CHAT_ID"], body=body, key=os.environ["REQUEST_KEY"])
+    print(result)
 ```
 
 {% endtab %}
 
 {% tab title="Rust" %}
 
-Add `serde_json = "1"` to your application's `[dependencies]` in `Cargo.toml`.
-
 ```rust
-use arx_nexo::{ Client, Config };
+use arx_nexo::{ Client, Config, models };
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let token = std::env::var("ARX_BOT_TOKEN")?;
-    let config = Config::new(token, "https://signal.arx.pro/bot-api/v1", false)?;
-    let bot = Client::new(config)?;
-    let body: arx_nexo::models::DeleteMessages = serde_json::from_value(serde_json::json!({
-      "message_ids": [
-        "42",
-        "43"
-      ]
-    }))?;
-    let result = bot.messages_delete_batch("4398046511200", &[], Some(&body), Some("example-messages-delete_batch-1")).await?;
+    let arx_bot_token = std::env::var("ARX_BOT_TOKEN")?;
+    let chat_id = std::env::var("CHAT_ID")?;
+    let message_ids : Vec<String> = std::env::var("MESSAGE_IDS")?.split(',').map(str::to_owned).collect();
+    let request_key = std::env::var("REQUEST_KEY")?;
+    let bot = Client::new(Config::new(arx_bot_token, "https://signal.arx.pro/bot-api/v1", false)?)?;
+    let body = models::DeleteMessages {
+        message_ids: message_ids,
+    };
+    let query = [];
+    let result = bot.messages_delete_batch(&chat_id, &query, Some(&body), Some(&request_key)).await?;
+    println!("{:?}", result);
     Ok(())
 }
 ```
@@ -696,12 +751,19 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 {% tab title="HTTP" %}
 
 ```sh
+payload=$(python3 - <<'PY'
+import json
+import os
+print(json.dumps({'message_ids': os.environ['MESSAGE_IDS'].split(",")}))
+PY
+)
+
 curl --fail-with-body --max-time 20 -X POST \
-  "https://signal.arx.pro/bot-api/v1/chats/4398046511200/messages/delete" \
+  "https://signal.arx.pro/bot-api/v1/chats/${CHAT_ID}/messages/delete" \
   -H "Authorization: Bearer ${ARX_BOT_TOKEN}" \
-  -H "Idempotency-Key: example-messages-delete_batch-1" \
+  -H "Idempotency-Key: ${REQUEST_KEY}" \
   -H "Content-Type: application/json" \
-  --data '{"message_ids": ["42", "43"]}'
+  --data "${payload}"
 ```
 
 {% endtab %}
@@ -768,26 +830,33 @@ If no eligible messages remain, HTTP 403 `protected_content` means at least one 
 
 ### Example <a href="#example-4" id="example-4"></a>
 
-This example forwards a text message whose content is "Hello". Use a new idempotency key for each new action. Reuse the example key only when retrying this exact request.
+Set `ARX_BOT_TOKEN`, `CHAT_ID`, `MESSAGE_IDS`, `REQUEST_KEY`, `SOURCE_CHAT_ID` before running this example. Use a comma-separated, strictly increasing list for `MESSAGE_IDS`.
 
 {% tabs %}
 
 {% tab title="TypeScript" %}
 
 ```ts
-import { Client } from "@arx/nexo";
+import { Client, type Models } from "@arx/nexo";
 
-const bot = new Client({ baseUrl: "https://signal.arx.pro/bot-api/v1" });
+const arxBotToken = process.env.ARX_BOT_TOKEN;
+const chatId = process.env.CHAT_ID;
+const messageIdsInput = process.env.MESSAGE_IDS;
+const requestKey = process.env.REQUEST_KEY;
+const sourceChatId = process.env.SOURCE_CHAT_ID;
+if (!arxBotToken || !chatId || !messageIdsInput || !requestKey || !sourceChatId) {
+  throw new Error("Set ARX_BOT_TOKEN, CHAT_ID, MESSAGE_IDS, REQUEST_KEY, SOURCE_CHAT_ID");
+}
+const messageIds = messageIdsInput.split(",");
+
+const bot = new Client({ token: arxBotToken, baseUrl: "https://signal.arx.pro/bot-api/v1" });
 try {
-  const result = await bot.messagesForward("4398046511201", {
-    "body": {
-      "from_chat_id": "4398046511200",
-      "message_ids": [
-        "42"
-      ]
-    },
-    "key": "example-messages-forward-1"
-  });
+  const body: Models.ForwardMessages = {
+    "from_chat_id": sourceChatId,
+    "message_ids": messageIds
+  };
+  const result = await bot.messagesForward(chatId, { body, key: requestKey });
+  console.log(result);
 } finally {
   await bot.close();
 }
@@ -798,35 +867,44 @@ try {
 {% tab title="Python" %}
 
 ```python
-from arx_nexo import Client, Config
-from arx_nexo import models
+import os
+from arx_nexo import Client, Config, models
 
-with Client(Config(base_url="https://signal.arx.pro/bot-api/v1")) as bot:
-    body = models.ForwardMessages.model_validate({'from_chat_id': '4398046511200', 'message_ids': ['42']})
-    result = bot.messages_forward('4398046511201', body=body, key='example-messages-forward-1')
+with Client(Config(token=os.environ["ARX_BOT_TOKEN"], base_url="https://signal.arx.pro/bot-api/v1")) as bot:
+    body = models.ForwardMessages(
+        from_chat_id=os.environ["SOURCE_CHAT_ID"],
+        message_ids=os.environ["MESSAGE_IDS"].split(","),
+    )
+    result = bot.messages_forward(os.environ["CHAT_ID"], body=body, key=os.environ["REQUEST_KEY"])
+    print(result)
 ```
 
 {% endtab %}
 
 {% tab title="Rust" %}
 
-Add `serde_json = "1"` to your application's `[dependencies]` in `Cargo.toml`.
-
 ```rust
-use arx_nexo::{ Client, Config };
+use arx_nexo::{ Client, Config, models };
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let token = std::env::var("ARX_BOT_TOKEN")?;
-    let config = Config::new(token, "https://signal.arx.pro/bot-api/v1", false)?;
-    let bot = Client::new(config)?;
-    let body: arx_nexo::models::ForwardMessages = serde_json::from_value(serde_json::json!({
-      "from_chat_id": "4398046511200",
-      "message_ids": [
-        "42"
-      ]
-    }))?;
-    let result = bot.messages_forward("4398046511201", &[], Some(&body), Some("example-messages-forward-1")).await?;
+    let arx_bot_token = std::env::var("ARX_BOT_TOKEN")?;
+    let chat_id = std::env::var("CHAT_ID")?;
+    let message_ids : Vec<String> = std::env::var("MESSAGE_IDS")?.split(',').map(str::to_owned).collect();
+    let request_key = std::env::var("REQUEST_KEY")?;
+    let source_chat_id = std::env::var("SOURCE_CHAT_ID")?;
+    let bot = Client::new(Config::new(arx_bot_token, "https://signal.arx.pro/bot-api/v1", false)?)?;
+    let body = models::ForwardMessages {
+        effect_id: None,
+        from_chat_id: source_chat_id,
+        message_ids: message_ids,
+        protect_content: None,
+        silent: None,
+        video_start_seconds: None,
+    };
+    let query = [];
+    let result = bot.messages_forward(&chat_id, &query, Some(&body), Some(&request_key)).await?;
+    println!("{:?}", result);
     Ok(())
 }
 ```
@@ -836,12 +914,19 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 {% tab title="HTTP" %}
 
 ```sh
+payload=$(python3 - <<'PY'
+import json
+import os
+print(json.dumps({'from_chat_id': os.environ['SOURCE_CHAT_ID'], 'message_ids': os.environ['MESSAGE_IDS'].split(",")}))
+PY
+)
+
 curl --fail-with-body --max-time 20 -X POST \
-  "https://signal.arx.pro/bot-api/v1/chats/4398046511201/messages/forward" \
+  "https://signal.arx.pro/bot-api/v1/chats/${CHAT_ID}/messages/forward" \
   -H "Authorization: Bearer ${ARX_BOT_TOKEN}" \
-  -H "Idempotency-Key: example-messages-forward-1" \
+  -H "Idempotency-Key: ${REQUEST_KEY}" \
   -H "Content-Type: application/json" \
-  --data '{"from_chat_id": "4398046511200", "message_ids": ["42"]}'
+  --data "${payload}"
 ```
 
 {% endtab %}
@@ -873,8 +958,8 @@ Example success response (HTTP 200). The SDK methods return `result`:
         "sender_user": {
           "id": "10000042",
           "is_bot": true,
-          "name": "Example",
-          "username": "EXAMPLEBOT"
+          "name": "Acme Support",
+          "username": "ACMESUPPORTBOT"
         },
         "sent_at": "2026-10-11T12:00:00Z",
         "silent": false,
@@ -929,23 +1014,30 @@ HTTP 400 `invalid_request` means the optional message ID or body is malformed. U
 
 ### Example <a href="#example-5" id="example-5"></a>
 
-Use a new idempotency key for each new action. Reuse the example key only when retrying this exact request.
+Set `ARX_BOT_TOKEN`, `CHAT_ID`, `MESSAGE_ID`, `REQUEST_KEY` before running this example.
 
 {% tabs %}
 
 {% tab title="TypeScript" %}
 
 ```ts
-import { Client } from "@arx/nexo";
+import { Client, type Models } from "@arx/nexo";
 
-const bot = new Client({ baseUrl: "https://signal.arx.pro/bot-api/v1" });
+const arxBotToken = process.env.ARX_BOT_TOKEN;
+const chatId = process.env.CHAT_ID;
+const messageId = process.env.MESSAGE_ID;
+const requestKey = process.env.REQUEST_KEY;
+if (!arxBotToken || !chatId || !messageId || !requestKey) {
+  throw new Error("Set ARX_BOT_TOKEN, CHAT_ID, MESSAGE_ID, REQUEST_KEY");
+}
+
+const bot = new Client({ token: arxBotToken, baseUrl: "https://signal.arx.pro/bot-api/v1" });
 try {
-  const result = await bot.messagesUnpin("4398046511200", {
-    "body": {
-      "message_id": "42"
-    },
-    "key": "example-messages-unpin-1"
-  });
+  const body: Models.UnpinMessage = {
+    "message_id": messageId
+  };
+  const result = await bot.messagesUnpin(chatId, { body, key: requestKey });
+  console.log(result);
 } finally {
   await bot.close();
 }
@@ -956,32 +1048,35 @@ try {
 {% tab title="Python" %}
 
 ```python
-from arx_nexo import Client, Config
-from arx_nexo import models
+import os
+from arx_nexo import Client, Config, models
 
-with Client(Config(base_url="https://signal.arx.pro/bot-api/v1")) as bot:
-    body = models.UnpinMessage.model_validate({'message_id': '42'})
-    result = bot.messages_unpin('4398046511200', body=body, key='example-messages-unpin-1')
+with Client(Config(token=os.environ["ARX_BOT_TOKEN"], base_url="https://signal.arx.pro/bot-api/v1")) as bot:
+    body = models.UnpinMessage(message_id=os.environ["MESSAGE_ID"])
+    result = bot.messages_unpin(os.environ["CHAT_ID"], body=body, key=os.environ["REQUEST_KEY"])
+    print(result)
 ```
 
 {% endtab %}
 
 {% tab title="Rust" %}
 
-Add `serde_json = "1"` to your application's `[dependencies]` in `Cargo.toml`.
-
 ```rust
-use arx_nexo::{ Client, Config };
+use arx_nexo::{ Client, Config, models };
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let token = std::env::var("ARX_BOT_TOKEN")?;
-    let config = Config::new(token, "https://signal.arx.pro/bot-api/v1", false)?;
-    let bot = Client::new(config)?;
-    let body: arx_nexo::models::UnpinMessage = serde_json::from_value(serde_json::json!({
-      "message_id": "42"
-    }))?;
-    let result = bot.messages_unpin("4398046511200", &[], Some(&body), Some("example-messages-unpin-1")).await?;
+    let arx_bot_token = std::env::var("ARX_BOT_TOKEN")?;
+    let chat_id = std::env::var("CHAT_ID")?;
+    let message_id = std::env::var("MESSAGE_ID")?;
+    let request_key = std::env::var("REQUEST_KEY")?;
+    let bot = Client::new(Config::new(arx_bot_token, "https://signal.arx.pro/bot-api/v1", false)?)?;
+    let body = models::UnpinMessage {
+        message_id: Some(message_id),
+    };
+    let query = [];
+    let result = bot.messages_unpin(&chat_id, &query, Some(&body), Some(&request_key)).await?;
+    println!("{:?}", result);
     Ok(())
 }
 ```
@@ -991,12 +1086,19 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 {% tab title="HTTP" %}
 
 ```sh
+payload=$(python3 - <<'PY'
+import json
+import os
+print(json.dumps({'message_id': os.environ['MESSAGE_ID']}))
+PY
+)
+
 curl --fail-with-body --max-time 20 -X POST \
-  "https://signal.arx.pro/bot-api/v1/chats/4398046511200/messages/unpin" \
+  "https://signal.arx.pro/bot-api/v1/chats/${CHAT_ID}/messages/unpin" \
   -H "Authorization: Bearer ${ARX_BOT_TOKEN}" \
-  -H "Idempotency-Key: example-messages-unpin-1" \
+  -H "Idempotency-Key: ${REQUEST_KEY}" \
   -H "Content-Type: application/json" \
-  --data '{"message_id": "42"}'
+  --data "${payload}"
 ```
 
 {% endtab %}
@@ -1048,7 +1150,7 @@ HTTP 404 `chat_not_found` means your bot cannot access the selected chat. HTTP 4
 
 ### Example <a href="#example-6" id="example-6"></a>
 
-Use a new idempotency key for each new action. Reuse the example key only when retrying this exact request.
+Set `ARX_BOT_TOKEN`, `CHAT_ID`, `REQUEST_KEY` before running this example.
 
 {% tabs %}
 
@@ -1057,11 +1159,17 @@ Use a new idempotency key for each new action. Reuse the example key only when r
 ```ts
 import { Client } from "@arx/nexo";
 
-const bot = new Client({ baseUrl: "https://signal.arx.pro/bot-api/v1" });
+const arxBotToken = process.env.ARX_BOT_TOKEN;
+const chatId = process.env.CHAT_ID;
+const requestKey = process.env.REQUEST_KEY;
+if (!arxBotToken || !chatId || !requestKey) {
+  throw new Error("Set ARX_BOT_TOKEN, CHAT_ID, REQUEST_KEY");
+}
+
+const bot = new Client({ token: arxBotToken, baseUrl: "https://signal.arx.pro/bot-api/v1" });
 try {
-  const result = await bot.messagesUnpinAll("4398046511200", {
-    "key": "example-messages-unpin_all-1"
-  });
+  const result = await bot.messagesUnpinAll(chatId, { key: requestKey });
+  console.log(result);
 } finally {
   await bot.close();
 }
@@ -1072,10 +1180,12 @@ try {
 {% tab title="Python" %}
 
 ```python
+import os
 from arx_nexo import Client, Config
 
-with Client(Config(base_url="https://signal.arx.pro/bot-api/v1")) as bot:
-    result = bot.messages_unpin_all('4398046511200', key='example-messages-unpin_all-1')
+with Client(Config(token=os.environ["ARX_BOT_TOKEN"], base_url="https://signal.arx.pro/bot-api/v1")) as bot:
+    result = bot.messages_unpin_all(os.environ["CHAT_ID"], key=os.environ["REQUEST_KEY"])
+    print(result)
 ```
 
 {% endtab %}
@@ -1087,10 +1197,13 @@ use arx_nexo::{ Client, Config };
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let token = std::env::var("ARX_BOT_TOKEN")?;
-    let config = Config::new(token, "https://signal.arx.pro/bot-api/v1", false)?;
-    let bot = Client::new(config)?;
-    let result = bot.messages_unpin_all("4398046511200", &[], None, Some("example-messages-unpin_all-1")).await?;
+    let arx_bot_token = std::env::var("ARX_BOT_TOKEN")?;
+    let chat_id = std::env::var("CHAT_ID")?;
+    let request_key = std::env::var("REQUEST_KEY")?;
+    let bot = Client::new(Config::new(arx_bot_token, "https://signal.arx.pro/bot-api/v1", false)?)?;
+    let query = [];
+    let result = bot.messages_unpin_all(&chat_id, &query, None, Some(&request_key)).await?;
+    println!("{:?}", result);
     Ok(())
 }
 ```
@@ -1101,9 +1214,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 ```sh
 curl --fail-with-body --max-time 20 -X POST \
-  "https://signal.arx.pro/bot-api/v1/chats/4398046511200/messages/unpin_all" \
+  "https://signal.arx.pro/bot-api/v1/chats/${CHAT_ID}/messages/unpin_all" \
   -H "Authorization: Bearer ${ARX_BOT_TOKEN}" \
-  -H "Idempotency-Key: example-messages-unpin_all-1"
+  -H "Idempotency-Key: ${REQUEST_KEY}"
 ```
 
 {% endtab %}
@@ -1156,7 +1269,7 @@ HTTP 403 `message_too_old` or `message_cant_be_deleted` means you cannot delete 
 
 ### Example <a href="#example-7" id="example-7"></a>
 
-Use a new idempotency key for each new action. Reuse the example key only when retrying this exact request.
+Set `ARX_BOT_TOKEN`, `CHAT_ID`, `MESSAGE_ID`, `REQUEST_KEY` before running this example.
 
 {% tabs %}
 
@@ -1165,11 +1278,18 @@ Use a new idempotency key for each new action. Reuse the example key only when r
 ```ts
 import { Client } from "@arx/nexo";
 
-const bot = new Client({ baseUrl: "https://signal.arx.pro/bot-api/v1" });
+const arxBotToken = process.env.ARX_BOT_TOKEN;
+const chatId = process.env.CHAT_ID;
+const messageId = process.env.MESSAGE_ID;
+const requestKey = process.env.REQUEST_KEY;
+if (!arxBotToken || !chatId || !messageId || !requestKey) {
+  throw new Error("Set ARX_BOT_TOKEN, CHAT_ID, MESSAGE_ID, REQUEST_KEY");
+}
+
+const bot = new Client({ token: arxBotToken, baseUrl: "https://signal.arx.pro/bot-api/v1" });
 try {
-  const result = await bot.messagesDelete("4398046511200", "42", {
-    "key": "example-messages-delete-1"
-  });
+  const result = await bot.messagesDelete(chatId, messageId, { key: requestKey });
+  console.log(result);
 } finally {
   await bot.close();
 }
@@ -1180,10 +1300,12 @@ try {
 {% tab title="Python" %}
 
 ```python
+import os
 from arx_nexo import Client, Config
 
-with Client(Config(base_url="https://signal.arx.pro/bot-api/v1")) as bot:
-    result = bot.messages_delete('4398046511200', '42', key='example-messages-delete-1')
+with Client(Config(token=os.environ["ARX_BOT_TOKEN"], base_url="https://signal.arx.pro/bot-api/v1")) as bot:
+    result = bot.messages_delete(os.environ["CHAT_ID"], os.environ["MESSAGE_ID"], key=os.environ["REQUEST_KEY"])
+    print(result)
 ```
 
 {% endtab %}
@@ -1195,10 +1317,14 @@ use arx_nexo::{ Client, Config };
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let token = std::env::var("ARX_BOT_TOKEN")?;
-    let config = Config::new(token, "https://signal.arx.pro/bot-api/v1", false)?;
-    let bot = Client::new(config)?;
-    let result = bot.messages_delete("4398046511200", "42", &[], None, Some("example-messages-delete-1")).await?;
+    let arx_bot_token = std::env::var("ARX_BOT_TOKEN")?;
+    let chat_id = std::env::var("CHAT_ID")?;
+    let message_id = std::env::var("MESSAGE_ID")?;
+    let request_key = std::env::var("REQUEST_KEY")?;
+    let bot = Client::new(Config::new(arx_bot_token, "https://signal.arx.pro/bot-api/v1", false)?)?;
+    let query = [];
+    let result = bot.messages_delete(&chat_id, &message_id, &query, None, Some(&request_key)).await?;
+    println!("{:?}", result);
     Ok(())
 }
 ```
@@ -1209,9 +1335,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 ```sh
 curl --fail-with-body --max-time 20 -X DELETE \
-  "https://signal.arx.pro/bot-api/v1/chats/4398046511200/messages/42" \
+  "https://signal.arx.pro/bot-api/v1/chats/${CHAT_ID}/messages/${MESSAGE_ID}" \
   -H "Authorization: Bearer ${ARX_BOT_TOKEN}" \
-  -H "Idempotency-Key: example-messages-delete-1"
+  -H "Idempotency-Key: ${REQUEST_KEY}"
 ```
 
 {% endtab %}
@@ -1284,27 +1410,34 @@ HTTP 400 `message_not_editable` means the message cannot accept this edit. HTTP 
 
 ### Example <a href="#example-8" id="example-8"></a>
 
-Use a new idempotency key for each new action. Reuse the example key only when retrying this exact request.
+Set `ARX_BOT_TOKEN`, `CHAT_ID`, `MESSAGE_ID`, `REQUEST_KEY` before running this example.
 
 {% tabs %}
 
 {% tab title="TypeScript" %}
 
 ```ts
-import { Client } from "@arx/nexo";
+import { Client, type Models } from "@arx/nexo";
 
-const bot = new Client({ baseUrl: "https://signal.arx.pro/bot-api/v1" });
+const arxBotToken = process.env.ARX_BOT_TOKEN;
+const chatId = process.env.CHAT_ID;
+const messageId = process.env.MESSAGE_ID;
+const requestKey = process.env.REQUEST_KEY;
+if (!arxBotToken || !chatId || !messageId || !requestKey) {
+  throw new Error("Set ARX_BOT_TOKEN, CHAT_ID, MESSAGE_ID, REQUEST_KEY");
+}
+
+const bot = new Client({ token: arxBotToken, baseUrl: "https://signal.arx.pro/bot-api/v1" });
 try {
-  const result = await bot.messagesEdit("4398046511200", "42", {
-    "body": {
-      "content": {
-        "type": "text",
-        "text": "Hello again",
-        "format": "plain"
-      }
-    },
-    "key": "example-messages-edit-1"
-  });
+  const body: Models.EditMessage = {
+    "content": {
+      "type": "text",
+      "text": "Hello again",
+      "format": "plain"
+    }
+  };
+  const result = await bot.messagesEdit(chatId, messageId, { body, key: requestKey });
+  console.log(result);
 } finally {
   await bot.close();
 }
@@ -1315,36 +1448,52 @@ try {
 {% tab title="Python" %}
 
 ```python
-from arx_nexo import Client, Config
-from arx_nexo import models
+import os
+from arx_nexo import Client, Config, models
 
-with Client(Config(base_url="https://signal.arx.pro/bot-api/v1")) as bot:
-    body = models.EditMessage.model_validate({'content': {'type': 'text', 'text': 'Hello again', 'format': 'plain'}})
-    result = bot.messages_edit('4398046511200', '42', body=body, key='example-messages-edit-1')
+with Client(Config(token=os.environ["ARX_BOT_TOKEN"], base_url="https://signal.arx.pro/bot-api/v1")) as bot:
+    body = models.EditMessage(
+        content=models.InputEditContent(
+            root=models.InputText(type='text', text='Hello again', format='plain'),
+        ),
+    )
+    result = bot.messages_edit(os.environ["CHAT_ID"], os.environ["MESSAGE_ID"], body=body, key=os.environ["REQUEST_KEY"])
+    print(result)
 ```
 
 {% endtab %}
 
 {% tab title="Rust" %}
 
-Add `serde_json = "1"` to your application's `[dependencies]` in `Cargo.toml`.
-
 ```rust
-use arx_nexo::{ Client, Config };
+use arx_nexo::{ Client, Config, models };
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let token = std::env::var("ARX_BOT_TOKEN")?;
-    let config = Config::new(token, "https://signal.arx.pro/bot-api/v1", false)?;
-    let bot = Client::new(config)?;
-    let body: arx_nexo::models::EditMessage = serde_json::from_value(serde_json::json!({
-      "content": {
-        "type": "text",
-        "text": "Hello again",
-        "format": "plain"
-      }
-    }))?;
-    let result = bot.messages_edit("4398046511200", "42", &[], Some(&body), Some("example-messages-edit-1")).await?;
+    let arx_bot_token = std::env::var("ARX_BOT_TOKEN")?;
+    let chat_id = std::env::var("CHAT_ID")?;
+    let message_id = std::env::var("MESSAGE_ID")?;
+    let request_key = std::env::var("REQUEST_KEY")?;
+    let bot = Client::new(Config::new(arx_bot_token, "https://signal.arx.pro/bot-api/v1", false)?)?;
+    let body = models::EditMessage {
+        caption: None,
+        caption_above_media: None,
+        caption_entities: None,
+        caption_format: None,
+        content: Some(models::InputEditContent::InputText(Box::new(models::InputText {
+            entities: None,
+            format: Some(models::InputTextFormat::Plain),
+            text: "Hello again".to_owned(),
+            r#type: models::InputTextType::Text,
+        }))),
+        expected_revision: None,
+        link_preview: arx_nexo::presence::Presence::Unset,
+        live_location: None,
+        reply_markup: None,
+    };
+    let query = [];
+    let result = bot.messages_edit(&chat_id, &message_id, &query, Some(&body), Some(&request_key)).await?;
+    println!("{:?}", result);
     Ok(())
 }
 ```
@@ -1355,9 +1504,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 ```sh
 curl --fail-with-body --max-time 20 -X PATCH \
-  "https://signal.arx.pro/bot-api/v1/chats/4398046511200/messages/42" \
+  "https://signal.arx.pro/bot-api/v1/chats/${CHAT_ID}/messages/${MESSAGE_ID}" \
   -H "Authorization: Bearer ${ARX_BOT_TOKEN}" \
-  -H "Idempotency-Key: example-messages-edit-1" \
+  -H "Idempotency-Key: ${REQUEST_KEY}" \
   -H "Content-Type: application/json" \
   --data '{"content": {"type": "text", "text": "Hello again", "format": "plain"}}'
 ```
@@ -1389,8 +1538,8 @@ Example success response (HTTP 200). The SDK methods return `result`:
     "sender_user": {
       "id": "10000042",
       "is_bot": true,
-      "name": "Example",
-      "username": "EXAMPLEBOT"
+      "name": "Acme Support",
+      "username": "ACMESUPPORTBOT"
     },
     "sent_at": "2026-10-11T12:00:00Z",
     "silent": false,
@@ -1436,23 +1585,30 @@ The chat metadata includes its pinned message IDs. HTTP 409 `pin_limit_reached` 
 
 ### Example <a href="#example-9" id="example-9"></a>
 
-Use a new idempotency key for each new action. Reuse the example key only when retrying this exact request.
+Set `ARX_BOT_TOKEN`, `CHAT_ID`, `MESSAGE_ID`, `REQUEST_KEY` before running this example.
 
 {% tabs %}
 
 {% tab title="TypeScript" %}
 
 ```ts
-import { Client } from "@arx/nexo";
+import { Client, type Models } from "@arx/nexo";
 
-const bot = new Client({ baseUrl: "https://signal.arx.pro/bot-api/v1" });
+const arxBotToken = process.env.ARX_BOT_TOKEN;
+const chatId = process.env.CHAT_ID;
+const messageId = process.env.MESSAGE_ID;
+const requestKey = process.env.REQUEST_KEY;
+if (!arxBotToken || !chatId || !messageId || !requestKey) {
+  throw new Error("Set ARX_BOT_TOKEN, CHAT_ID, MESSAGE_ID, REQUEST_KEY");
+}
+
+const bot = new Client({ token: arxBotToken, baseUrl: "https://signal.arx.pro/bot-api/v1" });
 try {
-  const result = await bot.messagesPin("4398046511200", "42", {
-    "body": {
-      "silent": true
-    },
-    "key": "example-messages-pin-1"
-  });
+  const body: Models.PinMessage = {
+    "silent": true
+  };
+  const result = await bot.messagesPin(chatId, messageId, { body, key: requestKey });
+  console.log(result);
 } finally {
   await bot.close();
 }
@@ -1463,32 +1619,35 @@ try {
 {% tab title="Python" %}
 
 ```python
-from arx_nexo import Client, Config
-from arx_nexo import models
+import os
+from arx_nexo import Client, Config, models
 
-with Client(Config(base_url="https://signal.arx.pro/bot-api/v1")) as bot:
-    body = models.PinMessage.model_validate({'silent': True})
-    result = bot.messages_pin('4398046511200', '42', body=body, key='example-messages-pin-1')
+with Client(Config(token=os.environ["ARX_BOT_TOKEN"], base_url="https://signal.arx.pro/bot-api/v1")) as bot:
+    body = models.PinMessage(silent=True)
+    result = bot.messages_pin(os.environ["CHAT_ID"], os.environ["MESSAGE_ID"], body=body, key=os.environ["REQUEST_KEY"])
+    print(result)
 ```
 
 {% endtab %}
 
 {% tab title="Rust" %}
 
-Add `serde_json = "1"` to your application's `[dependencies]` in `Cargo.toml`.
-
 ```rust
-use arx_nexo::{ Client, Config };
+use arx_nexo::{ Client, Config, models };
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let token = std::env::var("ARX_BOT_TOKEN")?;
-    let config = Config::new(token, "https://signal.arx.pro/bot-api/v1", false)?;
-    let bot = Client::new(config)?;
-    let body: arx_nexo::models::PinMessage = serde_json::from_value(serde_json::json!({
-      "silent": true
-    }))?;
-    let result = bot.messages_pin("4398046511200", "42", &[], Some(&body), Some("example-messages-pin-1")).await?;
+    let arx_bot_token = std::env::var("ARX_BOT_TOKEN")?;
+    let chat_id = std::env::var("CHAT_ID")?;
+    let message_id = std::env::var("MESSAGE_ID")?;
+    let request_key = std::env::var("REQUEST_KEY")?;
+    let bot = Client::new(Config::new(arx_bot_token, "https://signal.arx.pro/bot-api/v1", false)?)?;
+    let body = models::PinMessage {
+        silent: Some(true),
+    };
+    let query = [];
+    let result = bot.messages_pin(&chat_id, &message_id, &query, Some(&body), Some(&request_key)).await?;
+    println!("{:?}", result);
     Ok(())
 }
 ```
@@ -1499,9 +1658,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 ```sh
 curl --fail-with-body --max-time 20 -X POST \
-  "https://signal.arx.pro/bot-api/v1/chats/4398046511200/messages/42/pin" \
+  "https://signal.arx.pro/bot-api/v1/chats/${CHAT_ID}/messages/${MESSAGE_ID}/pin" \
   -H "Authorization: Bearer ${ARX_BOT_TOKEN}" \
-  -H "Idempotency-Key: example-messages-pin-1" \
+  -H "Idempotency-Key: ${REQUEST_KEY}" \
   -H "Content-Type: application/json" \
   --data '{"silent": true}'
 ```

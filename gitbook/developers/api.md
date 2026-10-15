@@ -18,6 +18,8 @@ Set your API base URL to `https://signal.arx.pro/bot-api/v1`. The routes below a
 
 The API returns successful JSON calls as `{"ok": true, "result": ...}`. The typed SDK methods unwrap `result`. File downloads return bytes, and `openapi.get` returns the OpenAPI document directly. Keep IDs as strings and read timestamps as UTC RFC 3339 values.
 
+The SDK programs read `ARX_BOT_TOKEN`; each example lists its other environment variables. HTTP examples use curl and Python 3 to encode JSON from those same variables. The JSON responses illustrate the request using fictional bot and chat data; your IDs and timestamps will differ.
+
 For a write, use a new `Idempotency-Key` for each logical action. It accepts 1 to 64 ASCII letters, digits, underscores, or hyphens. When retrying an action, reuse its key and the complete request, including binary files. The SDKs create a key when you omit one and retain it during their own retries. For retries across separate method calls, pass the original key explicitly. See [making requests](making-requests.md) for acknowledgement and PATCH rules.
 
 ## Common errors <a href="#common-errors" id="common-errors"></a>

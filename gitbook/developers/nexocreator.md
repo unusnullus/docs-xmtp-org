@@ -4,7 +4,7 @@ description: "Create your bot and manage its profile, credentials and delivery i
 
 # NexoCreator
 
-You can create and manage your bots by chatting with `@NEXOCREATOR` in ARX. Use your ARX account, select a bot from `/mybots`, or add `@HANDLE` to a command that asks you to select one.
+You can create and manage your bots by chatting with `@NEXOCREATOR` in ARX. Use your ARX account and select a bot from `/mybots`. You can also include its handle in a command. For example, `/token @ACMESUPPORTBOT` selects the bot named Acme Support.
 
 ## Create your first bot <a href="#create-your-first-bot" id="create-your-first-bot"></a>
 
@@ -37,7 +37,7 @@ You can continue a dialog on another device with the same account. NexoCreator u
 | `/setdescription` | A bot, language and description. |
 | `/setabouttext` | A bot, language and short description. |
 | `/setprivacypolicy` | An HTTPS policy URL, the standard ARX bot policy, or the option to clear it. |
-| `/setcommands` | A bot, scope and language, followed by `command - description` lines. |
+| `/setcommands` | A bot, scope and language, followed by command lines such as `help - Contact Acme Support`. |
 | `/deletecommands` | A bot, scope and language, then confirmation that you want to remove that list. |
 | `/setmenubutton` | Choose Commands to show the command menu, or Default to reset it. |
 

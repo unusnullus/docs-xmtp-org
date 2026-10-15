@@ -28,14 +28,8 @@ try {
 		query: { scope: "all_private_chats", language_code: "en" },
 		body: {
 			commands: [
-				{
-					command: "start",
-					description: "Start a conversation",
-				},
-				{
-					command: "help",
-					description: "Show available actions",
-				},
+				{ command: "start", description: "Start a conversation" },
+				{ command: "help", description: "Show available actions" },
 			],
 		},
 	});
@@ -52,20 +46,18 @@ try {
 import os
 from arx_nexo import Client, Config, models
 
-request = models.SetCommands.model_validate(
-    {
-        "commands": [
-            {"command": "start", "description": "Start a conversation"},
-            {"command": "help", "description": "Show available actions"},
-        ]
-    }
-)
 with Client(
     Config(
         token=os.environ["ARX_BOT_TOKEN"],
         base_url="https://signal.arx.pro/bot-api/v1",
     )
 ) as bot:
+    request = models.SetCommands(
+        commands=[
+            models.Command(command="start", description="Start a conversation"),
+            models.Command(command="help", description="Show available actions"),
+        ]
+    )
     result = bot.commands_set(
         query={"scope": "all_private_chats", "language_code": "en"},
         body=request,
@@ -85,26 +77,23 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let token = std::env::var("ARX_BOT_TOKEN")?;
     let key = std::env::var("REQUEST_KEY")?;
     let bot = Client::new(Config::new(token, "https://signal.arx.pro/bot-api/v1", false)?)?;
-    let request: models::SetCommands = serde_json::from_value(serde_json::json!({
-      "commands": [
-        {
-          "command": "start",
-          "description": "Start a conversation"
-        },
-        {
-          "command": "help",
-          "description": "Show available actions"
-        }
-      ]
-    }))?;
-    let result = bot
-        .commands_set(
-            &[("scope", "all_private_chats"), ("language_code", "en")],
-            Some(&request),
-            Some(&key),
-        )
-        .await?;
-    println!("{}", serde_json::to_string(&result)?);
+    let query = [("scope", "all_private_chats"), ("language_code", "en")];
+    let request = models::SetCommands {
+        commands: vec![
+            models::Command {
+                command: "start".into(),
+                description: "Start a conversation".into(),
+                is_ephemeral: None,
+            },
+            models::Command {
+                command: "help".into(),
+                description: "Show available actions".into(),
+                is_ephemeral: None,
+            },
+        ],
+    };
+    let result = bot.commands_set(&query, Some(&request), Some(&key)).await?;
+    println!("{result:?}");
     Ok(())
 }
 ```
@@ -165,8 +154,8 @@ try {
 	const result = await bot.profileUpdate({
 		key,
 		body: {
-			description: "Plan meetings and keep track of shared tasks.",
-			short_description: "Meeting planning and task reminders.",
+			description: "Get help with Acme orders and track support requests.",
+			short_description: "Acme customer support.",
 		},
 	});
 	console.log(result);
@@ -182,18 +171,16 @@ try {
 import os
 from arx_nexo import Client, Config, models
 
-request = models.PatchProfile.model_validate(
-    {
-        "description": "Plan meetings and keep track of shared tasks.",
-        "short_description": "Meeting planning and task reminders.",
-    }
-)
 with Client(
     Config(
         token=os.environ["ARX_BOT_TOKEN"],
         base_url="https://signal.arx.pro/bot-api/v1",
     )
 ) as bot:
+    request = models.PatchProfile(
+        description="Get help with Acme orders and track support requests.",
+        short_description="Acme customer support.",
+    )
     result = bot.profile_update(
         body=request,
         key=os.environ["REQUEST_KEY"],
@@ -205,19 +192,26 @@ with Client(
 {% tab title="Rust" %}
 
 ```rust
-use arx_nexo::{Client, Config, models};
+use arx_nexo::{Client, Config, models, presence::Presence};
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let token = std::env::var("ARX_BOT_TOKEN")?;
     let key = std::env::var("REQUEST_KEY")?;
     let bot = Client::new(Config::new(token, "https://signal.arx.pro/bot-api/v1", false)?)?;
-    let request: models::PatchProfile = serde_json::from_value(serde_json::json!({
-      "description": "Plan meetings and keep track of shared tasks.",
-      "short_description": "Meeting planning and task reminders."
-    }))?;
-    let result = bot.profile_update(&[], Some(&request), Some(&key)).await?;
-    println!("{}", serde_json::to_string(&result)?);
+    let query = [];
+    let request = models::PatchProfile {
+        description: Presence::Value(
+            "Get help with Acme orders and track support requests.".into(),
+        ),
+        language_code: None,
+        name: Presence::Unset,
+        short_description: Presence::Value("Acme customer support.".into()),
+    };
+    let result = bot
+        .profile_update(&query, Some(&request), Some(&key))
+        .await?;
+    println!("{result:?}");
     Ok(())
 }
 ```

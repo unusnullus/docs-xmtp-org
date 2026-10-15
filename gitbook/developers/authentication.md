@@ -4,7 +4,7 @@ description: "Store your bot token and authenticate requests to the Bot API."
 
 # Authentication & tokens
 
-Authenticate your program with a bot token issued through NexoCreator. The token belongs to one bot and is separate from the bot owner's ARX account session. Its form is `<bot ID>:aerx_…`. Keep the complete token, including its secret suffix, unchanged.
+Authenticate your program with a bot token issued through NexoCreator. The token belongs to one bot and is separate from the bot owner's ARX account session. It combines a numeric bot ID, a colon and a secret beginning with `aerx_`. Keep the complete token, including its secret suffix, unchanged.
 
 ## Get and save a token <a href="#get-and-save-a-token" id="get-and-save-a-token"></a>
 
@@ -16,7 +16,7 @@ Store the token in a secret manager or an environment variable that your process
 
 ## Authenticate a request <a href="#authenticate-a-request" id="authenticate-a-request"></a>
 
-Send the token in `Authorization: Bearer <token>` over HTTPS. Never put it in a URL or request body. For example, read your bot's identity:
+Send the complete bot token after `Bearer ` in the Authorization header over HTTPS. Never put it in a URL or request body. Set `ARX_BOT_TOKEN` and `ARX_BOT_API_BASE_URL` with the [quickstart setup](quickstart.md#create-the-bot), then read your bot's identity:
 
 ```sh
 curl --fail-with-body --max-time 30 \

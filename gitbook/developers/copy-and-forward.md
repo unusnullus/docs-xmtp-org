@@ -10,7 +10,7 @@ You can copy a message without its origin, or forward it with attribution. Your 
 
 Call `messages.copy` with a destination chat, `from_chat_id` and a nonempty `message_ids` array. This example copies one message and protects the new copy.
 
-Set `ARX_BOT_TOKEN`, `CHAT_ID` and `REQUEST_KEY` before running the example. Use a private chat that the user has started. See [Making requests](making-requests.md) for choosing keys and retrying requests. Replace `from_chat_id` and message ID `7` below with a readable source chat and one of its messages.
+Set `ARX_BOT_TOKEN`, `CHAT_ID` and `REQUEST_KEY` before running the example. Use a private chat that the user has started. See [Making requests](making-requests.md) for choosing keys and retrying requests. Also set `SOURCE_CHAT_ID` to a readable source chat and `SOURCE_MESSAGE_ID` to a message ID received in that chat. The example reads both values from the environment.
 
 {% tabs %}
 {% tab title="TypeScript" %}
@@ -21,16 +21,20 @@ import { Client } from "@arx/nexo";
 const token = process.env.ARX_BOT_TOKEN;
 const key = process.env.REQUEST_KEY;
 const chatId = process.env.CHAT_ID;
-if (!token || !key || !chatId) {
-	throw new Error("Set ARX_BOT_TOKEN, REQUEST_KEY, CHAT_ID");
+const sourceChatId = process.env.SOURCE_CHAT_ID;
+const sourceMessageId = process.env.SOURCE_MESSAGE_ID;
+if (!token || !key || !chatId || !sourceChatId || !sourceMessageId) {
+	throw new Error(
+		"Set ARX_BOT_TOKEN, REQUEST_KEY, CHAT_ID, SOURCE_CHAT_ID, SOURCE_MESSAGE_ID",
+	);
 }
 const bot = new Client({ token, baseUrl: "https://signal.arx.pro/bot-api/v1" });
 try {
 	const result = await bot.messagesCopy(chatId, {
 		key,
 		body: {
-			from_chat_id: "4398046511200",
-			message_ids: ["7"],
+			from_chat_id: sourceChatId,
+			message_ids: [sourceMessageId],
 			protect_content: true,
 			silent: true,
 		},
@@ -49,20 +53,20 @@ import os
 from arx_nexo import Client, Config, models
 
 chat_id = os.environ["CHAT_ID"]
-request = models.CopyMessages.model_validate(
-    {
-        "from_chat_id": "4398046511200",
-        "message_ids": ["7"],
-        "protect_content": True,
-        "silent": True,
-    }
-)
+source_chat_id = os.environ["SOURCE_CHAT_ID"]
+source_message_id = os.environ["SOURCE_MESSAGE_ID"]
 with Client(
     Config(
         token=os.environ["ARX_BOT_TOKEN"],
         base_url="https://signal.arx.pro/bot-api/v1",
     )
 ) as bot:
+    request = models.CopyMessages(
+        from_chat_id=source_chat_id,
+        message_ids=[source_message_id],
+        protect_content=True,
+        silent=True,
+    )
     result = bot.messages_copy(
         chat_id,
         body=request,
@@ -82,19 +86,29 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let token = std::env::var("ARX_BOT_TOKEN")?;
     let key = std::env::var("REQUEST_KEY")?;
     let chat_id = std::env::var("CHAT_ID")?;
+    let source_chat_id = std::env::var("SOURCE_CHAT_ID")?;
+    let source_message_id = std::env::var("SOURCE_MESSAGE_ID")?;
     let bot = Client::new(Config::new(token, "https://signal.arx.pro/bot-api/v1", false)?)?;
-    let request: models::CopyMessages = serde_json::from_value(serde_json::json!({
-      "from_chat_id": "4398046511200",
-      "message_ids": [
-        "7"
-      ],
-      "protect_content": true,
-      "silent": true
-    }))?;
+    let query = [];
+    let request = models::CopyMessages {
+        caption: None,
+        caption_above_media: None,
+        caption_entities: None,
+        caption_format: None,
+        effect_id: None,
+        from_chat_id: source_chat_id,
+        message_ids: vec![source_message_id],
+        protect_content: Some(true),
+        remove_caption: None,
+        reply_markup: None,
+        reply_to: None,
+        silent: Some(true),
+        video_start_seconds: None,
+    };
     let result = bot
-        .messages_copy(&chat_id, &[], Some(&request), Some(&key))
+        .messages_copy(&chat_id, &query, Some(&request), Some(&key))
         .await?;
-    println!("{}", serde_json::to_string(&result)?);
+    println!("{result:?}");
     Ok(())
 }
 ```
@@ -144,7 +158,7 @@ For an uncertain batch result, follow the retry rules in [Making requests](makin
 
 The shared caption length and formatting rules live in [Formatting](formatting.md#choose-the-formatting-fields). Copies and forwards preserve the source's `fallback_text` unless you replace or remove a caption. ARX then updates it to match the new caption or media type. Copying leaves the original caption unchanged.
 
-For example, copy one video with this body:
+For HTTP, this body copies a video and starts playback at five seconds. The source video must be longer than five seconds:
 
 ```json
 {
@@ -159,7 +173,7 @@ For example, copy one video with this body:
 
 ## Reply from a copy <a href="#reply-from-a-copy" id="reply-from-a-copy"></a>
 
-Set `reply_to.message_id` to a message in the destination chat. You can also supply `chat_id` for an accessible reply target in another chat, `allow_missing` to allow a missing target, or `quote` to select quoted text. A copy can select a `poll_option_id` or `checklist_task_id`; see [part replies](polls-and-checklists.md#reply-to-an-option-or-task).
+Set `reply_to.message_id` to a message in the destination chat. You can also supply `chat_id` for an accessible reply target in another chat, `allow_missing` to allow a missing target, or `quote` to select quoted text. A copy can select a `poll_option_id` or `checklist_task_id`; see [part replies](polls-and-checklists.md#reply-to-an-option-or-task). For HTTP:
 
 ```json
 {
