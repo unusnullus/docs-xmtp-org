@@ -1,0 +1,9 @@
+# RichDivider
+
+A horizontal divider between rich content blocks.
+
+| Field | Type | Required | Description and constraints |
+| --- | --- | --- | --- |
+| `type` | `"divider"` | Yes | The rich content node type is divider. |
+
+Return to the [type index](../types.md) or find an operation in the [API index](../../api.md).
