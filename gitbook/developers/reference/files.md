@@ -212,7 +212,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let bot = Client::new(Config::new(arx_bot_token, "https://signal.arx.pro/bot-api/v1", false)?)?;
     let body = models::UploadFile {
         file_name: Some("sample.pdf".to_owned()),
-        kind: models::UploadFileKind::Document,
+        ..models::UploadFile::new(models::UploadFileKind::Document)
     };
     let source = UploadSource::from_path(&file_path)?.with_content_type("application/pdf")?;
     let result = bot.files_upload(source, &body, Some(&request_key)).await?;

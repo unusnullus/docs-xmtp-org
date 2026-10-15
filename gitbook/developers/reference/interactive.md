@@ -115,7 +115,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         cache_seconds: Some(0),
         show_alert: Some(false),
         text: Some("Saved".to_owned()),
-        url: None,
+        ..Default::default()
     };
     let query = [];
     let result = bot.callback_queries_answer(&callback_query_id, &query, Some(&body), Some(&request_key)).await?;
@@ -253,10 +253,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let bot = Client::new(Config::new(arx_bot_token, "https://signal.arx.pro/bot-api/v1", false)?)?;
     let body = models::SetReactions {
         is_big: Some(false),
-        reactions: vec![models::Reaction {
-            emoji: "👍".to_owned(),
-            r#type: models::ReactionType::Emoji,
-        }],
+        ..models::SetReactions::new(vec![models::Reaction::new("👍".to_owned())])
     };
     let query = [];
     let result = bot.reactions_set(&chat_id, &message_id, &query, Some(&body), Some(&request_key)).await?;
@@ -542,9 +539,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let live_location_message_id = std::env::var("LIVE_LOCATION_MESSAGE_ID")?;
     let request_key = std::env::var("REQUEST_KEY")?;
     let bot = Client::new(Config::new(arx_bot_token, "https://signal.arx.pro/bot-api/v1", false)?)?;
-    let body = models::StopLiveLocation {
-        reply_markup: None,
-    };
+    let body = models::StopLiveLocation::default();
     let query = [];
     let result = bot.messages_stop_live_location(&chat_id, &live_location_message_id, &query, Some(&body), Some(&request_key)).await?;
     println!("{:?}", result);
@@ -698,9 +693,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let poll_message_id = std::env::var("POLL_MESSAGE_ID")?;
     let request_key = std::env::var("REQUEST_KEY")?;
     let bot = Client::new(Config::new(arx_bot_token, "https://signal.arx.pro/bot-api/v1", false)?)?;
-    let body = models::StopPoll {
-        reply_markup: None,
-    };
+    let body = models::StopPoll::default();
     let query = [];
     let result = bot.messages_stop_poll(&chat_id, &poll_message_id, &query, Some(&body), Some(&request_key)).await?;
     println!("{:?}", result);

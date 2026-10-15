@@ -8,24 +8,21 @@ Test your bot's replies and recovery behavior locally, then use a TESTBOT to che
 
 ## Local emulator <a href="#local-emulator" id="local-emulator"></a>
 
-Install the Python package with the CLI extra from [SDKs and CLI](sdks.md#install-an-sdk). The emulator serves a local Bot API that works with all three clients. Start it in one terminal:
+Install the standalone Rust CLI from [SDKs and CLI](sdks.md#cli). The emulator serves a local Bot API that works with all three clients. Start it in one terminal:
 
 ```sh
 arx-nexo emulate --port 18092
 ```
 
-The command prints one JSON line with `base_url`, `ui` and `credentials`. Open the `ui` address to chat with your bot as a test user. Keep the emulator running. In another terminal, activate the same Python environment and prepare a synthetic chat:
+The command prints one JSON line with `base_url`, `ui` and `credentials`. Open the `ui` address to chat with your bot as a test user. Keep the emulator running. In another terminal, prepare a synthetic chat with `curl` and `jq`:
 
 ```sh
 export ARX_BOT_API_BASE_URL='http://127.0.0.1:18092/bot-api/v1'
-export ARX_BOT_TOKEN="$(python -c 'from arx_nexo.emulator import emulator_token; print(emulator_token())')"
-export CHAT_ID="$(python - <<'PY'
-from arx_nexo.testing import EmulatorControl
-
-with EmulatorControl("http://127.0.0.1:18092") as control:
-    print(control.start_chat(username="ANALOPEZ"))
-PY
-)"
+export ARX_BOT_TOKEN="$(arx-nexo emulator-token)"
+export CHAT_ID="$(curl --fail --silent --show-error \
+  -H 'Content-Type: application/json' \
+  -d '{"username":"ANALOPEZ"}' \
+  http://127.0.0.1:18092/_emulator/chats | jq -er '.chat_id')"
 ```
 
 This token is a fixed emulator credential. Never use a real token for local tests. Enable insecure loopback access explicitly in your client and keep that permission out of your live configuration.
@@ -104,7 +101,7 @@ Run the same example twice. With the same key and payload, the returned message 
 
 ## Isolate a test in Python <a href="#isolate-a-test-in-python" id="isolate-a-test-in-python"></a>
 
-For an automated test, use a fresh emulator on an available port. Its context manager stops the server after the test:
+For an automated test, use a fresh emulator on an available port. The helper launches `arx-nexo emulate` and its context manager stops the process after the test. Put `arx-nexo` on `PATH`, or set `ARX_NEXO_CLI` to the executable path:
 
 ```python
 from arx_nexo import Client, Config

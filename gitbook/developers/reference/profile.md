@@ -360,13 +360,14 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let arx_bot_token = std::env::var("ARX_BOT_TOKEN")?;
     let request_key = std::env::var("REQUEST_KEY")?;
     let bot = Client::new(Config::new(arx_bot_token, "https://signal.arx.pro/bot-api/v1", false)?)?;
-    let body = models::SetCommands {
-        commands: vec![models::Command {
-            command: "start".to_owned(),
-            description: "Start".to_owned(),
-            is_ephemeral: Some(false),
-        }],
-    };
+    let body = models::SetCommands::new(
+        vec![
+            models::Command {
+                is_ephemeral: Some(false),
+                ..models::Command::new("start".to_owned(), "Start".to_owned())
+            },
+        ],
+    );
     let query = [];
     let result = bot.commands_set(&query, Some(&body), Some(&request_key)).await?;
     println!("{:?}", result);
@@ -749,28 +750,14 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let arx_bot_token = std::env::var("ARX_BOT_TOKEN")?;
     let request_key = std::env::var("REQUEST_KEY")?;
     let bot = Client::new(Config::new(arx_bot_token, "https://signal.arx.pro/bot-api/v1", false)?)?;
-    let body = models::SetAdminRights {
-        rights: Some(models::AdminRightsValue {
-            can_change_info: None,
-            can_delete_messages: Some(true),
-            can_delete_stories: None,
-            can_edit_messages: None,
-            can_edit_stories: None,
-            can_invite_users: None,
-            can_manage_chat: None,
-            can_manage_direct_messages: None,
-            can_manage_tags: None,
-            can_manage_topics: None,
-            can_manage_video_chats: None,
-            can_pin_messages: None,
-            can_post_messages: None,
-            can_post_stories: None,
-            can_promote_members: None,
-            can_restrict_members: None,
-            can_send_welcome_messages: None,
-            is_anonymous: None,
-        }),
-    };
+    let body = models::SetAdminRights::new(
+        Some(
+            models::AdminRightsValue {
+                can_delete_messages: Some(true),
+                ..Default::default()
+            },
+        ),
+    );
     let query = [("target", "groups")];
     let result = bot.default_admin_rights_set(&query, Some(&body), Some(&request_key)).await?;
     println!("{:?}", result);
@@ -1004,9 +991,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let arx_bot_token = std::env::var("ARX_BOT_TOKEN")?;
     let request_key = std::env::var("REQUEST_KEY")?;
     let bot = Client::new(Config::new(arx_bot_token, "https://signal.arx.pro/bot-api/v1", false)?)?;
-    let body = models::MenuButton {
-        r#type: models::MenuButtonType::Commands,
-    };
+    let body = models::MenuButton::new(models::MenuButtonType::Commands);
     let query = [];
     let result = bot.menu_button_set(&query, Some(&body), Some(&request_key)).await?;
     println!("{:?}", result);
@@ -1258,8 +1243,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let body = models::PatchProfile {
         description: arx_nexo::presence::Presence::Value("Acme Support".to_owned()),
         language_code: Some("en".to_owned()),
-        name: arx_nexo::presence::Presence::Unset,
-        short_description: arx_nexo::presence::Presence::Unset,
+        ..Default::default()
     };
     let query = [];
     let result = bot.profile_update(&query, Some(&body), Some(&request_key)).await?;
@@ -1521,12 +1505,13 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let file_path = std::env::var("FILE_PATH")?;
     let request_key = std::env::var("REQUEST_KEY")?;
     let bot = Client::new(Config::new(arx_bot_token, "https://signal.arx.pro/bot-api/v1", false)?)?;
-    let body = models::SetProfilePhoto::SetProfilePhotoVariant1(Box::new(models::SetProfilePhotoVariant1 {
-        photo: models::SetProfilePhotoVariant1Photo {
-            attach: "photo".to_owned(),
-        },
-        r#type: models::SetProfilePhotoVariant1Type::Static,
-    }));
+    let body = models::SetProfilePhoto::SetProfilePhotoVariant1(
+        Box::new(
+            models::SetProfilePhotoVariant1::new(
+                models::SetProfilePhotoVariant1Photo::new("photo".to_owned()),
+            ),
+        ),
+    );
     let result = bot.profile_set_photo(&body, vec![UploadPart::new("photo", UploadSource::from_path(&file_path)?.with_content_type("image/png")?)?], Some(&request_key)).await?;
     println!("{:?}", result);
     Ok(())

@@ -86,7 +86,7 @@ with Client(
 {% tab title="Rust" %}
 
 ```rust
-use arx_nexo::{Client, Config, models, presence::Presence};
+use arx_nexo::{Client, Config, models};
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -95,54 +95,20 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let chat_id = std::env::var("CHAT_ID")?;
     let bot = Client::new(Config::new(token, "https://signal.arx.pro/bot-api/v1", false)?)?;
     let query = [];
-    let request = models::SendMessage {
-        content: models::InputContent::InputPollContent(Box::new(models::InputPollContent {
-            r#type: models::InputPollContentType::Poll,
-            poll: models::InputPoll {
-                allow_adding_options: None,
-                allows_multiple_answers: Some(true),
-                allows_revoting: None,
-                close_at: None,
-                correct_option_ids: None,
-                country_codes: None,
-                description: None,
-                description_entities: None,
-                description_format: None,
-                explanation: None,
-                explanation_entities: None,
-                explanation_format: None,
-                explanation_media: None,
-                hide_results_until_closes: None,
-                is_anonymous: Some(false),
-                is_closed: None,
-                media: None,
-                members_only: None,
-                open_period_seconds: None,
-                options: vec![
-                    models::InputPollOption {
-                        media: None,
-                        text: "Morning".into(),
-                        text_entities: None,
-                    },
-                    models::InputPollOption {
-                        media: None,
-                        text: "Afternoon".into(),
-                        text_entities: None,
-                    },
-                ],
-                question: "Which meeting time works?".into(),
-                question_entities: None,
-                shuffle_options: None,
-                r#type: None,
-            },
-        })),
-        effect_id: None,
-        link_preview: Presence::Unset,
-        protect_content: None,
-        reply_markup: None,
-        reply_to: None,
-        silent: None,
+    let poll = models::InputPoll {
+        allows_multiple_answers: Some(true),
+        is_anonymous: Some(false),
+        ..models::InputPoll::new(
+            vec![
+                models::InputPollOption::new("Morning".into()),
+                models::InputPollOption::new("Afternoon".into()),
+            ],
+            "Which meeting time works?".into(),
+        )
     };
+    let content =
+        models::InputContent::InputPollContent(Box::new(models::InputPollContent::new(poll)));
+    let request = models::SendMessage::new(content);
     let result = bot
         .messages_send(&chat_id, &query, Some(&request), Some(&key))
         .await?;
@@ -300,7 +266,7 @@ with Client(
 {% tab title="Rust" %}
 
 ```rust
-use arx_nexo::{Client, Config, models, presence::Presence};
+use arx_nexo::{Client, Config, models};
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -309,40 +275,21 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let chat_id = std::env::var("CHAT_ID")?;
     let bot = Client::new(Config::new(token, "https://signal.arx.pro/bot-api/v1", false)?)?;
     let query = [];
-    let request = models::SendMessage {
-        content: models::InputContent::InputChecklistContent(Box::new(
-            models::InputChecklistContent {
-                r#type: models::InputChecklistContentType::Checklist,
-                checklist: models::InputChecklist {
-                    others_can_add_tasks: Some(true),
-                    others_can_mark_tasks_as_done: Some(true),
-                    tasks: vec![
-                        models::InputChecklistTask {
-                            id: "agenda".into(),
-                            text: "Send the agenda".into(),
-                            text_entities: None,
-                            text_format: None,
-                        },
-                        models::InputChecklistTask {
-                            id: "room".into(),
-                            text: "Reserve the room".into(),
-                            text_entities: None,
-                            text_format: None,
-                        },
-                    ],
-                    title: "Prepare the meeting".into(),
-                    title_entities: None,
-                    title_format: None,
-                },
-            },
-        )),
-        effect_id: None,
-        link_preview: Presence::Unset,
-        protect_content: None,
-        reply_markup: None,
-        reply_to: None,
-        silent: None,
+    let checklist = models::InputChecklist {
+        others_can_add_tasks: Some(true),
+        others_can_mark_tasks_as_done: Some(true),
+        ..models::InputChecklist::new(
+            vec![
+                models::InputChecklistTask::new("agenda".into(), "Send the agenda".into()),
+                models::InputChecklistTask::new("room".into(), "Reserve the room".into()),
+            ],
+            "Prepare the meeting".into(),
+        )
     };
+    let content = models::InputContent::InputChecklistContent(Box::new(
+        models::InputChecklistContent::new(checklist),
+    ));
+    let request = models::SendMessage::new(content);
     let result = bot
         .messages_send(&chat_id, &query, Some(&request), Some(&key))
         .await?;

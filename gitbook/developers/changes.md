@@ -18,7 +18,13 @@ Use [SDKs and CLI](sdks.md) to install the package for your language:
 - Python uses the distribution `arx-nexo`, imported as `arx_nexo`.
 - Rust uses the crate `arx-nexo`.
 
-The Python command is `arx-nexo`.
+### Standalone CLI <a href="#standalone-cli" id="standalone-cli"></a>
+
+The `arx-nexo` command is a Rust application in the repository's `CLI/` directory. Install it with `cargo install --path CLI`, or run it with `cargo run --release --manifest-path CLI/Cargo.toml -- whoami`. It includes YAML commands and profiles, webhook tools, signature verification and the local emulator. Python is no longer required to run the CLI or emulator.
+
+Use `arx-nexo new DIR --lang typescript`, `--lang python` or `--lang rust` to create an echo project configured for the emulator. `arx-nexo emulator-token` prints its synthetic token. Python tests can keep using `Emulator(port=0)` after installing the CLI; the helper finds the executable on `PATH` or through `ARX_NEXO_CLI`.
+
+The Python package no longer provides the `cli` extra, the `arx-nexo` console entry point or `python -m arx_nexo`. Install the [standalone CLI](sdks.md#cli) to use those tools.
 
 The [capability map](features.md) points to supported features, and [Not available yet](not-available-yet.md) collects features outside the current Bot API. The [API reference](api.md) groups operations and links to their types.
 

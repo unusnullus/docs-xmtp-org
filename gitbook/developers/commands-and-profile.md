@@ -78,20 +78,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let key = std::env::var("REQUEST_KEY")?;
     let bot = Client::new(Config::new(token, "https://signal.arx.pro/bot-api/v1", false)?)?;
     let query = [("scope", "all_private_chats"), ("language_code", "en")];
-    let request = models::SetCommands {
-        commands: vec![
-            models::Command {
-                command: "start".into(),
-                description: "Start a conversation".into(),
-                is_ephemeral: None,
-            },
-            models::Command {
-                command: "help".into(),
-                description: "Show available actions".into(),
-                is_ephemeral: None,
-            },
-        ],
-    };
+    let request = models::SetCommands::new(vec![
+        models::Command::new("start".into(), "Start a conversation".into()),
+        models::Command::new("help".into(), "Show available actions".into()),
+    ]);
     let result = bot.commands_set(&query, Some(&request), Some(&key)).await?;
     println!("{result:?}");
     Ok(())
@@ -204,9 +194,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         description: Presence::Value(
             "Get help with Acme orders and track support requests.".into(),
         ),
-        language_code: None,
-        name: Presence::Unset,
         short_description: Presence::Value("Acme customer support.".into()),
+        ..Default::default()
     };
     let result = bot
         .profile_update(&query, Some(&request), Some(&key))

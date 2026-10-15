@@ -79,7 +79,7 @@ with Client(
 {% tab title="Rust" %}
 
 ```rust
-use arx_nexo::{Client, Config, models, presence::Presence};
+use arx_nexo::{Client, Config, models};
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -88,21 +88,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let chat_id = std::env::var("CHAT_ID")?;
     let bot = Client::new(Config::new(token, "https://signal.arx.pro/bot-api/v1", false)?)?;
     let query = [];
-    let request = models::SendMessage {
-        content: models::InputContent::InputLocation(Box::new(models::InputLocation {
-            horizontal_accuracy: Some(25.0),
-            latitude: 14.62,
-            live: None,
-            longitude: -90.52,
-            r#type: models::InputLocationType::Location,
-        })),
-        effect_id: None,
-        link_preview: Presence::Unset,
-        protect_content: None,
-        reply_markup: None,
-        reply_to: None,
-        silent: None,
+    let location = models::InputLocation {
+        horizontal_accuracy: Some(25.0),
+        ..models::InputLocation::new(14.62, -90.52)
     };
+    let content = models::InputContent::InputLocation(Box::new(location));
+    let request = models::SendMessage::new(content);
     let result = bot
         .messages_send(&chat_id, &query, Some(&request), Some(&key))
         .await?;

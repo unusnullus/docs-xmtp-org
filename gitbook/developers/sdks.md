@@ -4,7 +4,7 @@ description: "Install the TypeScript, Python or Rust SDK and use the development
 
 # SDKs and CLI
 
-Connect your bot with a typed SDK in TypeScript, Python or Rust. Each SDK provides named API methods, polling helpers, webhook verification, file uploads and downloads. The Python package also includes a CLI and an emulator you can use with any of the clients.
+Connect your bot with a typed SDK in TypeScript, Python or Rust. Each SDK provides named API methods, polling helpers, webhook verification, file uploads and downloads. The standalone `arx-nexo` CLI includes an emulator and works with bots written in any language.
 
 ## Install an SDK <a href="#install-an-sdk" id="install-an-sdk"></a>
 
@@ -49,10 +49,8 @@ The distribution is `arx-nexo`. You import it as `arx_nexo`. Use Python 3.10 or 
 ```sh
 python3 -m venv .venv
 . .venv/bin/activate
-python -m pip install "$ARX_SDKS_ROOT/SDKs/bot/python[cli]"
+python -m pip install "$ARX_SDKS_ROOT/SDKs/bot/python"
 ```
-
-The `cli` extra installs YAML support for the command and profile tools. You can omit it if you only need the client.
 
 {% endtab %}
 {% tab title="Rust" %}
@@ -200,7 +198,20 @@ Load your bot's effective quotas with Python or Rust `refresh_send_limits()`, or
 
 ## CLI <a href="#cli" id="cli"></a>
 
-The `arx-nexo` command comes from the Python package. You can also run it as `python -m arx_nexo`. Live requests read `ARX_BOT_TOKEN` from the environment. Pass `--base-url` before the subcommand, or set `ARX_BOT_API_BASE_URL`.
+The `arx-nexo` command lives in `CLI/` at the repository root. It requires Rust 1.85 or later and works independently of the SDK you choose. Install it from your clone:
+
+```sh
+cargo install --path "$ARX_SDKS_ROOT/CLI"
+arx-nexo --help
+```
+
+You can also run it from source:
+
+```sh
+cargo run --release --manifest-path "$ARX_SDKS_ROOT/CLI/Cargo.toml" -- whoami
+```
+
+Live requests read `ARX_BOT_TOKEN` from the environment. Pass `--base-url` before the subcommand, or set `ARX_BOT_API_BASE_URL`. Tokens are never command arguments. YAML support is included.
 
 Prepare those variables with the [quickstart setup](quickstart.md#create-the-bot), and set `CHAT_ID` to `message.chat.id` from an incoming update in a chat you have started with the bot.
 
@@ -223,6 +234,8 @@ Use a chat you have started with the bot. Repeat `hello-1` only when retrying th
 | `webhook test --url URL` | Send a synthetic signed request directly to your receiver. |
 | `verify-signature --body-file FILE --signature VALUE` | Check recorded delivery bytes. |
 | `emulate --port PORT` | Start the local emulator. |
+| `emulator-token` | Print its fixed synthetic token. |
+| `new DIR --lang typescript\|python\|rust` | Create an echo project configured for the emulator. |
 
 For example, save this as `commands.yaml` and run `arx-nexo commands push commands.yaml`:
 
@@ -233,3 +246,14 @@ commands:
 ```
 
 Registering a command adds it to the menu. Your program must still implement the handler. See [Commands & profile](commands-and-profile.md) for scope and localization, and [Testing](testing.md) to connect any SDK to the emulator.
+
+## Create an echo project <a href="#create-an-echo-project" id="create-an-echo-project"></a>
+
+From a directory where you want to create a new project:
+
+```sh
+arx-nexo new acme-support --lang typescript
+cd acme-support
+```
+
+Choose `python` or `rust` instead for the same tutorial in that language. The generated README has three steps: start the emulator, install dependencies and run the bot. Its `.env` already contains synthetic local settings. See [Testing](testing.md) for the emulator UI and HTTP controls. SDK dependencies point to your clone; set `ARX_SDKS_ROOT` before `new` if you moved it. An existing destination is rejected without overwriting files.

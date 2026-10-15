@@ -304,29 +304,16 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let request_key = std::env::var("REQUEST_KEY")?;
     let second_photo_file_id = std::env::var("SECOND_PHOTO_FILE_ID")?;
     let bot = Client::new(Config::new(arx_bot_token, "https://signal.arx.pro/bot-api/v1", false)?)?;
-    let body = models::SendAlbum {
-        effect_id: None,
-        items: vec![models::AlbumItem::AlbumPhoto(Box::new(models::AlbumPhoto {
-            caption: None,
-            caption_above_media: None,
-            caption_entities: None,
-            caption_format: None,
-            has_spoiler: None,
-            media: FileInput::from_id(photo_file_id)?,
-            r#type: models::AlbumPhotoType::Photo,
-        })), models::AlbumItem::AlbumPhoto(Box::new(models::AlbumPhoto {
-            caption: None,
-            caption_above_media: None,
-            caption_entities: None,
-            caption_format: None,
-            has_spoiler: None,
-            media: FileInput::from_id(second_photo_file_id)?,
-            r#type: models::AlbumPhotoType::Photo,
-        }))],
-        protect_content: None,
-        reply_to: None,
-        silent: None,
-    };
+    let body = models::SendAlbum::new(
+        vec![
+            models::AlbumItem::AlbumPhoto(
+                Box::new(models::AlbumPhoto::new(FileInput::from_id(photo_file_id)?)),
+            ),
+            models::AlbumItem::AlbumPhoto(
+                Box::new(models::AlbumPhoto::new(FileInput::from_id(second_photo_file_id)?)),
+            ),
+        ],
+    );
     let query = [];
     let result = bot.messages_send_album(&chat_id, &query, Some(&body), Some(&request_key)).await?;
     println!("{:?}", result);
@@ -555,21 +542,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let request_key = std::env::var("REQUEST_KEY")?;
     let source_chat_id = std::env::var("SOURCE_CHAT_ID")?;
     let bot = Client::new(Config::new(arx_bot_token, "https://signal.arx.pro/bot-api/v1", false)?)?;
-    let body = models::CopyMessages {
-        caption: None,
-        caption_above_media: None,
-        caption_entities: None,
-        caption_format: None,
-        effect_id: None,
-        from_chat_id: source_chat_id,
-        message_ids: message_ids,
-        protect_content: None,
-        remove_caption: None,
-        reply_markup: None,
-        reply_to: None,
-        silent: None,
-        video_start_seconds: None,
-    };
+    let body = models::CopyMessages::new(source_chat_id, message_ids);
     let query = [];
     let result = bot.messages_copy(&chat_id, &query, Some(&body), Some(&request_key)).await?;
     println!("{:?}", result);
@@ -736,9 +709,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let message_ids : Vec<String> = std::env::var("MESSAGE_IDS")?.split(',').map(str::to_owned).collect();
     let request_key = std::env::var("REQUEST_KEY")?;
     let bot = Client::new(Config::new(arx_bot_token, "https://signal.arx.pro/bot-api/v1", false)?)?;
-    let body = models::DeleteMessages {
-        message_ids: message_ids,
-    };
+    let body = models::DeleteMessages::new(message_ids);
     let query = [];
     let result = bot.messages_delete_batch(&chat_id, &query, Some(&body), Some(&request_key)).await?;
     println!("{:?}", result);
@@ -894,14 +865,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let request_key = std::env::var("REQUEST_KEY")?;
     let source_chat_id = std::env::var("SOURCE_CHAT_ID")?;
     let bot = Client::new(Config::new(arx_bot_token, "https://signal.arx.pro/bot-api/v1", false)?)?;
-    let body = models::ForwardMessages {
-        effect_id: None,
-        from_chat_id: source_chat_id,
-        message_ids: message_ids,
-        protect_content: None,
-        silent: None,
-        video_start_seconds: None,
-    };
+    let body = models::ForwardMessages::new(source_chat_id, message_ids);
     let query = [];
     let result = bot.messages_forward(&chat_id, &query, Some(&body), Some(&request_key)).await?;
     println!("{:?}", result);
@@ -1073,6 +1037,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let bot = Client::new(Config::new(arx_bot_token, "https://signal.arx.pro/bot-api/v1", false)?)?;
     let body = models::UnpinMessage {
         message_id: Some(message_id),
+        ..Default::default()
     };
     let query = [];
     let result = bot.messages_unpin(&chat_id, &query, Some(&body), Some(&request_key)).await?;
@@ -1476,20 +1441,17 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let request_key = std::env::var("REQUEST_KEY")?;
     let bot = Client::new(Config::new(arx_bot_token, "https://signal.arx.pro/bot-api/v1", false)?)?;
     let body = models::EditMessage {
-        caption: None,
-        caption_above_media: None,
-        caption_entities: None,
-        caption_format: None,
-        content: Some(models::InputEditContent::InputText(Box::new(models::InputText {
-            entities: None,
-            format: Some(models::InputTextFormat::Plain),
-            text: "Hello again".to_owned(),
-            r#type: models::InputTextType::Text,
-        }))),
-        expected_revision: None,
-        link_preview: arx_nexo::presence::Presence::Unset,
-        live_location: None,
-        reply_markup: None,
+        content: Some(
+            models::InputEditContent::InputText(
+                Box::new(
+                    models::InputText {
+                        format: Some(models::InputTextFormat::Plain),
+                        ..models::InputText::new("Hello again".to_owned())
+                    },
+                ),
+            ),
+        ),
+        ..Default::default()
     };
     let query = [];
     let result = bot.messages_edit(&chat_id, &message_id, &query, Some(&body), Some(&request_key)).await?;
@@ -1644,6 +1606,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let bot = Client::new(Config::new(arx_bot_token, "https://signal.arx.pro/bot-api/v1", false)?)?;
     let body = models::PinMessage {
         silent: Some(true),
+        ..Default::default()
     };
     let query = [];
     let result = bot.messages_pin(&chat_id, &message_id, &query, Some(&body), Some(&request_key)).await?;
