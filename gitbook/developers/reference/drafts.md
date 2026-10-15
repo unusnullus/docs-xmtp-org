@@ -103,9 +103,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let chat_id = std::env::var("CHAT_ID")?;
     let request_key = std::env::var("REQUEST_KEY")?;
     let bot = Client::new(Config::new(arx_bot_token, "https://signal.arx.pro/bot-api/v1", false)?)?;
-    let body = models::SendAction {
-        action: models::SendActionAction::Typing,
-    };
+    let body = models::SendAction::new(models::SendActionAction::Typing);
     let query = [];
     let result = bot.chats_send_action(&chat_id, &query, Some(&body), Some(&request_key)).await?;
     println!("{:?}", result);
@@ -365,11 +363,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let bot = Client::new(Config::new(arx_bot_token, "https://signal.arx.pro/bot-api/v1", false)?)?;
     let body = models::SetDraft {
         can_stop: Some(true),
-        entities: None,
-        format: None,
         keep_on_stop: Some(false),
-        rich: None,
         text: Some("Working…".to_owned()),
+        ..Default::default()
     };
     let query = [];
     let result = bot.drafts_set(&chat_id, &draft_id, &query, Some(&body), Some(&request_key)).await?;

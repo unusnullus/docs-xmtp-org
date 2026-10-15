@@ -227,13 +227,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             models::SetWebhookAllowedUpdatesItem::Default,
             models::SetWebhookAllowedUpdatesItem::MessagesDeleted,
         ]),
-        certificate: None,
         drop_pending_updates: Some(false),
-        ip_address: None,
         max_connections: Some(40),
         reply_operations_enabled: Some(false),
         secret_token: Some(webhook_secret),
-        url: webhook_url,
+        ..models::SetWebhook::new(webhook_url)
     };
     let result = bot.webhook_set(&query, Some(&request), Some(&key)).await?;
     println!("{result:?}");

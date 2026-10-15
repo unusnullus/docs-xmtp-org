@@ -84,13 +84,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let query = [];
     let me = bot.me_get(&query, None, None).await?;
     let request = models::CallbackAnswer {
-        cache_seconds: None,
-        show_alert: None,
-        text: None,
         url: Some(format!(
             "https://www.arx.pro/bot/{}?start=help_42",
             me.username
         )),
+        ..Default::default()
     };
     let result = bot
         .callback_queries_answer(&callback_id, &query, Some(&request), Some(&key))

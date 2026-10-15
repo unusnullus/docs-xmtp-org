@@ -91,19 +91,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let bot = Client::new(Config::new(token, "https://signal.arx.pro/bot-api/v1", false)?)?;
     let query = [];
     let request = models::CopyMessages {
-        caption: None,
-        caption_above_media: None,
-        caption_entities: None,
-        caption_format: None,
-        effect_id: None,
-        from_chat_id: source_chat_id,
-        message_ids: vec![source_message_id],
         protect_content: Some(true),
-        remove_caption: None,
-        reply_markup: None,
-        reply_to: None,
         silent: Some(true),
-        video_start_seconds: None,
+        ..models::CopyMessages::new(source_chat_id, vec![source_message_id])
     };
     let result = bot
         .messages_copy(&chat_id, &query, Some(&request), Some(&key))

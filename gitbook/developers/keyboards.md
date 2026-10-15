@@ -79,10 +79,7 @@ with Client(
 {% tab title="Rust" %}
 
 ```rust
-use arx_nexo::{
-    ButtonStyle, Client, Config, FormattedText, InlineButton, InlineKeyboard, models,
-    presence::Presence,
-};
+use arx_nexo::{ButtonStyle, Client, Config, FormattedText, InlineButton, InlineKeyboard, models};
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -97,13 +94,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         Some(ButtonStyle::Primary),
     )?])?;
     let request = models::SendMessage {
-        content: FormattedText::new("Save this reminder?", vec![])?.content()?,
-        effect_id: None,
-        link_preview: Presence::Unset,
-        protect_content: None,
         reply_markup: Some(keyboard.markup()?),
-        reply_to: None,
-        silent: None,
+        ..models::SendMessage::new(FormattedText::new("Save this reminder?", vec![])?.content()?)
     };
     let result = bot
         .messages_send(&chat_id, &query, Some(&request), Some(&key))

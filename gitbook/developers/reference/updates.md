@@ -495,14 +495,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let webhook_url = std::env::var("WEBHOOK_URL")?;
     let bot = Client::new(Config::new(arx_bot_token, "https://signal.arx.pro/bot-api/v1", false)?)?;
     let body = models::SetWebhook {
-        allowed_updates: None,
-        certificate: None,
-        drop_pending_updates: None,
-        ip_address: None,
         max_connections: Some(40),
-        reply_operations_enabled: None,
-        secret_token: None,
-        url: webhook_url,
+        ..models::SetWebhook::new(webhook_url)
     };
     let query = [];
     let result = bot.webhook_set(&query, Some(&body), Some(&request_key)).await?;

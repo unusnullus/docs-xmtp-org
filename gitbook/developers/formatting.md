@@ -86,19 +86,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let heading = FormattedText::bold("Meeting notes")?;
     let text = FormattedText::join(&[(&heading).into(), "\nhttps://example.com/notes".into()])?;
     let request = models::SendMessage {
-        content: text.content()?,
-        effect_id: None,
         link_preview: Presence::Value(models::InputLinkPreview {
             disabled: Some(true),
-            prefer_large_media: None,
-            prefer_small_media: None,
-            show_above_text: None,
-            url: None,
+            ..Default::default()
         }),
-        protect_content: None,
-        reply_markup: None,
-        reply_to: None,
-        silent: None,
+        ..models::SendMessage::new(text.content()?)
     };
     let result = bot
         .messages_send(&chat_id, &query, Some(&request), Some(&key))
@@ -304,7 +296,7 @@ with Client(
 ```rust
 use arx_nexo::{
     Client, Config, FileInput, MediaKind, RichBlocks, RichMediaOptions, RichMessage,
-    RichMessageOptions, models, presence::Presence,
+    RichMessageOptions, models,
 };
 
 #[tokio::main]
@@ -321,15 +313,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         RichMediaOptions::default(),
     )?;
     let rich = RichMessage::new(vec![photo], RichMessageOptions::default())?;
-    let request = models::SendMessage {
-        content: rich.content()?,
-        effect_id: None,
-        link_preview: Presence::Unset,
-        protect_content: None,
-        reply_markup: None,
-        reply_to: None,
-        silent: None,
-    };
+    let request = models::SendMessage::new(rich.content()?);
     let result = bot
         .messages_send(&chat_id, &query, Some(&request), Some(&key))
         .await?;

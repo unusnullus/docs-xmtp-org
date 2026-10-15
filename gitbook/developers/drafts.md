@@ -84,11 +84,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let query = [];
     let request = models::SetDraft {
         can_stop: Some(true),
-        entities: None,
-        format: None,
         keep_on_stop: Some(true),
-        rich: None,
         text: Some("Checking the available options".into()),
+        ..Default::default()
     };
     let result = bot
         .drafts_set(&chat_id, &draft_id, &query, Some(&request), Some(&key))

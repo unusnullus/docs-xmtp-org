@@ -130,3 +130,13 @@ Send another message in Messenger. Your bot should reply with "Hello from Nexo!"
 The next polling request supplies the last processed `update_id` plus one. That acknowledges every update up to that ID, so advance the offset only after you finish processing each update. These programs keep the offset in memory. Their stable reply key lets a repeated update replay the same send while its idempotency record remains valid, but it does not protect other work your handler performs.
 
 Before deploying, add durable update handling and graceful shutdown using the [updates guide](updates.md). Then work through [Testing](testing.md) and the [go-live checklist](go-live-checklist.md).
+
+## Start with a local echo project <a href="#start-with-a-local-echo-project" id="start-with-a-local-echo-project"></a>
+
+To try a complete project before creating a live bot, install the [standalone CLI](sdks.md#cli) and run:
+
+```sh
+arx-nexo new acme-support --lang typescript
+```
+
+Use `--lang python` or `--lang rust` for the other SDKs. Follow the generated README to start the emulator and run the bot. The project includes dependencies and synthetic environment settings; no token needs editing for the local test.

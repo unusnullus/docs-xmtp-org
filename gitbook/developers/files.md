@@ -93,7 +93,7 @@ with Client(Config(base_url="https://signal.arx.pro/bot-api/v1")) as bot:
 {% tab title="Rust" %}
 
 ```rust
-use arx_nexo::{Client, Config, FileInput, UploadSource, models, presence::Presence};
+use arx_nexo::{Client, Config, FileInput, UploadSource, models};
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -109,28 +109,14 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .with_filename("notes.txt")?
         .with_content_type("text/plain")?;
     let upload = models::UploadFile {
-        kind: models::UploadFileKind::Document,
         file_name: Some("notes.txt".into()),
+        ..models::UploadFile::new(models::UploadFileKind::Document)
     };
     let uploaded = bot.files_upload(source, &upload, Some(&upload_key)).await?;
     let ready = bot.wait_file_ready(&uploaded.file_id, None).await?;
-    let body = models::SendMessage {
-        content: models::InputContent::InputDocument(Box::new(models::InputDocument {
-            r#type: models::InputDocumentType::Document,
-            document: FileInput::from_id(ready.file_id)?,
-            caption: None,
-            caption_entities: None,
-            caption_format: None,
-            disable_content_type_detection: None,
-            thumbnail: None,
-        })),
-        effect_id: None,
-        link_preview: Presence::Unset,
-        protect_content: None,
-        reply_markup: None,
-        reply_to: None,
-        silent: None,
-    };
+    let document = models::InputDocument::new(FileInput::from_id(ready.file_id)?);
+    let content = models::InputContent::InputDocument(Box::new(document));
+    let body = models::SendMessage::new(content);
     let query = [];
     let message = bot
         .messages_send(&chat_id, &query, Some(&body), Some(&send_key))

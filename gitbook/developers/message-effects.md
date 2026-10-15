@@ -78,7 +78,7 @@ with Client(
 {% tab title="Rust" %}
 
 ```rust
-use arx_nexo::{Client, Config, FormattedText, models, presence::Presence};
+use arx_nexo::{Client, Config, FormattedText, models};
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -98,13 +98,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         })
         .ok_or("No private-chat effect is available")?;
     let request = models::SendMessage {
-        content: FormattedText::new("Trail saved.", vec![])?.content()?,
         effect_id: Some(effect.effect_id.clone()),
-        link_preview: Presence::Unset,
-        protect_content: None,
-        reply_markup: None,
-        reply_to: None,
-        silent: None,
+        ..models::SendMessage::new(FormattedText::new("Trail saved.", vec![])?.content()?)
     };
     let result = bot
         .messages_send(&chat_id, &query, Some(&request), Some(&key))
