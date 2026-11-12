@@ -28,6 +28,8 @@ Supply exactly one of the following forms. Required fields apply within each for
 
 - When `type` is `"checklist"`, use [InputChecklistContent](inputchecklistcontent.md).
 
+- When `type` is `"sticker"`, use [InputStickerContent](inputstickercontent.md).
+
 - When `type` is `"poll"`, use [InputPollContent](inputpollcontent.md).
 
 - When `type` is `"location"`, use [InputLocation](inputlocation.md).
@@ -35,5 +37,7 @@ Supply exactly one of the following forms. Required fields apply within each for
 - When `type` is `"venue"`, use [InputVenue](inputvenue.md).
 
 - When `type` is `"contact"`, use [InputContact](inputcontact.md).
+
+- When `type` is `"invoice"`, use [InputInvoice](inputinvoice.md).
 
 Return to the [type index](../types.md) or find an operation in the [API index](../../api.md).

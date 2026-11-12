@@ -2,8 +2,6 @@
 
 A request to remove the user's custom reply keyboard.
 
-Only the listed fields are allowed.
-
 | Field | Type | Required | Description and constraints |
 | --- | --- | --- | --- |
 | `selective` | boolean | No | This is true when the keyboard or reply prompt targets only the relevant users. |

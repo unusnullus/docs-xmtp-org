@@ -55,7 +55,9 @@ python -m pip install "$ARX_SDKS_ROOT/SDKs/bot/python"
 {% endtab %}
 {% tab title="Rust" %}
 
-The crate is `arx-nexo`. You import it as `arx_nexo`. Use Rust 1.85 or later. Create a Cargo application, then add the local SDK and the dependencies used by the examples:
+The bot crate is `arx-nexo`. You import it as `arx_nexo`. Use Rust 1.85 or later.
+The separate human API crate, `arx-sdk` in `SDKs/rust`, requires Rust 1.87 or later.
+Create a Cargo application, then add the local bot SDK and the dependencies used by the examples:
 
 ```sh
 cargo new acme-support-bot
@@ -133,6 +135,10 @@ Rust's generated read methods take a query slice, an optional body and an option
 Python and Rust use method names such as `messages_send`. TypeScript uses `messagesSend`. For a plain text reply, use `send_text` in Python or Rust, or `sendText` in TypeScript. The [API reference](api.md) shows typed calls for individual operations.
 
 All three SDKs provide a `Polling` helper. Python also provides `AsyncPolling`. Each client offers webhook verification and receiver helpers. Follow [Polling and webhooks](updates.md) for complete setup, verification and acknowledgement examples.
+
+## Groups, Mini Apps, payments and advanced modes <a href="#groups-mini-apps-payments-and-advanced-modes" id="groups-mini-apps-payments-and-advanced-modes"></a>
+
+Every SDK exposes the group, topic, moderation, Mini App, payment and managed-bot operations as typed methods with the same naming rules. Group messages arrive as `message` updates whose `chat.kind` is `group`; in Rust, match `IncomingMessage::GroupMessage` to handle them. Business connections also need the separate Business endpoint runtime in `SDKs/bot/runtime`, which keeps the encryption keys for your connections. The runtime requires Rust 1.94.1 or later and runs on Unix hosts. See [Bots in groups](groups.md), [Mini Apps](mini-apps.md), [Payments](payments.md) and [Advanced modes](managed-bots.md).
 
 ## Webhook adapters <a href="#webhook-adapters" id="webhook-adapters"></a>
 

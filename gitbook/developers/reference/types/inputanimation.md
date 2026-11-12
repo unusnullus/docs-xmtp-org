@@ -7,7 +7,7 @@ Only the listed fields are allowed. Do not supply `caption_format` and `caption_
 | Field | Type | Required | Description and constraints |
 | --- | --- | --- | --- |
 | `animation` | [InputFile](inputfile.md) | Yes | This contains the animation file or source for the content. |
-| `caption` | string | No | This is the caption displayed with the media. You can use up to 1,024 UTF-16 code units after markup is parsed. |
+| `caption` | string | No | You can use up to 1,024 UTF-16 code units after markup is parsed. |
 | `caption_above_media` | boolean | No | This is true when the caption appears above the media. |
 | `caption_entities` | Array of [InputEntity](inputentity.md) | No | These define explicit caption formatting. In requests, use these instead of caption_format. |
 | `caption_format` | `"plain"` or `"markdown"` or `"html"` | No | This is the markup format used to parse the caption. Omit caption_entities when you set this field. |

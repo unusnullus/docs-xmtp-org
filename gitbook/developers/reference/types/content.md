@@ -26,6 +26,10 @@ You receive one of the following forms. Required fields apply within each form.
 
 - `type` is `"live_photo"`: [LivePhoto](livephoto.md).
 
+- `type` is `"invoice"`: [InvoiceContent](invoicecontent.md).
+
+- `type` is `"sticker"`: [StickerContent](stickercontent.md).
+
 - `type` is `"poll"`: [PollContent](pollcontent.md).
 
 - `type` is `"checklist"`: [ChecklistContent](checklistcontent.md).

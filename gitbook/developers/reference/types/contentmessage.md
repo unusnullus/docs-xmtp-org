@@ -4,8 +4,10 @@ A received message containing text, media, or another supported content variant.
 
 | Field | Type | Required | Description and constraints |
 | --- | --- | --- | --- |
+| `author_signature` | string | No | This is the signature displayed for the author of the original message. |
 | `chat` | [Chat](chat.md) | Yes | This identifies the chat associated with the message or event. |
 | `content` | [Content](content.md) | Yes | This contains the message content. The type field selects its variant. |
+| `edited_at` | string | No | When this post was last edited, in RFC 3339 format. The original sent_at is unchanged. The format is `date-time`. |
 | `effect_id` | string | No | The identifier of the message effect attached to this message. |
 | `fallback_text` | string | No | This is a plain text representation of the message content. |
 | `forward_origin` | [ForwardOrigin](forwardorigin.md) | No | This identifies the origin of a forwarded message. |
@@ -18,10 +20,13 @@ A received message containing text, media, or another supported content variant.
 | `reply_markup` | [InlineKeyboard](inlinekeyboard.md) | No | The inline keyboard attached to this message. |
 | `reply_to` | [Reply](reply.md) | No | This identifies the reply target and optional quote for the message. |
 | `revision` | string | No | This is the message's revision, encoded as a decimal string. The value must match `^[0-9]+$`. |
-| `sender_user` | [User](user.md) | Yes | This identifies the user or bot that sent the message. |
+| `sender_chat` | [ChannelChat](channelchat.md) | No | The public channel that sent this post. Channel posts omit sender_user. |
+| `sender_user` | [User](user.md) | No | This identifies the user or bot that sent the message. |
 | `sent_at` | string | Yes | This records when the message was sent, in RFC 3339 format. The format is `date-time`. |
 | `silent` | boolean | No | Whether this message was sent without a notification sound. |
 | `start_parameter` | string | No | Your bot receives this payload when a user starts it through a deep link. |
 | `state_version` | string | No | This version orders changes to the message's state and is encoded as a decimal string. The value must match `^[0-9]+$`. |
+| `topic_id` | string | No | This is the topic ID within the chat, when the event belongs to a topic. The value must match `^[1-9][0-9]*$`. |
+| `via_bot` | [User](user.md) | No | The bot through which the user shared this message. |
 
 Return to the [type index](../types.md) or find an operation in the [API index](../../api.md).

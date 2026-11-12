@@ -95,6 +95,7 @@ The SDK returns the sent message directly. The [request guide](making-requests.m
 | [25 - Files and Media](https://github.com/unusnullus/arx-sdks/tree/main/examples/python/25%20-%20Files%20and%20Media) | Upload and send files. |
 | [26 - Streaming Replies](https://github.com/unusnullus/arx-sdks/tree/main/examples/python/26%20-%20Streaming%20Replies) | Show a draft while preparing a final reply. |
 | [27 - Error Handling and Retries](https://github.com/unusnullus/arx-sdks/tree/main/examples/python/27%20-%20Error%20Handling%20and%20Retries) | Handle failures and repeat requests safely. |
+| [28 - Business Endpoint](https://github.com/unusnullus/arx-sdks/tree/main/examples/python/28%20-%20Business%20Endpoint) | Register a Business connection endpoint and decode encrypted messages. |
 
 {% endtab %}
 {% tab title="Rust" %}
@@ -117,4 +118,4 @@ Create a [TESTBOT](testing.md#testbot), start a conversation with it in Messenge
 
 The examples use typed SDK methods. Keep stable idempotency keys for repeated actions, and add your own durable storage before deploying an example as a service. See [Making requests](making-requests.md) and the [go-live checklist](go-live-checklist.md).
 
-For the commands and privacy behavior of ARX's own bots, read [Official bots](official-bots.md).
+Guides for [groups](groups.md), [Mini Apps](mini-apps.md), [payments](payments.md) and [advanced modes](managed-bots.md) include their own examples in all three languages.

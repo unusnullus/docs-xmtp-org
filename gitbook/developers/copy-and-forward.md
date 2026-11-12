@@ -152,7 +152,7 @@ For HTTP, this body copies a video and starts playback at five seconds. The sour
 
 ```json
 {
-  "from_chat_id": "4398046511200",
+  "from_chat_id": "123456789",
   "message_ids": ["7"],
   "caption": "<b>Trail preview</b>",
   "caption_format": "html",
@@ -163,11 +163,11 @@ For HTTP, this body copies a video and starts playback at five seconds. The sour
 
 ## Reply from a copy <a href="#reply-from-a-copy" id="reply-from-a-copy"></a>
 
-Set `reply_to.message_id` to a message in the destination chat. You can also supply `chat_id` for an accessible reply target in another chat, `allow_missing` to allow a missing target, or `quote` to select quoted text. A copy can select a `poll_option_id` or `checklist_task_id`; see [part replies](polls-and-checklists.md#reply-to-an-option-or-task). For HTTP:
+Set `reply_to.message_id` to a message in the destination chat. You can also supply `chat_id` for an accessible reply target in another chat, `allow_missing` to allow a missing target, or `quote` to select quoted text. A copy can select a `poll_option_id` or `checklist_task_id`; see [part replies](polls-and-checklists.md#reply-to-an-option-or-task). [Replies and quotes](messages/replies.md) has the full reply rules. For HTTP:
 
 ```json
 {
-  "from_chat_id": "4398046511200",
+  "from_chat_id": "123456789",
   "message_ids": ["7"],
   "reply_to": {"message_id":"12"},
   "silent": true,
@@ -182,3 +182,7 @@ Set `reply_to.message_id` to a message in the destination chat. You can also sup
 `video_start_seconds` must be finite, nonnegative and below every copied or forwarded video's duration. Omitting it keeps the source setting. It leaves non-video messages unchanged. Invalid playback options return HTTP 400 `invalid_parameter` for the whole batch.
 
 Select `effect_id` from [Message effects](message-effects.md). For polls, checklists and live locations, read their [copy behavior](polls-and-checklists.md#receive-votes-and-results) and [location behavior](locations-and-contacts.md#update-or-stop-a-live-location) before treating a copy as the same interactive object.
+
+## In groups and topics <a href="#in-groups-and-topics" id="in-groups-and-topics"></a>
+
+`messages.copy` and `messages.forward` work between your bot's private chats. Supergroups do not accept them as a destination. To repost content in a group, send it with `messages.send`. See [Groups](groups.md).

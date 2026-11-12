@@ -21,8 +21,6 @@ The confirmation lasts five minutes and applies only to the action you reviewed.
 
 The recipient must be an eligible human account in good standing with room in its [bot ownership allowance](limits.md#bot-profile-and-ownership). An offer lasts 72 hours. You keep ownership and your program keeps running until the recipient accepts. You can cancel an open offer, and the recipient can reject it. Expiration, suspension or deletion closes an outstanding offer without transferring ownership.
 
-Official bots cannot be transferred or deleted through these owner workflows.
-
 ## What changes at acceptance <a href="#what-changes-at-acceptance" id="what-changes-at-acceptance"></a>
 
 | Preserved | Requires action from the new bot owner |

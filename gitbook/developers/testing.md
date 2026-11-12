@@ -127,7 +127,9 @@ The TypeScript and Rust clients can connect to the same HTTP emulator during the
 
 Create a TESTBOT with `/newtestbot` in NexoCreator, then manage invited testers with `/testers`. A test version of Acme Support could use the handle `ACMESUPPORTTESTBOT`, if it is available. Your bot owner account and up to 50 invited testers can interact with it. Other users cannot discover or start it.
 
-Use the environment's normal Bot API endpoint with the TESTBOT's own token. It has no `/test` URL prefix. Its effective sending limits and HTTPS webhook requirements still apply. A TESTBOT cannot become a regular bot, and another bot cannot reuse its file IDs. See [Environments](environments.md) when preparing a regular bot.
+An action that involves anyone other than the owner and invited testers returns `test_bot_access_denied`. Test group features in a group of testers.
+
+Use the Bot API endpoint `https://signal.arx.pro/bot-api/v1` with the TESTBOT's own token. It has no `/test` URL prefix. Its effective sending limits and HTTPS webhook requirements still apply. A TESTBOT cannot become a regular bot, and another bot cannot reuse its file IDs. See [Environments](environments.md) when preparing a regular bot.
 
 ## Check your handlers <a href="#check-your-handlers" id="check-your-handlers"></a>
 
@@ -139,7 +141,9 @@ Use the environment's normal Bot API endpoint with the TESTBOT's own token. It h
 | Return a retryable failure or a rate limit. | Respect the delay and keep other chats responsive. |
 | Send unsupported input, emoji near entity boundaries and oversized files. | Explain valid input to the user and handle the API error without crashing. |
 | Block and restart the bot from Messenger. | Stop new interaction while blocked and handle the new Start flow. |
+| Add the bot to a group, change its rights, then remove it. | Follow `my_chat_member` updates and stop group work after removal. |
+| Press a button twice, or let a callback or `pre_checkout_query` wait past its deadline. | Answer once and handle `query_already_answered` or `query_expired` without crashing. |
 
-The emulator does not decode real media or reproduce every network and Messenger behavior. Verify your own uploads, downloads, rendering, keyboard interactions, file processing and token rotation with a TESTBOT. Test invalid signatures locally before configuring live delivery.
+The emulator serves private chats only. It does not decode real media or reproduce every network and Messenger behavior. Test group behavior with a TESTBOT. Verify your own uploads, downloads, rendering, keyboard interactions, file processing and token rotation with a TESTBOT. Test invalid signatures locally before configuring live delivery.
 
 Follow [Polling and webhooks](updates.md) for acknowledgement rules and the [go-live checklist](go-live-checklist.md) before inviting users.

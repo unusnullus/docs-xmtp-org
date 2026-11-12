@@ -6,7 +6,7 @@ Only the listed fields are allowed.
 
 | Field | Type | Required | Description and constraints |
 | --- | --- | --- | --- |
-| `rich` | object | Yes | This contains structured rich message content. Provide exactly one of blocks, html, or markdown. A rich message can contain up to 500 blocks, a nesting depth of 16, 32,768 UTF-16 code units, 50 media occurrences, 100 buttons, and 20 table columns. Media dictionary IDs must be unique. Use structured blocks to include interactive buttons. Only the listed fields are allowed. Include exactly one of `blocks`, `html`, or `markdown`. |
+| `rich` | object | Yes | Provide exactly one of blocks, html, or markdown. A rich message can contain up to 500 blocks, a nesting depth of 16, 32,768 UTF-16 code units, 50 media occurrences, 100 buttons, and 20 table columns. Media dictionary IDs must be unique. Use structured blocks to include interactive buttons. Only the listed fields are allowed. Include exactly one of `blocks`, `html`, or `markdown`. |
 | `rich.blocks` | Array of [InputRichBlock](inputrichblock.md) | No | These are the rich content blocks in display order. |
 | `rich.html` | string | No | Write this rich message content in the supported HTML format. |
 | `rich.is_rtl` | boolean | No | This is true when rich content is laid out from right to left. |

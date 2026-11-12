@@ -12,4 +12,6 @@ You receive one of the following forms. Required fields apply within each form.
 
 - `type` is `"disabled"`: [InlineButtonDisabled](inlinebuttondisabled.md).
 
+- `type` is `"mini_app"`: [InlineButtonMiniApp](inlinebuttonminiapp.md).
+
 Return to the [type index](../types.md) or find an operation in the [API index](../../api.md).

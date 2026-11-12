@@ -114,10 +114,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 | `url` | `url` | The user opens a URL or an ARX profile link. |
 | `copy_text` | `copy` | The user copies text. |
 | `disabled` | None | The button shows a label without an action. |
+| `mini_app` | `url` | The user opens your [Mini App](mini-apps.md). The URL uses HTTPS, has at most 2,048 bytes and no credentials or fragment, and is on an origin registered for your bot. An unregistered origin returns HTTP 400 `mini_app_origin_not_registered`. |
 
 Every button requires `type` and `text`. An inline keyboard permits up to 100 buttons. Each row holds one to eight buttons; only `rows` itself can be empty. Labels contain 1 to 64 UTF-16 units. A callback's `data` contains 1 to 64 UTF-8 bytes, while `copy` contains 1 to 256 UTF-16 units. See [Formatting](formatting.md#utf-16-offsets) for how to count text.
 
-You can set `style` to `primary`, `success` or `danger`. Omit it to use the default appearance. A URL button with `aerx://user?id=42` becomes a profile action for that user ID. For links that start your bot, see [Deep links](deep-links.md).
+You can set `style` to `primary`, `success` or `danger` on inline and reply buttons. Omit it to use the default appearance. A URL button accepts `http`, `https` and `arx` links. A URL button with `aerx://user?id=42` becomes a profile action for that user ID. For links that start your bot, see [Deep links](deep-links.md).
 
 ## Receive and answer a callback <a href="#receive-and-answer-a-callback" id="receive-and-answer-a-callback"></a>
 
@@ -153,7 +154,7 @@ Use `messages.edit` with the last returned `revision` as `expected_revision`. A 
 }
 ```
 
-An empty `rows` array removes inline buttons. Omitting `reply_markup` keeps them. A stale revision returns `revision_conflict`; read the current state before deciding whether your action still applies.
+An empty `rows` array removes inline buttons. Omitting `reply_markup` keeps them. A stale revision returns `revision_conflict`; read the current state before deciding whether your action still applies. A message sent with a reply keyboard cannot be edited; `messages.edit` returns `message_not_editable`. See [Edit and delete](messages/edit-and-delete.md).
 
 `open_reply` opens the reply input when the keyboard first appears. When you replace an inline keyboard through `messages.edit` or `messages.stop_poll`, omit `open_reply` to keep its value or send the same value the original keyboard used. These operations reject a changed value and accept inline keyboard replacements only.
 
@@ -184,6 +185,10 @@ To offer conversation inputs over HTTP, send a new message with this reply keybo
 | `request_contact` | The user chooses to share their ARX card. |
 | `request_location` | The user shares a location message. |
 | `request_poll` | The user creates a regular poll or quiz. |
+| `mini_app` | The user opens your Mini App from the keyboard. It takes a `url` on a registered origin, as the inline button does. |
+| `request_managed_bot` | The user creates a bot that your bot manages. See [Managed bots](managed-bots/managed-bots.md). |
+
+Chat-selection buttons (`request_chat`) are not available and return HTTP 403 `capability_not_available`.
 
 For `request_users`, provide `request_id` with 1 to 64 ASCII letters, digits, underscores or hyphens. `max_quantity` can be 1 to 10. You can filter with `user_is_bot` and `user_is_premium`, and request a handle or photo with `request_username` and `request_photo`. Selecting a user does not grant access to other profile data.
 
@@ -195,9 +200,14 @@ You can restrict `request_poll.poll_type` to `regular` or `quiz`. Read the selec
 | `resize` | Fits its height to its buttons. |
 | `one_time` | Hides it after a press; the user can show it again. |
 | `placeholder` | Sets input text with 1 to 64 UTF-16 units. |
+| `selective` | Accepted for compatibility on reply keyboards, `remove_keyboard` and `force_reply`. |
 
 Send `{"type":"remove_keyboard"}` as `reply_markup` to remove a reply keyboard. To open the reply input for the next step, send `{"type":"force_reply","placeholder":"Type your answer"}`. Its `placeholder` is optional and accepts 1 to 64 UTF-16 units. Reply keyboards require at least one row.
 
 For a complete interaction, open Menus and Buttons in [TypeScript](https://github.com/unusnullus/arx-sdks/tree/main/examples/typescript/23%20-%20Menus%20and%20Buttons), [Python](https://github.com/unusnullus/arx-sdks/tree/main/examples/python/23%20-%20Menus%20and%20Buttons) or [Rust](https://github.com/unusnullus/arx-sdks/tree/main/examples/rust/23%20-%20Menus%20and%20Buttons).
+
+## In groups and topics <a href="#in-groups-and-topics" id="in-groups-and-topics"></a>
+
+In a Supergroup, your bot can attach an inline keyboard to a text message. Its buttons can be `callback`, `url`, `copy_text` or `disabled`; profile links, Mini App buttons and `open_reply` are not accepted. Reply keyboards, `remove_keyboard` and `force_reply` are not available in groups. Reply keyboards, `open_reply` and profile links return HTTP 403 `capability_not_available`; a Mini App button returns HTTP 400 `invalid_request` with `field: reply_markup`. Presses in a group arrive as callback queries that identify the group; see [Groups](groups.md).
 
 Continue with [Locations and contacts](locations-and-contacts.md) for consent and contact fields, or [Commands & profile](commands-and-profile.md) to configure your bot's command menu.

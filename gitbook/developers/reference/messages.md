@@ -6,32 +6,211 @@ Each route uses the configured API base URL. [Shared request rules and errors](.
 
 | Operation | HTTP route |
 | --- | --- |
+| [`messages.history`](#operation-messages-history) | `GET /chats/{chat_id}/messages` |
 | [`messages.send`](#operation-messages-send) | `POST /chats/{chat_id}/messages` |
 | [`messages.send_album`](#operation-messages-send-album) | `POST /chats/{chat_id}/messages/album` |
 | [`messages.copy`](#operation-messages-copy) | `POST /chats/{chat_id}/messages/copy` |
 | [`messages.delete_batch`](#operation-messages-delete-batch) | `POST /chats/{chat_id}/messages/delete` |
 | [`messages.forward`](#operation-messages-forward) | `POST /chats/{chat_id}/messages/forward` |
+| [`messages.get`](#operation-messages-get) | `POST /chats/{chat_id}/messages/get` |
 | [`messages.unpin`](#operation-messages-unpin) | `POST /chats/{chat_id}/messages/unpin` |
 | [`messages.unpin_all`](#operation-messages-unpin-all) | `POST /chats/{chat_id}/messages/unpin_all` |
 | [`messages.delete`](#operation-messages-delete) | `DELETE /chats/{chat_id}/messages/{message_id}` |
 | [`messages.edit`](#operation-messages-edit) | `PATCH /chats/{chat_id}/messages/{message_id}` |
 | [`messages.pin`](#operation-messages-pin) | `POST /chats/{chat_id}/messages/{message_id}/pin` |
 
-## messages.send <a href="#operation-messages-send" id="operation-messages-send"></a>
+## messages.history <a href="#operation-messages-history" id="operation-messages-history"></a>
 
-`POST /bot-api/v1/chats/{chat_id}/messages`
+`GET /bot-api/v1/chats/{chat_id}/messages`
 
-Send a message to a private chat that the user has started. Use the chat ID from an update or a chat lookup.
+Read earlier messages of a Super Group, for example to build context before your bot replies. Messages use the same shape as group message updates.
 
-Choose the content's form with `content.type`. Use JSON for text and existing library files or URL sources. To attach new media, send multipart with the JSON request in `payload` and binary parts matching the attachment names. Preserve the complete request and idempotency key when retrying a send.
+Your bot must be a current member with access to all group messages: its group privacy is off, or it is an administrator. You see only what a member with your bot's membership can see: messages since your bot joined, or the full visible history when the group showed history to new members at that time. Messages from other bots and deleted, expired and ephemeral messages are omitted. Edited messages appear in their latest revision. Private chats and channels are not supported.
+
+Without a cursor the page ends at the newest message. Pass `before_message_id` to read older messages or `after_message_id` to read newer ones; do not combine them. Continue with `next_before_message_id` or `next_after_message_id` while `has_more` is true. A page can hold fewer than `limit` messages. Pass `topic_id` to read one forum topic; `1` is General.
 
 ### Parameters <a href="#parameters" id="parameters"></a>
 
 | Parameter | Location | Type | Required | Description and constraints |
 | --- | --- | --- | --- | --- |
 | `chat_id` | path | string | Yes | Use the ID of the chat available to your bot, encoded as a decimal string. This differs from the user ID. The value must match `^[1-9][0-9]*$`. |
+| `topic_id` | query | string | No | Read only this forum topic. Topic 1 is General. Omit it to read every topic of the group. The value must match `^[1-9][0-9]*$`. |
+| `before_message_id` | query | string | No | Return the newest messages older than this message ID. Omit both cursors to read the newest messages. The value must match `^[1-9][0-9]*$`. |
+| `after_message_id` | query | string | No | Return messages newer than this message ID, oldest first. Do not combine it with before_message_id. The value must match `^[1-9][0-9]*$`. |
+| `limit` | query | integer | No | Set the maximum number of messages to return, from 1 to 100. A page can contain fewer messages; continue while has_more is true. The default is `50`. |
 
 ### Request <a href="#request" id="request"></a>
+
+Do not send a request body.
+
+### Response <a href="#response" id="response"></a>
+
+| HTTP | Success body |
+| --- | --- |
+| 200 | JSON envelope with [GroupMessageHistory](types/groupmessagehistory.md) in `result` |
+
+### Errors <a href="#errors" id="errors"></a>
+
+HTTP 403 `history_access_required` means your bot cannot read all group messages; turn off its group privacy or have an administrator promote it. HTTP 403 `access_restricted` means your bot is not a current member of the group. HTTP 403 `capability_not_available` means the chat is a private chat or channel, which have no readable history. HTTP 400 `invalid_request` means a cursor, `topic_id` or `limit` is malformed, or both cursors were sent. HTTP 404 `topic_not_found` means the topic does not exist or the group is not a forum. See [Receiving updates](../receiving-updates.md) for group message updates.
+
+### Example <a href="#example" id="example"></a>
+
+Set `ARX_BOT_TOKEN`, `CHAT_ID` before running this example.
+
+{% tabs %}
+
+{% tab title="TypeScript" %}
+
+```ts
+import { Client } from "@arx/nexo";
+
+const arxBotToken = process.env.ARX_BOT_TOKEN;
+const chatId = process.env.CHAT_ID;
+if (!arxBotToken || !chatId) {
+  throw new Error("Set ARX_BOT_TOKEN, CHAT_ID");
+}
+
+const bot = new Client({ token: arxBotToken, baseUrl: "https://signal.arx.pro/bot-api/v1" });
+try {
+  const result = await bot.messagesHistory(chatId);
+  console.log(result);
+} finally {
+  await bot.close();
+}
+```
+
+{% endtab %}
+
+{% tab title="Python" %}
+
+```python
+import os
+from arx_nexo import Client, Config
+
+with Client(Config(token=os.environ["ARX_BOT_TOKEN"], base_url="https://signal.arx.pro/bot-api/v1")) as bot:
+    result = bot.messages_history(os.environ["CHAT_ID"])
+    print(result)
+```
+
+{% endtab %}
+
+{% tab title="Rust" %}
+
+```rust
+use arx_nexo::{ Client, Config };
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let arx_bot_token = std::env::var("ARX_BOT_TOKEN")?;
+    let chat_id = std::env::var("CHAT_ID")?;
+    let bot = Client::new(Config::new(arx_bot_token, "https://signal.arx.pro/bot-api/v1", false)?)?;
+    let query = [];
+    let result = bot.messages_history(&chat_id, &query, None, None).await?;
+    println!("{:?}", result);
+    Ok(())
+}
+```
+
+{% endtab %}
+
+{% tab title="HTTP" %}
+
+```sh
+curl --fail-with-body --max-time 20 -X GET \
+  "https://signal.arx.pro/bot-api/v1/chats/${CHAT_ID}/messages" \
+  -H "Authorization: Bearer ${ARX_BOT_TOKEN}"
+```
+
+{% endtab %}
+
+{% endtabs %}
+
+Example success response (HTTP 200). The SDK methods return `result`:
+
+```json
+{
+  "ok": true,
+  "result": {
+    "has_more": true,
+    "messages": [
+      {
+        "chat": {
+          "id": "1099511627776",
+          "is_forum": false,
+          "kind": "group",
+          "title": "Example group"
+        },
+        "content": {
+          "entities": [],
+          "text": "Hello",
+          "type": "text"
+        },
+        "fallback_text": "Hello",
+        "has_protected_content": false,
+        "kind": "content",
+        "message_id": "41",
+        "reply_to": {
+          "message_id": "40"
+        },
+        "revision": "1",
+        "sender_user": {
+          "id": "700001234",
+          "is_bot": false,
+          "name": "Ana López",
+          "username": "ANALOPEZ"
+        },
+        "sent_at": "2026-10-24T12:00:00+00:00",
+        "silent": false,
+        "state_version": "41"
+      },
+      {
+        "chat": {
+          "id": "1099511627776",
+          "is_forum": false,
+          "kind": "group",
+          "title": "Example group"
+        },
+        "content": {
+          "entities": [],
+          "text": "Hello",
+          "type": "text"
+        },
+        "fallback_text": "Hello",
+        "has_protected_content": false,
+        "kind": "content",
+        "message_id": "42",
+        "revision": "1",
+        "sender_user": {
+          "id": "700001234",
+          "is_bot": false,
+          "name": "Ana López",
+          "username": "ANALOPEZ"
+        },
+        "sent_at": "2026-10-24T12:00:00+00:00",
+        "silent": false,
+        "state_version": "42"
+      }
+    ],
+    "next_before_message_id": "41"
+  }
+}
+```
+
+## messages.send <a href="#operation-messages-send" id="operation-messages-send"></a>
+
+`POST /bot-api/v1/chats/{chat_id}/messages`
+
+Send a message to a private chat that the user has started, or to a Super Group where your bot is a member. Use the chat ID from an update or a chat lookup. To post in a topic, set `topic_id`.
+
+Choose the content's form with `content.type`. Use JSON for text and existing library files or URL sources. To attach new media, send multipart with the JSON request in `payload` and binary parts matching the attachment names. Preserve the complete request and idempotency key when retrying a send. In a group, your bot needs the group's permission to send messages, and the group's slow mode applies unless your bot is an administrator who can manage the chat.
+
+### Parameters <a href="#parameters-1" id="parameters-1"></a>
+
+| Parameter | Location | Type | Required | Description and constraints |
+| --- | --- | --- | --- | --- |
+| `chat_id` | path | string | Yes | Use the ID of the chat available to your bot, encoded as a decimal string. This differs from the user ID. The value must match `^[1-9][0-9]*$`. |
+
+### Request <a href="#request-1" id="request-1"></a>
 
 Content type: `application/json`. You must include the body.
 
@@ -48,6 +227,7 @@ The content and delivery settings for a new message. Only the listed fields are 
 | `reply_markup` | [ReplyMarkup](types/replymarkup.md) | No | This defines the keyboard attached to the message. The type field selects its variant. |
 | `reply_to` | [InputReply](types/inputreply.md) | No | This identifies the reply target and optional quote for the message. |
 | `silent` | boolean | No | Set this to true to send or pin the message without a notification sound. |
+| `topic_id` | string | No | This is the topic ID within the chat, when the event belongs to a topic. The value must match `^[1-9][0-9]*$`. |
 
 Content type: `multipart/form-data`. You must include the body.
 
@@ -59,17 +239,17 @@ The request deadline is 3,600 seconds.
 | --- | --- | --- | --- |
 | `payload` | [SendMessage](types/sendmessage.md) | Yes | Send the JSON operation body in the payload part of a multipart request. |
 
-### Response <a href="#response" id="response"></a>
+### Response <a href="#response-1" id="response-1"></a>
 
 | HTTP | Success body |
 | --- | --- |
-| 200 | JSON envelope with [Message](types/message.md) in `result` |
+| 200 | JSON envelope with [SentMessage](types/sentmessage.md) in `result` |
 
-### Errors <a href="#errors" id="errors"></a>
+### Errors <a href="#errors-1" id="errors-1"></a>
 
-HTTP 403 `chat_not_started`, `bot_blocked_by_user`, or `user_deactivated` means you should stop attempting that send. HTTP 409 `file_not_ready` means you should wait for media processing. Use [Formatting](../formatting.md) for text rules, [Files](../files.md) for media, and [Receiving updates](../receiving-updates.md) for incoming messages.
+HTTP 403 `chat_not_started`, `bot_blocked_by_user`, or `user_deactivated` means you should stop attempting that send. HTTP 409 `file_not_ready` means you should wait for media processing. In a group, HTTP 429 `slow_mode_active` means you should wait for the `retry_after` seconds in the error details, HTTP 403 `not_enough_rights` means your bot cannot send this content there, and HTTP 403 `topic_closed` means the topic does not accept new messages. Use [Formatting](../formatting.md) for text rules, [Files](../files.md) for media, and [Receiving updates](../receiving-updates.md) for incoming messages.
 
-### Example <a href="#example" id="example"></a>
+### Example <a href="#example-1" id="example-1"></a>
 
 Set `ARX_BOT_TOKEN`, `CHAT_ID`, `REQUEST_KEY` before running this example.
 
@@ -186,13 +366,13 @@ Send 2 to 10 media items as one album. The result contains one message for each 
 
 You can mix photos, videos, and live photos. An audio album contains only audio, and a document album contains only documents. Use existing file IDs in JSON, or attach new files with multipart. Albums do not accept a reply keyboard or inline keyboard.
 
-### Parameters <a href="#parameters-1" id="parameters-1"></a>
+### Parameters <a href="#parameters-2" id="parameters-2"></a>
 
 | Parameter | Location | Type | Required | Description and constraints |
 | --- | --- | --- | --- | --- |
 | `chat_id` | path | string | Yes | Use the ID of the chat available to your bot, encoded as a decimal string. This differs from the user ID. The value must match `^[1-9][0-9]*$`. |
 
-### Request <a href="#request-1" id="request-1"></a>
+### Request <a href="#request-2" id="request-2"></a>
 
 Content type: `application/json`. You must include the body.
 
@@ -207,6 +387,7 @@ The media items and delivery settings for a new album. Send 2 to 10 items togeth
 | `protect_content` | boolean | No | Set this to true to protect the new message against copying and forwarding. |
 | `reply_to` | [InputReply](types/inputreply.md) | No | This identifies the reply target and optional quote for the message. |
 | `silent` | boolean | No | Set this to true to send or pin the message without a notification sound. |
+| `topic_id` | string | No | This is the topic ID within the chat, when the event belongs to a topic. The value must match `^[1-9][0-9]*$`. |
 
 Content type: `multipart/form-data`. You must include the body.
 
@@ -218,17 +399,17 @@ The request deadline is 3,600 seconds.
 | --- | --- | --- | --- |
 | `payload` | [SendAlbum](types/sendalbum.md) | Yes | Send the JSON operation body in the payload part of a multipart request. |
 
-### Response <a href="#response-1" id="response-1"></a>
+### Response <a href="#response-2" id="response-2"></a>
 
 | HTTP | Success body |
 | --- | --- |
 | 200 | JSON envelope with [Album](types/album.md) in `result` |
 
-### Errors <a href="#errors-1" id="errors-1"></a>
+### Errors <a href="#errors-2" id="errors-2"></a>
 
-HTTP 400 `album_type_mismatch` means you must use a supported combination of item types. HTTP 409 `file_not_ready` means an item still needs processing. See [Files](../files.md) for media limits and album uploads.
+HTTP 400 `invalid_parameter` with reason `album_family` means the items mix unsupported types, and reason `album_type` means an item type cannot be used in an album. HTTP 409 `file_not_ready` means an item still needs processing. See [Files](../files.md) for media limits and album uploads.
 
-### Example <a href="#example-1" id="example-1"></a>
+### Example <a href="#example-2" id="example-2"></a>
 
 Set `ARX_BOT_TOKEN`, `CHAT_ID`, `PHOTO_FILE_ID`, `REQUEST_KEY`, `SECOND_PHOTO_FILE_ID` before running this example.
 
@@ -435,13 +616,13 @@ Albums remain albums. To replace a caption or inline keyboard, copy a single mes
 
 Missing, service, protected, paid media, invoice, and giveaway messages are skipped. Check the result's `skipped` list even when the request succeeds.
 
-### Parameters <a href="#parameters-2" id="parameters-2"></a>
+### Parameters <a href="#parameters-3" id="parameters-3"></a>
 
 | Parameter | Location | Type | Required | Description and constraints |
 | --- | --- | --- | --- | --- |
 | `chat_id` | path | string | Yes | Use the ID of the chat available to your bot, encoded as a decimal string. This differs from the user ID. The value must match `^[1-9][0-9]*$`. |
 
-### Request <a href="#request-2" id="request-2"></a>
+### Request <a href="#request-3" id="request-3"></a>
 
 Content type: `application/json`. You must include the body.
 
@@ -451,7 +632,7 @@ The source message IDs and optional replacements for a copy request. Only the li
 
 | Field | Type | Required | Description and constraints |
 | --- | --- | --- | --- |
-| `caption` | string | No | This is the caption displayed with the media. You can use up to 1,024 UTF-16 code units after markup is parsed. |
+| `caption` | string | No | You can use up to 1,024 UTF-16 code units after markup is parsed. |
 | `caption_above_media` | boolean | No | This is true when the caption appears above the media. |
 | `caption_entities` | Array of [InputEntity](types/inputentity.md) | No | These define explicit caption formatting. In requests, use these instead of caption_format. |
 | `caption_format` | `"plain"` or `"markdown"` or `"html"` | No | This is the markup format used to parse the caption. Omit caption_entities when you set this field. |
@@ -464,19 +645,20 @@ The source message IDs and optional replacements for a copy request. Only the li
 | `reply_markup` | [ReplyMarkup](types/replymarkup.md) | No | This defines the keyboard attached to the message. The type field selects its variant. |
 | `reply_to` | [InputReply](types/inputreply.md) | No | This identifies the reply target and optional quote for the message. |
 | `silent` | boolean | No | Set this to true to send or pin the message without a notification sound. |
-| `video_start_seconds` | number | No | This is the initial video playback position for the copied or forwarded message, in seconds. Set a new video playback start before the end of the video. Other message types are unchanged. The minimum is 0. |
+| `topic_id` | string | No | This is the topic ID within the chat, when the event belongs to a topic. The value must match `^[1-9][0-9]*$`. |
+| `video_start_seconds` | number | No | Set a new video playback start before the end of the video. Other message types are unchanged. The minimum is 0. |
 
-### Response <a href="#response-2" id="response-2"></a>
+### Response <a href="#response-3" id="response-3"></a>
 
 | HTTP | Success body |
 | --- | --- |
 | 200 | JSON envelope with [MessageBatch](types/messagebatch.md) in `result` |
 
-### Errors <a href="#errors-2" id="errors-2"></a>
+### Errors <a href="#errors-3" id="errors-3"></a>
 
-If no eligible messages remain, HTTP 403 `protected_content` means at least one source was protected; otherwise you receive HTTP 404 `message_not_found`. HTTP 400 `invalid_parameter` identifies an invalid copy option. See [Copy and forward](../copy-and-forward.md) for video offsets, caption position, and reply options.
+If no eligible messages remain, HTTP 403 `protected_content` means at least one source was protected; otherwise you receive HTTP 404 `message_not_found`. HTTP 400 `invalid_parameter` identifies an invalid copy option, and HTTP 400 `invalid_request` means the body or ID list is malformed. See [Copy and forward](../copy-and-forward.md) for video offsets, caption position, and reply options.
 
-### Example <a href="#example-2" id="example-2"></a>
+### Example <a href="#example-3" id="example-3"></a>
 
 Set `ARX_BOT_TOKEN`, `CHAT_ID`, `MESSAGE_IDS`, `REQUEST_KEY`, `SOURCE_CHAT_ID` before running this example. Use a comma-separated, strictly increasing list for `MESSAGE_IDS`.
 
@@ -620,13 +802,13 @@ Attempt to delete up to 100 messages in one chat. The response separates deleted
 
 The same age and access rules as `messages.delete` apply to each item. Missing or undeletable messages appear in `skipped`, so you should inspect both result lists after a successful request. See [the single-message operation](messages.md#operation-messages-delete) for deletion rules.
 
-### Parameters <a href="#parameters-3" id="parameters-3"></a>
+### Parameters <a href="#parameters-4" id="parameters-4"></a>
 
 | Parameter | Location | Type | Required | Description and constraints |
 | --- | --- | --- | --- | --- |
 | `chat_id` | path | string | Yes | Use the ID of the chat available to your bot, encoded as a decimal string. This differs from the user ID. The value must match `^[1-9][0-9]*$`. |
 
-### Request <a href="#request-3" id="request-3"></a>
+### Request <a href="#request-4" id="request-4"></a>
 
 Content type: `application/json`. You must include the body.
 
@@ -639,17 +821,17 @@ The message IDs to remove from one chat. Only the listed fields are allowed.
 | `message_ids` | Array of string | Yes | These are message IDs within the specified chat, encoded as decimal strings. The minimum is 1 item. The maximum is 100 items. Each item must be unique. |
 | `message_ids[]` | string | Per item | The value must match `^[1-9][0-9]*$`. |
 
-### Response <a href="#response-3" id="response-3"></a>
+### Response <a href="#response-4" id="response-4"></a>
 
 | HTTP | Success body |
 | --- | --- |
 | 200 | JSON envelope with [DeleteBatch](types/deletebatch.md) in `result` |
 
-### Errors <a href="#errors-3" id="errors-3"></a>
+### Errors <a href="#errors-4" id="errors-4"></a>
 
 HTTP 400 `invalid_request` means the message list is invalid. On success, inspect `skipped` for individual messages that could not be deleted.
 
-### Example <a href="#example-3" id="example-3"></a>
+### Example <a href="#example-4" id="example-4"></a>
 
 Set `ARX_BOT_TOKEN`, `CHAT_ID`, `MESSAGE_IDS`, `REQUEST_KEY` before running this example. Use a comma-separated, strictly increasing list for `MESSAGE_IDS`.
 
@@ -765,13 +947,13 @@ Forward messages with their source attribution. Supply 1 to 100 strictly increas
 
 The API skips missing, service, protected, paid media, invoice, and giveaway messages and reports skipped IDs. Private origins can hide the original user's identity. A forward keeps the source caption. Use `messages.copy` to replace a caption without attribution. Invalid video offsets reject the request before forwarding any messages.
 
-### Parameters <a href="#parameters-4" id="parameters-4"></a>
+### Parameters <a href="#parameters-5" id="parameters-5"></a>
 
 | Parameter | Location | Type | Required | Description and constraints |
 | --- | --- | --- | --- | --- |
 | `chat_id` | path | string | Yes | Use the ID of the chat available to your bot, encoded as a decimal string. This differs from the user ID. The value must match `^[1-9][0-9]*$`. |
 
-### Request <a href="#request-4" id="request-4"></a>
+### Request <a href="#request-5" id="request-5"></a>
 
 Content type: `application/json`. You must include the body.
 
@@ -787,19 +969,20 @@ The source message IDs and delivery options for a forward request. Only the list
 | `message_ids[]` | string | Per item | The value must match `^[1-9][0-9]*$`. |
 | `protect_content` | boolean | No | Set this to true to protect the new message against copying and forwarding. |
 | `silent` | boolean | No | Set this to true to send or pin the message without a notification sound. |
-| `video_start_seconds` | number | No | This is the initial video playback position for the copied or forwarded message, in seconds. Set a new video playback start before the end of the video. Other message types are unchanged. The minimum is 0. |
+| `topic_id` | string | No | This is the topic ID within the chat, when the event belongs to a topic. The value must match `^[1-9][0-9]*$`. |
+| `video_start_seconds` | number | No | Set a new video playback start before the end of the video. Other message types are unchanged. The minimum is 0. |
 
-### Response <a href="#response-4" id="response-4"></a>
+### Response <a href="#response-5" id="response-5"></a>
 
 | HTTP | Success body |
 | --- | --- |
 | 200 | JSON envelope with [MessageBatch](types/messagebatch.md) in `result` |
 
-### Errors <a href="#errors-4" id="errors-4"></a>
+### Errors <a href="#errors-5" id="errors-5"></a>
 
 If no eligible messages remain, HTTP 403 `protected_content` means at least one source was protected; otherwise you receive HTTP 404 `message_not_found`. Check the response's `skipped` list even when the request succeeds. See [Copy and forward](../copy-and-forward.md) for batch behavior and reply options.
 
-### Example <a href="#example-4" id="example-4"></a>
+### Example <a href="#example-5" id="example-5"></a>
 
 Set `ARX_BOT_TOKEN`, `CHAT_ID`, `MESSAGE_IDS`, `REQUEST_KEY`, `SOURCE_CHAT_ID` before running this example. Use a comma-separated, strictly increasing list for `MESSAGE_IDS`.
 
@@ -940,21 +1123,189 @@ Example success response (HTTP 200). The SDK methods return `result`:
 }
 ```
 
-## messages.unpin <a href="#operation-messages-unpin" id="operation-messages-unpin"></a>
+## messages.get <a href="#operation-messages-get" id="operation-messages-get"></a>
 
-`POST /bot-api/v1/chats/{chat_id}/messages/unpin`
+`POST /bot-api/v1/chats/{chat_id}/messages/get`
 
-Remove a message from the chat's pinned list. Supply its message ID, or omit the ID to remove the most recent pin.
+Read specific Super Group messages by ID, for example the message a user replied to. Messages use the same shape as group message updates.
 
-This request does not delete the message. Use `messages.unpin_all` when you want to clear the complete pinned list.
+Send 1 to 100 distinct IDs in `message_ids`. The result lists the messages your bot can read now, in ascending `message_id` order. Missing, deleted, expired and unreadable IDs are left out without an error, so compare the result with your request. The membership and visibility rules of [`messages.history`](messages.md#operation-messages-history) apply.
 
-### Parameters <a href="#parameters-5" id="parameters-5"></a>
+### Parameters <a href="#parameters-6" id="parameters-6"></a>
 
 | Parameter | Location | Type | Required | Description and constraints |
 | --- | --- | --- | --- | --- |
 | `chat_id` | path | string | Yes | Use the ID of the chat available to your bot, encoded as a decimal string. This differs from the user ID. The value must match `^[1-9][0-9]*$`. |
 
-### Request <a href="#request-5" id="request-5"></a>
+### Request <a href="#request-6" id="request-6"></a>
+
+Content type: `application/json`. You must include the body.
+
+[GroupGetMessages](types/groupgetmessages.md)
+
+The message IDs to read, for example the message_id of a reply reference. Only the listed fields are allowed.
+
+| Field | Type | Required | Description and constraints |
+| --- | --- | --- | --- |
+| `message_ids` | Array of string | Yes | One to 100 distinct message IDs in this group, encoded as decimal strings. The minimum is 1 item. The maximum is 100 items. Each item must be unique. |
+| `message_ids[]` | string | Per item | The value must match `^[1-9][0-9]*$`. |
+
+### Response <a href="#response-6" id="response-6"></a>
+
+| HTTP | Success body |
+| --- | --- |
+| 200 | JSON envelope with [GroupMessages](types/groupmessages.md) in `result` |
+
+### Errors <a href="#errors-6" id="errors-6"></a>
+
+HTTP 403 `history_access_required` means your bot cannot read all group messages; turn off its group privacy or have an administrator promote it. HTTP 400 `payload_too_large` means the requested messages exceed one response; request fewer IDs. HTTP 403 `access_restricted` means your bot is not a current member of the group. HTTP 403 `capability_not_available` means the chat is a private chat or channel, which have no readable history. See [Receiving updates](../receiving-updates.md) for reply references.
+
+### Example <a href="#example-6" id="example-6"></a>
+
+Set `ARX_BOT_TOKEN`, `CHAT_ID`, `MESSAGE_IDS`, `REQUEST_KEY` before running this example. Use a comma-separated, strictly increasing list for `MESSAGE_IDS`.
+
+{% tabs %}
+
+{% tab title="TypeScript" %}
+
+```ts
+import { Client, type Models } from "@arx/nexo";
+
+const arxBotToken = process.env.ARX_BOT_TOKEN;
+const chatId = process.env.CHAT_ID;
+const messageIdsInput = process.env.MESSAGE_IDS;
+const requestKey = process.env.REQUEST_KEY;
+if (!arxBotToken || !chatId || !messageIdsInput || !requestKey) {
+  throw new Error("Set ARX_BOT_TOKEN, CHAT_ID, MESSAGE_IDS, REQUEST_KEY");
+}
+const messageIds = messageIdsInput.split(",");
+
+const bot = new Client({ token: arxBotToken, baseUrl: "https://signal.arx.pro/bot-api/v1" });
+try {
+  const body: Models.GroupGetMessages = {
+    "message_ids": messageIds
+  };
+  const result = await bot.messagesGet(chatId, { body, key: requestKey });
+  console.log(result);
+} finally {
+  await bot.close();
+}
+```
+
+{% endtab %}
+
+{% tab title="Python" %}
+
+```python
+import os
+from arx_nexo import Client, Config, models
+
+with Client(Config(token=os.environ["ARX_BOT_TOKEN"], base_url="https://signal.arx.pro/bot-api/v1")) as bot:
+    body = models.GroupGetMessages(message_ids=os.environ["MESSAGE_IDS"].split(","))
+    result = bot.messages_get(os.environ["CHAT_ID"], body=body, key=os.environ["REQUEST_KEY"])
+    print(result)
+```
+
+{% endtab %}
+
+{% tab title="Rust" %}
+
+```rust
+use arx_nexo::{ Client, Config, models };
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let arx_bot_token = std::env::var("ARX_BOT_TOKEN")?;
+    let chat_id = std::env::var("CHAT_ID")?;
+    let message_ids : Vec<String> = std::env::var("MESSAGE_IDS")?.split(',').map(str::to_owned).collect();
+    let request_key = std::env::var("REQUEST_KEY")?;
+    let bot = Client::new(Config::new(arx_bot_token, "https://signal.arx.pro/bot-api/v1", false)?)?;
+    let body = models::GroupGetMessages::new(message_ids);
+    let query = [];
+    let result = bot.messages_get(&chat_id, &query, Some(&body), Some(&request_key)).await?;
+    println!("{:?}", result);
+    Ok(())
+}
+```
+
+{% endtab %}
+
+{% tab title="HTTP" %}
+
+```sh
+payload=$(python3 - <<'PY'
+import json
+import os
+print(json.dumps({'message_ids': os.environ['MESSAGE_IDS'].split(",")}))
+PY
+)
+
+curl --fail-with-body --max-time 20 -X POST \
+  "https://signal.arx.pro/bot-api/v1/chats/${CHAT_ID}/messages/get" \
+  -H "Authorization: Bearer ${ARX_BOT_TOKEN}" \
+  -H "Idempotency-Key: ${REQUEST_KEY}" \
+  -H "Content-Type: application/json" \
+  --data "${payload}"
+```
+
+{% endtab %}
+
+{% endtabs %}
+
+Example success response (HTTP 200). The SDK methods return `result`:
+
+```json
+{
+  "ok": true,
+  "result": {
+    "messages": [
+      {
+        "chat": {
+          "id": "1099511627776",
+          "is_forum": false,
+          "kind": "group",
+          "title": "Example group"
+        },
+        "content": {
+          "entities": [],
+          "text": "Hello",
+          "type": "text"
+        },
+        "fallback_text": "Hello",
+        "has_protected_content": false,
+        "kind": "content",
+        "message_id": "41",
+        "revision": "1",
+        "sender_user": {
+          "id": "700001234",
+          "is_bot": false,
+          "name": "Ana López",
+          "username": "ANALOPEZ"
+        },
+        "sent_at": "2026-10-24T12:00:00+00:00",
+        "silent": false,
+        "state_version": "41"
+      }
+    ]
+  }
+}
+```
+
+## messages.unpin <a href="#operation-messages-unpin" id="operation-messages-unpin"></a>
+
+`POST /bot-api/v1/chats/{chat_id}/messages/unpin`
+
+Remove a message from the chat's pinned list. Supply its message ID, or omit the ID to remove the latest pin: the most recently pinned message in a private chat, or the newest pinned message in a Super Group.
+
+This request does not delete the message. Use `messages.unpin_all` when you want to clear the complete pinned list.
+
+### Parameters <a href="#parameters-7" id="parameters-7"></a>
+
+| Parameter | Location | Type | Required | Description and constraints |
+| --- | --- | --- | --- | --- |
+| `chat_id` | path | string | Yes | Use the ID of the chat available to your bot, encoded as a decimal string. This differs from the user ID. The value must match `^[1-9][0-9]*$`. |
+
+### Request <a href="#request-7" id="request-7"></a>
 
 Content type: `application/json`. You may omit the body.
 
@@ -966,17 +1317,17 @@ The optional message ID selecting which pinned message to remove. Only the liste
 | --- | --- | --- | --- |
 | `message_id` | string | No | This is the message ID within its chat, encoded as a decimal string. The value must match `^[1-9][0-9]*$`. |
 
-### Response <a href="#response-5" id="response-5"></a>
+### Response <a href="#response-7" id="response-7"></a>
 
 | HTTP | Success body |
 | --- | --- |
 | 200 | JSON envelope with [Boolean](types/boolean.md) in `result` |
 
-### Errors <a href="#errors-5" id="errors-5"></a>
+### Errors <a href="#errors-7" id="errors-7"></a>
 
 HTTP 400 `invalid_request` means the optional message ID or body is malformed. Use a decimal message ID. If the ID is not pinned, the operation leaves the pinned list unchanged.
 
-### Example <a href="#example-5" id="example-5"></a>
+### Example <a href="#example-7" id="example-7"></a>
 
 Set `ARX_BOT_TOKEN`, `CHAT_ID`, `MESSAGE_ID`, `REQUEST_KEY` before running this example.
 
@@ -1087,13 +1438,13 @@ Remove all pins from the selected chat. Omit the body or send `{}`.
 
 The messages themselves remain in the conversation. Use `messages.unpin` when you only want to remove one pin.
 
-### Parameters <a href="#parameters-6" id="parameters-6"></a>
+### Parameters <a href="#parameters-8" id="parameters-8"></a>
 
 | Parameter | Location | Type | Required | Description and constraints |
 | --- | --- | --- | --- | --- |
 | `chat_id` | path | string | Yes | Use the ID of the chat available to your bot, encoded as a decimal string. This differs from the user ID. The value must match `^[1-9][0-9]*$`. |
 
-### Request <a href="#request-6" id="request-6"></a>
+### Request <a href="#request-8" id="request-8"></a>
 
 Content type: `application/json`. You may omit the body.
 
@@ -1103,17 +1454,17 @@ The value has the type object.
 
 An empty JSON object. Use `{}` when an operation requires a body but has no settings to send.
 
-### Response <a href="#response-6" id="response-6"></a>
+### Response <a href="#response-8" id="response-8"></a>
 
 | HTTP | Success body |
 | --- | --- |
 | 200 | JSON envelope with [Boolean](types/boolean.md) in `result` |
 
-### Errors <a href="#errors-6" id="errors-6"></a>
+### Errors <a href="#errors-8" id="errors-8"></a>
 
 HTTP 404 `chat_not_found` means your bot cannot access the selected chat. HTTP 403 `chat_not_started` means the user must start the chat first.
 
-### Example <a href="#example-6" id="example-6"></a>
+### Example <a href="#example-8" id="example-8"></a>
 
 Set `ARX_BOT_TOKEN`, `CHAT_ID`, `REQUEST_KEY` before running this example.
 
@@ -1203,16 +1554,16 @@ Example success response (HTTP 200). The SDK methods return `result`:
 
 Delete one message your bot can access.
 
-Your bot can delete its own private-chat messages without an age limit. Incoming private-chat messages must be less than 48 hours old. A private dice message must be more than 24 hours old.
+Your bot can delete its own private-chat messages without an age limit. Incoming private-chat messages must be less than 48 hours old. A private dice message must be more than 24 hours old. In a Super Group, any message, including your bot's own, must be less than 48 hours old, and deleting another sender's message requires the delete messages right (HTTP 403 `not_enough_rights`).
 
-### Parameters <a href="#parameters-7" id="parameters-7"></a>
+### Parameters <a href="#parameters-9" id="parameters-9"></a>
 
 | Parameter | Location | Type | Required | Description and constraints |
 | --- | --- | --- | --- | --- |
 | `chat_id` | path | string | Yes | Use the ID of the chat available to your bot, encoded as a decimal string. This differs from the user ID. The value must match `^[1-9][0-9]*$`. |
 | `message_id` | path | string | Yes | Use the ID of the message within this chat, encoded as a decimal string. The value must match `^[1-9][0-9]*$`. |
 
-### Request <a href="#request-7" id="request-7"></a>
+### Request <a href="#request-9" id="request-9"></a>
 
 Content type: `application/json`. You may omit the body.
 
@@ -1222,17 +1573,17 @@ The value has the type object.
 
 An empty JSON object. Use `{}` when an operation requires a body but has no settings to send.
 
-### Response <a href="#response-7" id="response-7"></a>
+### Response <a href="#response-9" id="response-9"></a>
 
 | HTTP | Success body |
 | --- | --- |
 | 200 | JSON envelope with [Boolean](types/boolean.md) in `result` |
 
-### Errors <a href="#errors-7" id="errors-7"></a>
+### Errors <a href="#errors-9" id="errors-9"></a>
 
 HTTP 403 `message_too_old` or `message_cant_be_deleted` means you cannot delete the target under these rules. HTTP 404 `message_not_found` means the message is missing or inaccessible. Use `messages.delete_batch` when you want to attempt several IDs and inspect skipped items.
 
-### Example <a href="#example-7" id="example-7"></a>
+### Example <a href="#example-9" id="example-9"></a>
 
 Set `ARX_BOT_TOKEN`, `CHAT_ID`, `MESSAGE_ID`, `REQUEST_KEY` before running this example.
 
@@ -1324,16 +1675,18 @@ Example success response (HTTP 200). The SDK methods return `result`:
 
 Edit a message sent by your bot. You can replace its content, update its inline keyboard, or edit the supported caption or live-location fields.
 
+In a Super Group your bot can edit its own text, captions and text-message keyboards, and the result is the group message.
+
 Omitted fields preserve their values. Inline `rows: []` removes buttons. A replacement keyboard preserves `open_reply` when you omit it; you cannot change its accepted value. Use `expected_revision` to avoid overwriting another edit. An identical edit returns the current message without advancing its revision.
 
-### Parameters <a href="#parameters-8" id="parameters-8"></a>
+### Parameters <a href="#parameters-10" id="parameters-10"></a>
 
 | Parameter | Location | Type | Required | Description and constraints |
 | --- | --- | --- | --- | --- |
 | `chat_id` | path | string | Yes | Use the ID of the chat available to your bot, encoded as a decimal string. This differs from the user ID. The value must match `^[1-9][0-9]*$`. |
 | `message_id` | path | string | Yes | Use the ID of the message within this chat, encoded as a decimal string. The value must match `^[1-9][0-9]*$`. |
 
-### Request <a href="#request-8" id="request-8"></a>
+### Request <a href="#request-10" id="request-10"></a>
 
 Content type: `application/json`. You must include the body.
 
@@ -1343,7 +1696,7 @@ The content, caption, live location, or inline keyboard changes to apply to a me
 
 | Field | Type | Required | Description and constraints |
 | --- | --- | --- | --- |
-| `caption` | string | No | This is the caption displayed with the media. You can use up to 1,024 UTF-16 code units after markup is parsed. |
+| `caption` | string | No | You can use up to 1,024 UTF-16 code units after markup is parsed. |
 | `caption_above_media` | boolean | No | This is true when the caption appears above the media. |
 | `caption_entities` | Array of [InputEntity](types/inputentity.md) | No | These define explicit caption formatting. In requests, use these instead of caption_format. |
 | `caption_format` | `"plain"` or `"markdown"` or `"html"` | No | This is the markup format used to parse the caption. Omit caption_entities when you set this field. |
@@ -1363,17 +1716,17 @@ The request deadline is 3,600 seconds.
 | --- | --- | --- | --- |
 | `payload` | [EditMessage](types/editmessage.md) | Yes | Send the JSON operation body in the payload part of a multipart request. |
 
-### Response <a href="#response-8" id="response-8"></a>
+### Response <a href="#response-10" id="response-10"></a>
 
 | HTTP | Success body |
 | --- | --- |
-| 200 | JSON envelope with [Message](types/message.md) in `result` |
+| 200 | JSON envelope with [SentMessage](types/sentmessage.md) in `result` |
 
-### Errors <a href="#errors-8" id="errors-8"></a>
+### Errors <a href="#errors-10" id="errors-10"></a>
 
-HTTP 400 `message_not_editable` means the message cannot accept this edit. HTTP 409 `revision_conflict` means you should use the current message state before editing again. HTTP 409 `file_not_ready` means you must wait for media processing. See [Files](../files.md) for caption edits and [Locations and contacts](../locations-and-contacts.md) for live-location edits.
+HTTP 400 `message_not_editable` means the message cannot accept this edit. HTTP 400 `album_type_mismatch` means new media in an album item must stay in the same family (photo, video or live photo; audio; document). HTTP 409 `revision_conflict` means you should use the current message state before editing again. HTTP 409 `file_not_ready` means you must wait for media processing. See [Files](../files.md) for caption edits and [Locations and contacts](../locations-and-contacts.md) for live-location edits.
 
-### Example <a href="#example-8" id="example-8"></a>
+### Example <a href="#example-10" id="example-10"></a>
 
 Set `ARX_BOT_TOKEN`, `CHAT_ID`, `MESSAGE_ID`, `REQUEST_KEY` before running this example.
 
@@ -1514,16 +1867,16 @@ Example success response (HTTP 200). The SDK methods return `result`:
 
 `POST /bot-api/v1/chats/{chat_id}/messages/{message_id}/pin`
 
-Pin an accessible message in a private chat. Use `silent: true` to suppress the notification sound.
+Pin an accessible message in a chat. In a Super Group your bot needs the pin messages right. Use `silent: true` to suppress the notification sound.
 
-### Parameters <a href="#parameters-9" id="parameters-9"></a>
+### Parameters <a href="#parameters-11" id="parameters-11"></a>
 
 | Parameter | Location | Type | Required | Description and constraints |
 | --- | --- | --- | --- | --- |
 | `chat_id` | path | string | Yes | Use the ID of the chat available to your bot, encoded as a decimal string. This differs from the user ID. The value must match `^[1-9][0-9]*$`. |
 | `message_id` | path | string | Yes | Use the ID of the message within this chat, encoded as a decimal string. The value must match `^[1-9][0-9]*$`. |
 
-### Request <a href="#request-9" id="request-9"></a>
+### Request <a href="#request-11" id="request-11"></a>
 
 Content type: `application/json`. You may omit the body.
 
@@ -1535,17 +1888,17 @@ The notification settings for pinning a message. Only the listed fields are allo
 | --- | --- | --- | --- |
 | `silent` | boolean | No | Set this to true to send or pin the message without a notification sound. |
 
-### Response <a href="#response-9" id="response-9"></a>
+### Response <a href="#response-11" id="response-11"></a>
 
 | HTTP | Success body |
 | --- | --- |
 | 200 | JSON envelope with [Boolean](types/boolean.md) in `result` |
 
-### Errors <a href="#errors-9" id="errors-9"></a>
+### Errors <a href="#errors-11" id="errors-11"></a>
 
-The chat metadata includes its pinned message IDs. HTTP 409 `pin_limit_reached` means you should unpin an existing message before trying again. HTTP 404 `message_not_found` means the target is missing or inaccessible. Use `messages.unpin` to remove one pin.
+HTTP 409 `pin_limit_reached` means you should unpin an existing message before trying again. HTTP 404 `message_not_found` means the target is missing or inaccessible. In a Super Group, HTTP 403 `not_enough_rights` means your bot lacks the pin messages right. Use `messages.unpin` to remove one pin.
 
-### Example <a href="#example-9" id="example-9"></a>
+### Example <a href="#example-11" id="example-11"></a>
 
 Set `ARX_BOT_TOKEN`, `CHAT_ID`, `MESSAGE_ID`, `REQUEST_KEY` before running this example.
 

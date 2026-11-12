@@ -140,16 +140,18 @@ JavaScript's `text.length`, Python's `len(text.encode("utf-16-le")) // 2`, and R
 | Entity | How to use it |
 | --- | --- |
 | `bold`, `italic`, `underline`, `strikethrough`, `spoiler` | Apply a style to a span. |
-| `code`, `pre` | Mark code. Only `pre` accepts `language`. Neither can contain another entity. |
-| `blockquote`, `expandable_blockquote` | Mark quoted text. These entities cannot nest in one another. |
+| `code`, `pre` | Mark code. Only `pre` accepts `language`. A code span can neither contain another entity nor sit inside one. |
+| `blockquote`, `expandable_blockquote` | Mark quoted text. A quote cannot sit inside another quote, a link or a mention. |
 | `text_link` | Supply `url` for the destination. |
 | `text_mention` | Supply `user_id`; the response contains the resolved `user`. |
 | `date_time` | Supply `at` and `date_time_format` to display a time in the reader's locale and timezone. |
 | `mention`, `hashtag`, `cashtag`, `bot_command`, `url`, `email`, `phone_number` | ARX detects these in text. Hashtags and cashtags can include `chat_username`. |
 
+A detected phone number has 7 to 15 digits. With a leading `+`, any grouping counts. Without one, the digits must form a single run of up to 11 digits or a grouped national number, such as `415-555-0132`, `(415) 555-0132`, `020 7946 0958` or `612 345 678`. Dates, long IDs, amounts with thousand separators and loose digit pairs stay plain text.
+
 Spans can be separate or sit inside one another. Partial overlaps are invalid. Semantic entities, such as links and mentions, cannot contain one another.
 
-Captions, poll descriptions and quiz explanations accept the supported entity set. Quotes and checklist text accept only `bold`, `italic`, `underline`, `strikethrough`, `spoiler` and `date_time`. Poll questions and options use plain text; omit their entity arrays or send empty arrays.
+Captions, poll descriptions and quiz explanations accept the supported entity set. Quotes and checklist text accept only `bold`, `italic`, `underline`, `strikethrough`, `spoiler` and `date_time`. A quote of a user's message also keeps its `custom_emoji` spans. Quote a `date_time` or `custom_emoji` span whole. Poll questions and options use plain text; omit their entity arrays or send empty arrays.
 
 For `date_time_format`, use `r` by itself for relative time. Otherwise, combine `w`, one of `d` or `D`, and one of `t` or `T`, in that order. Each part is optional: `w`, `D`, `t` and `wDT` are all valid. Lowercase `d` and `t` select short forms; uppercase selects long forms. An empty format keeps the label text.
 
@@ -331,7 +333,7 @@ For the dictionary form, each `media` entry requires a unique `id` and a `file` 
 
 ## Link previews <a href="#link-previews" id="link-previews"></a>
 
-Place `link_preview` beside `content`, not inside the text content. It applies to text messages only. Omitting it lets ARX choose the first eligible URL in the text; URLs covered by spoilers are excluded. Set it to null to suppress the preview, or use the object below.
+Place `link_preview` beside `content`, not inside the text content. It applies to text messages only; sending it with any other content type returns HTTP 400 `unsupported_content`. Omitting it lets ARX choose the first eligible URL in the text; URLs covered by spoilers are excluded. Set it to null to suppress the preview, or use the object below.
 
 | Field | Behavior |
 | --- | --- |
@@ -342,5 +344,9 @@ Place `link_preview` beside `content`, not inside the text content. It applies t
 | `show_above_text` | Places the preview above the message text. |
 
 Do not set both media preferences to true. On an edit, `link_preview` requires `content`; omitting it preserves preview settings and updates an automatically chosen URL when the text changes. Preview metadata can arrive after the initial message. A failed preview leaves the message text usable.
+
+## In groups and topics <a href="#in-groups-and-topics" id="in-groups-and-topics"></a>
+
+Supergroups accept `format` and `entities` on text messages and media captions. They do not accept `rich` content or `link_preview`; either returns HTTP 403 `capability_not_available`. A `text_mention` entity or an `aerx://user` link must name a member of the group, otherwise the send returns HTTP 404 `user_not_found`. See [Groups](groups.md).
 
 Continue with [Files](files.md) for captions and attachments, or [Keyboards](keyboards.md) for message actions.

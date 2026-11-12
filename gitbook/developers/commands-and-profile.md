@@ -91,7 +91,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 {% endtab %}
 {% endtabs %}
 
-A list can contain up to 100 commands. Each command requires `command` and `description`. Names are unique within the list and contain 1 to 32 lowercase ASCII letters, digits or underscores, without the leading slash. Descriptions contain 1 to 256 UTF-16 units and cannot be blank.
+A list can contain up to 100 commands. Each command requires `command` and `description`. Names are unique within the list and contain 1 to 32 lowercase ASCII letters, digits or underscores, without the leading slash. Descriptions contain 1 to 256 UTF-16 units and cannot be blank. The optional `is_ephemeral` field is accepted and stored, but it does not change command behavior yet.
 
 Configuring the list does not implement the commands or restrict what users can type. Your bot still receives command messages through [Updates](updates.md). Check command arguments and the user's permissions in your handler. The SDK routers can help you match command names.
 
@@ -101,12 +101,12 @@ Configuring the list does not implement the commands or restrict what users can 
 
 | Query field | Rule |
 | --- | --- |
-| `scope` | Defaults to `default`. Use `all_private_chats` for private chats or `chat` for a specific chat. |
+| `scope` | Defaults to `default`. Private-chat scopes are `all_private_chats`, `chat` and `chat_member`. |
 | `chat_id` | Required for `chat`, `chat_administrators` and `chat_member`; omit it for other scopes. |
-| `user_id` | Required only for `chat_member`. It must identify the user in that private chat. |
+| `user_id` | Required only for `chat_member`, and omitted for every other scope. It names the user inside the chat given by `chat_id`. |
 | `language_code` | Omit it or use an empty string for the fallback list. A localized list uses a valid two-letter lowercase language code such as `en` or `pt`. |
 
-The API also accepts the group scopes `all_group_chats`, `all_chat_administrators` and `chat_administrators`. They don't affect private chats. See [Not available yet](not-available-yet.md) for supported chat capabilities.
+The group scopes are `all_group_chats`, `all_chat_administrators`, and `chat`, `chat_administrators` or `chat_member` with a group `chat_id`. They don't affect private chats. Group members see `chat_administrators` and `all_chat_administrators` lists only while they are administrators of that group. See [Groups](groups.md) for how group command lists resolve.
 
 For a private chat, ARX checks `chat`, then `all_private_chats`, then `default`. At each scope it tries the requested language before that scope's fallback list. The first configured list wins, including an empty list. For example, a chat-specific fallback takes precedence over a language-specific global list.
 
@@ -120,7 +120,7 @@ Follow [Making requests](making-requests.md) when retrying an uncertain command 
 
 ## Configure the menu button <a href="#configure-the-menu-button" id="configure-the-menu-button"></a>
 
-Call `menu_button.set` with `{"type":"commands"}` to show the command menu. Use `{"type":"default"}` to restore the default behavior. Omit its `chat_id` query for the bot-wide setting, or provide an accessible private chat ID for a chat-specific setting.
+Call `menu_button.set` with `{"type":"commands"}` to show the command menu. Use `{"type":"default"}` to restore the default behavior. To open your [Mini App](mini-apps.md) from the menu button, send `{"type":"mini_app","text":"Open shop","url":"https://example.com/shop"}`; `text` has 1 to 64 characters and `url` at most 2,048, on an origin registered for your bot. Omit its `chat_id` query for the bot-wide setting, or provide an accessible private chat ID for a chat-specific setting.
 
 `menu_button.get` returns the configured setting for the selected chat or the bot-wide setting when you omit `chat_id`. A per-chat `default` setting falls back to the bot-wide button. Use [Keyboards](keyboards.md) when you need buttons attached to a particular message instead.
 

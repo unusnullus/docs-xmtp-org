@@ -32,4 +32,4 @@ NexoCreator combines triggered conditions into one notice per bot per hour. You 
 
 Fixed does not test recovery. A later window can produce another notice, and NexoCreator does not send an automatic recovery message. Repeating a mute action keeps its original deadline rather than extending it. Alerts and their action history remain available for 30 days. Buttons check current ownership, so a former bot owner cannot act on them after a transfer.
 
-For delivery problems, open `/delivery` as described in [NexoCreator](nexocreator.md#delivery-diagnostics-and-recovery). For rejected sends, follow [Errors](errors.md).
+For delivery problems, open `/delivery` as described in [NexoCreator](nexocreator.md#delivery-and-alerts). For rejected sends, follow [Errors](errors.md).

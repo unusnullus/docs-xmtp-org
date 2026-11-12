@@ -18,7 +18,7 @@ Each `InputFile` contains exactly one source:
 
 Video notes, both parts of a live photo and chosen thumbnails reject URL inputs. A chosen thumbnail also rejects `file_id` reuse. Use a new attachment for it.
 
-For a library upload, `files.upload` requires a binary part named `file` and a JSON part named `payload` with `Content-Type: application/json`. The payload requires `kind` and accepts an optional `file_name`. The upload kinds are `photo`, `video`, `animation`, `audio`, `voice`, `video_note`, `document` and `live_photo_video`. Thumbnails are attached to media rather than uploaded as separate library files.
+For a library upload, `files.upload` requires a binary part named `file` and a JSON part named `payload` with `Content-Type: application/json`. The payload requires `kind` and accepts an optional `file_name`. The upload kinds are `photo`, `video`, `animation`, `audio`, `voice`, `video_note`, `document`, `sticker` and `live_photo_video`. Thumbnails are attached to media rather than uploaded as separate library files.
 
 For a multipart message, put the complete message body in the JSON `payload` part. Each `attach` value must match a supplied file-part name. The SDK's typed multipart methods build these parts for you. A message can contain up to 32 binary parts, and an album can contain up to 30. The whole HTTP body, including overhead, must fit within 51 MiB (53,477,376 bytes).
 
@@ -34,28 +34,36 @@ Install the [SDK for your language](sdks.md) before running the example.
 ```typescript
 import { Client, FileInput, UploadSource } from "@arx/nexo";
 
-const bot = new Client({
-  token: process.env.ARX_BOT_TOKEN!,
-  baseUrl: "https://signal.arx.pro/bot-api/v1",
-});
-const uploaded = await bot.filesUpload(
-  UploadSource.fromBytes(new TextEncoder().encode("Meeting notes.\n"), {
-    filename: "notes.txt",
-    contentType: "text/plain",
-  }),
-  {
-    body: { kind: "document", file_name: "notes.txt" },
-    key: process.env.UPLOAD_REQUEST_KEY!,
-  },
-);
-const ready = await bot.waitFileReady(uploaded.file_id);
-const message = await bot.messagesSend(process.env.CHAT_ID!, {
-  body: {
-    content: { type: "document", document: FileInput.fromId(ready.file_id) },
-  },
-  key: process.env.REQUEST_KEY!,
-});
-console.log(message.message_id);
+const token = process.env.ARX_BOT_TOKEN;
+const uploadKey = process.env.UPLOAD_REQUEST_KEY;
+const key = process.env.REQUEST_KEY;
+const chatId = process.env.CHAT_ID;
+if (!token || !uploadKey || !key || !chatId) {
+  throw new Error("Set ARX_BOT_TOKEN, UPLOAD_REQUEST_KEY, REQUEST_KEY, CHAT_ID");
+}
+const bot = new Client({ token, baseUrl: "https://signal.arx.pro/bot-api/v1" });
+try {
+  const uploaded = await bot.filesUpload(
+    UploadSource.fromBytes(new TextEncoder().encode("Meeting notes.\n"), {
+      filename: "notes.txt",
+      contentType: "text/plain",
+    }),
+    {
+      body: { kind: "document", file_name: "notes.txt" },
+      key: uploadKey,
+    },
+  );
+  const ready = await bot.waitFileReady(uploaded.file_id);
+  const message = await bot.messagesSend(chatId, {
+    body: {
+      content: { type: "document", document: FileInput.fromId(ready.file_id) },
+    },
+    key,
+  });
+  console.log(message.message_id);
+} finally {
+  await bot.close();
+}
 ```
 
 {% endtab %}
@@ -146,23 +154,55 @@ ARX validates file contents and decoded media rather than trusting the filename 
 | Voice | OGG with Opus, MP3 or M4A: `audio/ogg`, `audio/mpeg`, `audio/mp4`. | 50 MiB. | 20 MiB. | The decoded audio codec must be Opus, MP3 or AAC. |
 | Video note | Square MP4: `video/mp4`. | 50 MiB. | URLs are rejected. | At most 60 seconds, with no caption. |
 | Document | Content-dependent, including `application/pdf`, `application/zip` and `application/octet-stream`. | 50 MiB. | 20 MiB. | Executables, scripts and active HTML, SVG or XML content are rejected. |
+| Sticker | WebP, TGS or WebM: `image/webp`, `application/x-tgsticker`, `video/webm`. | 512 KiB (524,288 bytes). | 512 KiB, static WebP only. | See [sticker formats](messages/stickers-and-dice.md#sticker-formats) for dimensions, duration and the TGS limit. |
 | Live-photo photo | JPEG, PNG or WebP. | 10 MiB. | URLs are rejected. | Send it together with the video component. |
 | Live-photo video | MP4: `video/mp4`. | 10 MiB. | URLs are rejected. | At most ten seconds. |
 | Chosen thumbnail | JPEG: `image/jpeg`. | 199,999 bytes. | URLs are rejected. | At most 320 pixels on either side, supplied as a new attachment. |
 
 Decoded video and audio must have a positive duration of at most 86,400 seconds (24 hours), unless their type has a smaller bound above. Video dimensions must be positive and fit within 40,000,000 pixels. An animation's codec and lack of audio have additional validation, as shown in the table.
 
-The 50 MiB ceiling does not apply to photos, live-photo videos or thumbnails. An oversized file returns HTTP 413 `file_too_large`, with the byte limit in `error.details.limit`. Reducing the body size alone will not fix an invalid media type. See the [file error catalog](errors.md#files-and-uploads).
+Photos, live-photo videos, stickers and thumbnails have the lower limits shown in the table. Every other kind is capped at 50 MiB. An oversized file returns HTTP 413 `file_too_large`, with the byte limit in `error.details.limit`. Reducing the body size alone will not fix an invalid media type. See the [file error catalog](errors.md#files-and-uploads).
 
 Thumbnails are optional for types that support them. Omit the thumbnail to let ARX generate one. Refer to [Not available yet](not-available-yet.md) for unsupported media features.
 
+## Media options <a href="#media-options" id="media-options"></a>
+
+Each media content type accepts the fields below beside its file source. Size and duration hints never replace the values ARX measures from the file; the response contains the measured values.
+
+| Field | Types | Rule |
+| --- | --- | --- |
+| `caption`, `caption_format` or `caption_entities` | Photo, video, animation, audio, voice, document, live photo | Up to 1,024 UTF-16 units after parsing. See [Formatting](formatting.md#choose-the-formatting-fields). |
+| `caption_above_media` | Photo, video, animation, live photo | Shows the caption above the media. |
+| `has_spoiler` | Photo, video, animation, live photo | Hides the media behind a spoiler until the user taps it. |
+| `thumbnail` | Video, animation, audio, document, video note | A new JPEG attachment, as described in the table above. Omit it to let ARX generate one. |
+| `cover` | Video | A photo source shown before playback. It follows the photo rules. |
+| `start_seconds` | Video | The initial playback position. It must not exceed the measured duration. |
+| `supports_streaming` | Video | Marks the video as suitable for streaming playback. |
+| `duration_seconds` | Video, animation, audio, voice, video note | A hint from 0 to 86,400. |
+| `width`, `height` | Video, animation | Hints from 0 to 10,000 pixels. |
+| `length` | Video note | A diameter hint from 0 to 10,000 pixels. The response uses the measured width. |
+| `performer`, `title` | Audio | Up to 256 UTF-16 units each. Without them, ARX reads the file's own tags. |
+| `disable_content_type_detection` | Document | Accepted for compatibility. It does not change validation or MIME detection. |
+
+A hint outside its range, or a `start_seconds` past the end of the video, returns HTTP 400 `invalid_parameter` with `reason: media_options`. A field the content type does not define returns HTTP 400 `invalid_request`.
+
+## Video notes <a href="#video-notes" id="video-notes"></a>
+
+A video note is a round video message. Send it with `content.type: video_note` and a `video_note` source. The video must be square, MP4 and at most 60 seconds long. Upload it as a new attachment or reuse a `file_id`; URLs are rejected. A video note has no caption.
+
+## Live photos <a href="#live-photos" id="live-photos"></a>
+
+A live photo pairs a photo with a short MP4 video. Send `content.type: live_photo` with both `photo` and `video` sources. Upload the video with `kind: live_photo_video`, or attach it in the same multipart request. The video is at most 10 MiB and 10 seconds. Neither source accepts a URL. A live photo accepts a caption, `caption_above_media` and `has_spoiler`, and can be an item in a visual [album](messages/albums.md).
+
 ## Captions and albums <a href="#captions-and-albums" id="captions-and-albums"></a>
 
-Use the media's `caption` with either `caption_format` or `caption_entities`, following [Formatting](formatting.md). Captions allow up to 1,024 parsed UTF-16 units. `messages.edit` can change a caption or its position where supported, while retaining the original file. An empty caption clears its text and entities. Do not combine caption fields with `content` or `live_location` in the same edit.
+Use the media's `caption` with either `caption_format` or `caption_entities`, following [Formatting](formatting.md). Captions allow up to 1,024 parsed UTF-16 units. `messages.edit` can change a caption or its position while keeping the original file. An empty caption clears its text and entities. Do not combine caption fields with `content` or `live_location` in the same edit. See [Edit and delete](messages/edit-and-delete.md#what-you-can-change).
 
-`messages.send_album` accepts 2 to 10 items and creates them atomically with a shared `media_group_id`. Photos, videos and live photos can mix. Audio albums contain only audio, and document albums contain only documents. Albums have no keyboards. Ordinary items use `media: InputFile`; a live-photo item uses `media: {photo: InputFile, video: InputFile}`.
+To send several files as one grouped message, use `messages.send_album`. See [Albums](messages/albums.md). Preserve the original idempotency key, JSON payload and bytes when you retry any multipart request. Changing any part with the same key returns `idempotency_key_reused`. The [API reference for files](reference/files.md) and [messages](reference/messages.md) has the complete typed request fields.
 
-Upload files first and reuse their IDs if an album's binary parts would exceed the multipart body limit. Preserve the original idempotency key, JSON payload and bytes for retries. Changing any part with the same key returns `idempotency_key_reused`. The [API reference for files](reference/files.md) and [messages](reference/messages.md) has the complete typed request fields.
+## In groups and topics <a href="#in-groups-and-topics" id="in-groups-and-topics"></a>
+
+Supergroups accept `photo`, `video`, `animation`, `audio`, `voice`, `video_note`, `document` and `sticker` messages, one at a time. They do not accept live photos, albums or video covers. Group permissions can restrict media types; see [Groups](groups.md).
 
 ## Authenticated downloads <a href="#authenticated-downloads" id="authenticated-downloads"></a>
 
@@ -196,7 +236,7 @@ A ready file can also include `download_url` and `download_url_expires_at`. Use 
 
 `profile.delete_photo` uses an empty JSON object to remove the avatar. Both profile operations return `true`. Use a new key for a new change and keep the key, body and file bytes for retries. See [the profile reference](reference/profile.md) for complete examples.
 
-Replacing or removing profile media invalidates old profile references. For a test bot, only its owner and current testers can see its profile media. To manage these images in chat, follow [Profile media in NexoCreator](nexocreator.md#profile-media).
+Replacing or removing profile media invalidates old profile references. For a test bot, only its owner and current testers can see its profile media. To manage these images in chat, follow [Profile media in NexoCreator](nexocreator.md#edit-the-profile).
 
 ## User profile photos <a href="#user-profile-photos" id="user-profile-photos"></a>
 
@@ -204,7 +244,7 @@ Replacing or removing profile media invalidates old profile references. For a te
 
 The `limit` range is 1 to 100. Omit `cursor` or pass an empty value. A known user without a photo or the required sharing consent produces an empty page. An unknown or deleted user returns HTTP 404 `user_not_found`.
 
-For users known only through a user-selection message, access requires `share_photo: true` and a selection message that remains readable by your bot. See [Keyboards](keyboards.md) for the selection request and the [profile reference](reference/profile.md) for the operation.
+For users known only through a user-selection message, your `request_users` button must set `request_photo: true`, the user must share their photo in that selection, and the selection message must still be readable by your bot. See [Keyboards](keyboards.md) for the selection request and the [profile reference](reference/profile.md) for the operation.
 
 ## File identity and retention <a href="#file-identity-and-retention" id="file-identity-and-retention"></a>
 

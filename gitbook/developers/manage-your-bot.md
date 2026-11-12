@@ -1,6 +1,6 @@
 # Manage your bot
 
-* [NexoCreator](nexocreator.md): Create your bot and manage its profile, credentials and delivery in ARX.
+* [NexoCreator](nexocreator.md): Create bots and manage their profile, tokens, groups, Mini Apps, payments and advanced modes.
 * [Lifecycle](lifecycle.md): Transfer ownership, restart delivery after a handover and delete a bot.
 * [Alerts](alerts.md): Read activity alerts, acknowledge a fix and control owner notifications.
 * [Security](security.md): Protect your bot token, verify incoming updates and handle user data.

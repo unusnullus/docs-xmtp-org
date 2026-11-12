@@ -4,13 +4,13 @@ description: "Create a Nexo bot and send its first reply with any of the three S
 
 # Create your first bot
 
-Create a bot that replies "Hello from Nexo!" when you send it a message. You need an ARX account, Messenger, and [the SDK for your language](sdks.md#install-an-sdk).
+Create a bot that replies "Hello from Nexo!" when you message it in a private chat. You need an ARX account, ARX Messenger, and [the SDK for your language](sdks.md#install-an-sdk). The setup has three steps: create the bot in NexoCreator, start a chat with it, and run a reply loop.
 
 ## Create the bot <a href="#create-the-bot" id="create-the-bot"></a>
 
 Open `@NEXOCREATOR` in Messenger and send `/newbot`. Read and accept the developer terms shown there, then choose a display name and an available handle. For example, a support bot could be named **Acme Support** with the handle `ACMESUPPORTBOT`. NexoCreator checks the name and handle for you. See [NexoCreator](nexocreator.md) for account requirements and creation limits.
 
-Choose **View token** and save the credential immediately. You can reveal it only once, within 3,600 seconds (60 minutes) by default. This is the reveal window, not the token's lifetime. If you miss it or lose the credential, rotate the token in NexoCreator. [Authentication & tokens](authentication.md) explains storage and replacement.
+Choose **View token** and save the credential immediately. You can reveal it only once, within 60 minutes by default. This is the reveal window, not the token's lifetime. If you miss it or lose the credential, rotate the token in NexoCreator. [Authentication & tokens](authentication.md) explains storage and replacement.
 
 Set these variables in the terminal where you will run the program:
 
@@ -26,7 +26,7 @@ Regular bots and TESTBOTs use this same endpoint. See [Environments](environment
 
 ## Start a conversation <a href="#start-a-conversation" id="start-a-conversation"></a>
 
-Find your bot in Messenger and choose **Start**. The user must start the conversation before your bot can reply. Its first `message` update contains `/start`; `message.chat.id` identifies the conversation. Keep chat IDs and user IDs separate.
+Find your bot by its handle in Messenger search and choose **Start**. A user must start a private chat before your bot can message them. The first `message` update contains `/start`, and `message.chat.id` identifies the conversation. Keep chat IDs and user IDs separate: a chat ID is never a user ID.
 
 ## Run the reply loop <a href="#run-the-reply-loop" id="run-the-reply-loop"></a>
 
@@ -48,8 +48,9 @@ try {
       query: { timeout_seconds: 30, ...(offset ? { offset } : {}) },
     });
     for (const update of batch.updates) {
-      if (update.type === "message" && update.message) {
-        await bot.sendText(update.message.chat.id, "Hello from Nexo!", {
+      const message = update.type === "message" ? update.message : undefined;
+      if (message?.chat.kind === "private") {
+        await bot.sendText(message.chat.id, "Hello from Nexo!", {
           key: `hello-${update.update_id}`,
         });
       }
@@ -75,9 +76,10 @@ with Client(Config(base_url=os.environ["ARX_BOT_API_BASE_URL"])) as bot:
     while True:
         batch = bot.updates_get(offset=offset, timeout_seconds=30)
         for update in batch.updates:
-            if update.type == "message" and update.message is not None:
+            message = update.message if update.type == "message" else None
+            if message is not None and message.chat.kind == "private":
                 bot.send_text(
-                    update.message.chat.id,
+                    message.chat.id,
                     "Hello from Nexo!",
                     key=f"hello-{update.update_id}",
                 )
@@ -90,7 +92,7 @@ with Client(Config(base_url=os.environ["ARX_BOT_API_BASE_URL"])) as bot:
 Save as `src/main.rs` in your Cargo application. Add `tokio` with the `macros` and `rt-multi-thread` features to its dependencies, then run `cargo run`.
 
 ```rust
-use arx_nexo::{Client, Config};
+use arx_nexo::{Client, Config, models::IncomingMessage};
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -110,7 +112,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             bot.updates_get(&query, None, None).await?
         };
         for update in batch.updates {
-            if let Some(message) = update.message() {
+            if let Some(IncomingMessage::Message(message)) = update.message() {
                 let key = format!("hello-{}", update.update_id());
                 bot.send_text(&message.chat().id, "Hello from Nexo!", Some(&key)).await?;
             }
@@ -125,11 +127,22 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 {% endtab %}
 {% endtabs %}
 
-Send another message in Messenger. Your bot should reply with "Hello from Nexo!".
+The bot replies "Hello from Nexo!" to the waiting `/start` update and to each message you send after that.
+
+The programs reply only in private chats. If you later add the bot to a group, messages from that group arrive with `message.chat.kind` set to `group`, and the bot ignores them until you write a handler for them. See [Bots in groups](groups.md).
 
 The next polling request supplies the last processed `update_id` plus one. That acknowledges every update up to that ID, so advance the offset only after you finish processing each update. These programs keep the offset in memory. Their stable reply key lets a repeated update replay the same send while its idempotency record remains valid, but it does not protect other work your handler performs.
 
 Before deploying, add durable update handling and graceful shutdown using the [updates guide](updates.md). Then work through [Testing](testing.md) and the [go-live checklist](go-live-checklist.md).
+
+## Next steps <a href="#next-steps" id="next-steps"></a>
+
+- Add [commands and a profile](commands-and-profile.md), then [buttons](keyboards.md).
+- Move to a [webhook](updates.md) when your bot runs behind a public HTTPS address.
+- Add the bot to [groups, forum topics and communities](groups.md).
+- Open a [Mini App](mini-apps.md) from a button or the menu.
+- Sell access with [crypto invoices and subscriptions](payments.md).
+- Browse the [capability map](features.md) for everything else.
 
 ## Start with a local echo project <a href="#start-with-a-local-echo-project" id="start-with-a-local-echo-project"></a>
 

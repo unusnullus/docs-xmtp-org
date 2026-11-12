@@ -7,9 +7,15 @@
 * [Files](reference/files.md): Upload reusable files, inspect their processing state, and download accessible bytes.
 * [Updates](reference/updates.md): Receive updates through polling or configure a webhook and inspect its delivery status.
 * [Profile](reference/profile.md): Set your bot's command lists, menu button, profile text, and avatar.
+* [Groups and moderation](reference/groups.md): Read members, moderate supergroups, manage your bot's invite links, and answer join requests.
+* [Topics](reference/topics.md): Create, edit, close, and delete forum topics in groups and private chats.
+* [Inline and Mini Apps](reference/mini-apps.md): Answer inline, guest, and Mini App queries, and save prepared messages and buttons.
+* [Payments](reference/payments.md): Create invoice links, answer pre-checkout queries, read plans, balances, and subscriptions, and refund charges.
+* [Managed bots](reference/managed-bots.md): Read and rotate the tokens of bots you manage and set who can use them.
+* [Business connections](reference/business.md): Read a business connection, update the connected account, and exchange encrypted messages.
 * [Platform](reference/platform.md): Check your bot's identity, read its effective limits, and manage its token.
 * [Types](reference/types.md): Find the models for your workflow below. Each entry explains what you send or receive and links to its fields.
-* [Capabilities](features.md): Find the guide for the feature your bot needs.
+* [Capabilities](features.md): Find every Nexo bot capability and the guide that covers it.
 * [Limits](limits.md): Check effective sending allowances, payload sizes and time windows.
 * [Errors](errors.md): Read Bot API error codes, decide what to fix and retry safely.
 * [Versioning & deprecation](versioning.md): Understand API versions, SDK versions and compatibility changes.

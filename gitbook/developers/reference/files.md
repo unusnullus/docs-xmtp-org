@@ -16,7 +16,7 @@ Each route uses the configured API base URL. [Shared request rules and errors](.
 
 Download an accessible file with your bot token. The response contains the original file bytes.
 
-The complete file must be at most 20 MiB (20,971,520 bytes), even when you request a small range. A full download returns HTTP 200. A single supported byte range returns HTTP 206 with `Content-Range`. An unsupported or unsatisfiable range returns HTTP 416 with an empty body and `Content-Range: bytes */size`. Do not send query parameters or a request body.
+The complete file must be at most 20 MiB (20,971,520 bytes), even when you request a small range. A full download returns HTTP 200. A single supported byte range returns HTTP 206 with `Content-Range`. An unsupported or unsatisfiable range returns HTTP 416 with an empty body and `Content-Range: bytes */size`. Do not send query parameters or a request body; a request with a query string returns HTTP 404 `file_not_found`.
 
 ### Parameters <a href="#parameters" id="parameters"></a>
 
@@ -261,7 +261,7 @@ Example success response (HTTP 200). The SDK methods return `result`:
 
 Read an accessible file's processing state and metadata. A ready file within the download limit can also include a signed download URL.
 
-Use `metadata_only: true` when you only need state or metadata, including for files above 20 MiB. After an upload, poll metadata until the state is `ready`, or use your SDK's file-ready helper. A signed URL is valid for at least one hour; access can still end if your bot loses permission.
+Use `metadata_only: true` when you only need state or metadata, including for files above 20 MiB. After an upload, poll metadata until the state is `ready`, or use your SDK's file-ready helper. The signed URL expires at `download_url_expires_at`, one hour after the response. It stops working earlier if your bot loses access to the file or its token is revoked.
 
 ### Parameters <a href="#parameters-2" id="parameters-2"></a>
 

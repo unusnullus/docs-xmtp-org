@@ -137,7 +137,7 @@ Input options have no IDs. Read the accepted `content.poll.options[].id` values 
 | `hide_results_until_closes` | Defaults to false. Hides results until closure. |
 | `allow_adding_options` | Defaults to false. Requires a regular, non-anonymous poll. |
 | `is_closed` | Defaults to false. You can send a poll that is already closed. |
-| `members_only` | Omit it or use false for a private chat. |
+| `members_only` | Not available. Omit it or send false. |
 
 Optional poll fields reject null. Questions and options use plain text. See [Not available yet](not-available-yet.md) for restricted poll features.
 
@@ -343,5 +343,9 @@ The selected part must exist when ARX accepts the request. New messages, albums 
 | Both part selectors | HTTP 400 `invalid_request` |
 
 A reply stores a snapshot of the original message as it was when ARX accepted the reply. Quiz reply context hides answers and explanations, so read the authorized original poll when you need them.
+
+## In groups and topics <a href="#in-groups-and-topics" id="in-groups-and-topics"></a>
+
+Your bot sends polls and checklists in private chats. Supergroups do not accept `poll` or `checklist` content from bots; the send returns HTTP 403 `capability_not_available`. See [Groups](groups.md).
 
 Continue with [Keyboards](keyboards.md) to request a user-created poll, or [the interactive reference](reference/interactive.md) for the poll operations.

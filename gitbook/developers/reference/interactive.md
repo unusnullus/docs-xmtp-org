@@ -50,7 +50,7 @@ The notification, alert, or bot start link used to answer an inline button press
 
 ### Errors <a href="#errors" id="errors"></a>
 
-For an invalid link, HTTP 400 `invalid_parameter` identifies `url`; correct it before the query expires. HTTP 409 `query_already_answered` means another answer was accepted. HTTP 410 `query_expired` means you must wait for a new button press.
+For an invalid link, HTTP 400 `invalid_parameter` identifies `url`; correct it before the query expires. HTTP 409 `query_already_answered` means another answer was accepted. HTTP 410 `query_expired` means the query is unknown, belongs to another bot or is older than 15 minutes; wait for a new button press. HTTP 409 `idempotency_key_reused` means the key was used with a different body. HTTP 400 `invalid_request` means a field is invalid, for example `text` over 200 UTF-16 code units.
 
 ### Example <a href="#example" id="example"></a>
 
@@ -480,7 +480,7 @@ The optional inline keyboard replacement to apply when stopping live sharing. On
 
 ### Errors <a href="#errors-3" id="errors-3"></a>
 
-HTTP 404 `message_not_found` means the target is missing or inaccessible. HTTP 400 `invalid_parameter` can identify an inactive or invalid target. See [Locations and contacts](../locations-and-contacts.md) for live-location updates.
+HTTP 404 `message_not_found` means the target is missing or inaccessible. HTTP 400 `message_not_editable` with reason `live_period_ended` means the target is not an active live location, and reason `not_author` means your bot did not send it. See [Locations and contacts](../locations-and-contacts.md) for live-location updates.
 
 ### Example <a href="#example-3" id="example-3"></a>
 

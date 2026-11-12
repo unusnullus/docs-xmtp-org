@@ -128,7 +128,7 @@ Stop does not save partial text in history. If you want to retain that text, sen
 
 ## Finish or remove the preview <a href="#finish-or-remove-the-preview" id="finish-or-remove-the-preview"></a>
 
-Send the finished reply with `messages.send`. A newly accepted message from your bot retires the current draft. Replaying an accepted send, editing a message or receiving a user's message does not retire it.
+Send the finished reply with `messages.send`. The send removes the current preview for you. Stop writing chunks for that generation once you send: a final send does not retire the draft ID, so a late write to the same ID shows a new preview. If that happens, remove it with `drafts.delete`.
 
 To remove a preview without sending a final reply, call `drafts.delete` with the same chat and draft IDs. The typed methods are `draftsDelete` in TypeScript and `drafts_delete` in Python and Rust; they return true.
 
@@ -136,10 +136,27 @@ To remove a preview without sending a final reply, call `drafts.delete` with the
 
 Retry the same chunk with the same key and body if you did not receive its result. A replay returns the accepted result without extending expiry or using another content change allowance. Changing a request while reusing its key returns HTTP 409 `idempotency_key_reused`.
 
-Stop or a later bot message retires the draft ID. Further writes to that ID return HTTP 409 `version_conflict` with `reason: draft_retired`. Start a new generation with a fresh ID. Deleting the final message does not make the retired ID reusable.
+Stopping generation retires the draft ID. Further writes to that ID return HTTP 409 `version_conflict` with `reason: draft_retired`. Start a new generation with a fresh ID.
 
 ## Show a chat action <a href="#show-a-chat-action" id="show-a-chat-action"></a>
 
-Use `chats.send_action` when a short activity indicator is enough. Send, for example, `{"action":"typing"}`. The indicator lasts five seconds or until your bot sends a message. Calls less than one second apart combine into the same activity.
+Use `chats.send_action` when a short activity indicator is enough. The HTTP body is `{"action":"typing"}`. The typed methods are `chatsSendAction` in TypeScript and `chats_send_action` in Python and Rust; they return true.
 
-[The draft reference](reference/drafts.md) lists all action values and the typed methods. For a complete bot that uses temporary replies, open Streaming Replies in [TypeScript](https://github.com/unusnullus/arx-sdks/tree/main/examples/typescript/26%20-%20Streaming%20Replies), [Python](https://github.com/unusnullus/arx-sdks/tree/main/examples/python/26%20-%20Streaming%20Replies) or [Rust](https://github.com/unusnullus/arx-sdks/tree/main/examples/rust/26%20-%20Streaming%20Replies).
+| `action` | What the user sees |
+| --- | --- |
+| `typing` | Your bot is typing. |
+| `upload_photo` | Your bot is sending a photo. |
+| `record_video`, `upload_video` | Your bot is recording or sending a video. |
+| `record_voice`, `upload_voice` | Your bot is recording or sending a voice message. |
+| `upload_document` | Your bot is sending a file. |
+| `choose_sticker` | Your bot is choosing a sticker. |
+| `find_location` | Your bot is looking for a location. |
+| `record_video_note`, `upload_video_note` | Your bot is recording or sending a video note. |
+
+The indicator lasts five seconds or until your bot sends a message. Calls for the same action less than one second apart count as one. Repeat the call every few seconds while the work continues.
+
+## In groups and topics <a href="#in-groups-and-topics" id="in-groups-and-topics"></a>
+
+Drafts and chat actions work in private chats. For what your bot can show in a group, see [Groups](groups.md).
+
+[The draft reference](reference/drafts.md) gives the typed methods for drafts and actions. For a complete bot that uses temporary replies, open Streaming Replies in [TypeScript](https://github.com/unusnullus/arx-sdks/tree/main/examples/typescript/26%20-%20Streaming%20Replies), [Python](https://github.com/unusnullus/arx-sdks/tree/main/examples/python/26%20-%20Streaming%20Replies) or [Rust](https://github.com/unusnullus/arx-sdks/tree/main/examples/rust/26%20-%20Streaming%20Replies).

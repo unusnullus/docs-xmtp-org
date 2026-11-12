@@ -11,7 +11,7 @@ Only the listed fields are allowed. Do not supply `format` and `entities` togeth
 | `format` | `"plain"` or `"html"` or `"markdown"` | No | Choose the markup format used to parse text. Use this instead of entities. |
 | `keep_on_stop` | boolean | No | This is true when the current draft remains visible when the user stops generation. The default is `false`. |
 | `rich` | [InputDraftRich](inputdraftrich.md) | No | This contains structured rich message content. |
-| `text` | string | No | The temporary draft text shown while your bot generates a response. You can use 0 to 4,096 UTF-16 code units after markup is parsed. An empty string displays the thinking indicator. |
+| `text` | string | No | You can use 0 to 4,096 UTF-16 code units after markup is parsed. An empty string displays the thinking indicator. |
 
 Supply exactly one of the following forms. Required fields apply within each form.
 
