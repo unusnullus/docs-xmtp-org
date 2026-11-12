@@ -32,4 +32,30 @@ You receive one of the following forms. Required fields apply within each form.
 
 - `type` is `"updates_dropped"`: [UpdateUpdatesDropped](updateupdatesdropped.md).
 
+- `type` is `"inline_query"`: [UpdateInlineQuery](updateinlinequery.md).
+
+- `type` is `"managed_bot"`: [UpdateManagedBot](updatemanagedbot.md).
+
+- `type` is `"guest_message"`: [UpdateGuestMessage](updateguestmessage.md).
+
+- `type` is `"pre_checkout_query"`: [UpdatePreCheckoutQuery](updateprecheckoutquery.md).
+
+- `type` is `"subscription_updated"`: [UpdateSubscriptionUpdated](updatesubscriptionupdated.md).
+
+- `type` is `"renewal_due"`: [UpdateRenewalDue](updaterenewaldue.md).
+
+- `type` is `"refund_request_updated"`: [UpdateRefundRequestUpdated](updaterefundrequestupdated.md).
+
+- `type` is `"business_envelope"`: [UpdateBusinessEnvelope](updatebusinessenvelope.md).
+
+- `type` is `"business_connection"`: [UpdateBusinessConnection](updatebusinessconnection.md).
+
+- `type` is `"chat_join_request"`: [GroupUpdateChatJoinRequest](groupupdatechatjoinrequest.md).
+
+- `type` is `"chat_member"`: [GroupUpdateChatMember](groupupdatechatmember.md).
+
+- `type` is `"channel_post"`: [UpdateChannelPost](updatechannelpost.md).
+
+- `type` is `"edited_channel_post"`: [UpdateEditedChannelPost](updateeditedchannelpost.md).
+
 Return to the [type index](../types.md) or find an operation in the [API index](../../api.md).

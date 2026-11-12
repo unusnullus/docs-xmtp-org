@@ -23,5 +23,7 @@ A received message that reports a service event rather than ordinary content.
 | `silent` | boolean | No | Set this to true to send or pin the message without a notification sound. |
 | `start_parameter` | string | No | Your bot receives this payload when a user starts it through a deep link. |
 | `state_version` | string | No | This version orders changes to the message's state and is encoded as a decimal string. The value must match `^[0-9]+$`. |
+| `topic_id` | string | No | This is the topic ID within the chat, when the event belongs to a topic. The value must match `^[1-9][0-9]*$`. |
+| `via_bot` | [User](user.md) | No | The bot through which the user shared this message. |
 
 Return to the [type index](../types.md) or find an operation in the [API index](../../api.md).

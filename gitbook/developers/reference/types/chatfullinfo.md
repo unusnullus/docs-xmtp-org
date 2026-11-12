@@ -6,7 +6,8 @@ The current information for an existing private chat and its user. Read the priv
 | --- | --- | --- | --- |
 | `id` | string | Yes | This is the chat ID, encoded as a decimal string. It differs from the user's ID. The value must match `^[1-9][0-9]*$`. |
 | `is_forum` | boolean | Yes | This is true when the chat has forum topics. |
-| `kind` | `"private"` | Yes | This chat is private: it connects your bot with one user. |
+| `kind` | `"private"` | Yes | This context belongs to a private conversation. |
+| `personal_chat` | [PersonalChannelChat](personalchannelchat.md) | No | The user's currently visible personal public channel. Omitted when no eligible channel is available. This field does not change the private chat ID or grant channel membership. |
 | `user` | object | Yes | This identifies the user associated with the event, mention, or private chat. |
 | `user.has_photo` | boolean | Yes | This is true when this user currently has a profile photo. |
 | `user.id` | string | Yes | This is the user ID of the account in the private chat, encoded as a decimal string. The value must match `^[1-9][0-9]*$`. |

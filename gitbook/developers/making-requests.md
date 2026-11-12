@@ -21,7 +21,16 @@ curl --fail-with-body --max-time 30 -X POST \
   --data '{"content":{"type":"text","text":"Your note is saved."}}'
 ```
 
-Use the [file upload guide](files.md) for multipart requests. Fields that appear in a response are not necessarily accepted in a request. Follow each operation's request schema and omit fields it does not define.
+| Request part | Rule |
+| --- | --- |
+| Base URL | `https://signal.arx.pro/bot-api/v1`, over HTTPS. Do not follow redirects on authenticated requests. |
+| Authentication | `Authorization: Bearer <BOT_TOKEN>` on every request. See [Authentication & tokens](authentication.md). |
+| JSON body | `Content-Type: application/json`, UTF-8, up to 1 MiB. |
+| Multipart body | `multipart/form-data` with one JSON part and binary file parts, for uploads and sends that attach new files. Up to 51 MiB in total. |
+| Path IDs | Decimal strings, such as `chats/123456789/messages`. |
+| Idempotency | `Idempotency-Key` header on mutations that accept it. See [Idempotency](#idempotency). |
+
+Use the [file upload guide](files.md) for multipart requests. Fields that appear in a response are not necessarily accepted in a request. The request schema defines the accepted fields. `messages.send` rejects unsupported top-level fields with HTTP 403 `capability_not_available`; omit fields the operation does not define.
 
 ## Read a response <a href="#read-a-response" id="read-a-response"></a>
 
@@ -55,6 +64,18 @@ Keep user IDs, chat IDs, message IDs and update IDs as strings. A user ID identi
 
 Polling offsets need exact integer arithmetic on `update_id`. Python integers, JavaScript `BigInt`, and Rust's checked integer arithmetic avoid rounding when calculating the next offset. Convert the result back to a string before sending it, as shown in the [quickstart](quickstart.md).
 
+## Read lists page by page <a href="#read-lists-page-by-page" id="read-lists-page-by-page"></a>
+
+List operations return one page at a time. Request the next page with the value the previous page returned, and stop when the page says there is no more.
+
+| Operation | Request the next page with | Stop when |
+| --- | --- | --- |
+| `messages.history` | `before_message_id` from `next_before_message_id`, or `after_message_id` from `next_after_message_id`. | `has_more` is false. |
+| `topics.list` | `after_topic_id` from `next_after_topic_id`. | `has_more` is false. |
+| `users.list_profile_photos`, `payment_plans.list`, `subscriptions.list` | `cursor` from `next_cursor`. | `next_cursor` is null. |
+
+A page can contain fewer items than `limit` even when more exist. Treat cursors as opaque and short-lived: `cursor_expired` or `snapshot_expired` means you start the listing again without a cursor.
+
 ## Idempotency <a href="#idempotency" id="idempotency"></a>
 
 For an operation that accepts `Idempotency-Key`, choose one key per logical action. A key contains 1 to 64 ASCII letters, digits, underscores or hyphens. Persist the key with the request payload before sending important work.
@@ -63,7 +84,7 @@ Repeat the same key and payload when retrying that action. A completed request r
 
 The saved replay result lasts 24 hours. After it expires, `idempotency_key_expired` means you must reconcile the original action before deciding whether to send another request. An idempotency key does not make your database writes or external service calls safe to repeat. Handle those effects separately, and [deduplicate incoming updates](updates.md).
 
-The SDKs create keys for supported mutations and retain them on automatic retries. Supply your own stable key when your application needs to resume after a restart. See [SDK retries](sdks.md#retries-and-idempotency).
+A few operations require the header, including refunds, invoice links, subscription changes, managed-bot token rotation and connected-account operations. The [API reference](api.md) marks each one. The SDKs create keys for supported mutations and retain them on automatic retries. Supply your own stable key when your application needs to resume after a restart. See [SDK retries](sdks.md#retries-and-idempotency).
 
 ## PATCH: omission, null and empty values <a href="#patch-omission-null-and-empty-values" id="patch-omission-null-and-empty-values"></a>
 

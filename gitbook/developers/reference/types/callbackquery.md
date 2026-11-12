@@ -4,7 +4,7 @@ An inline button press received by your bot. Answer it with callback_queries.ans
 
 | Field | Type | Required | Description and constraints |
 | --- | --- | --- | --- |
-| `chat_instance` | string | Yes | This is an opaque identifier of the chat associated with the callback. The format is `uuid`. |
+| `chat_instance` | string | Yes | This is an opaque identifier of the chat associated with the callback. The minimum length is 1 character. |
 | `created_at` | string | Yes | This records when the callback query was created, in RFC 3339 format. The format is `date-time`. |
 | `data` | string | Yes | Your bot receives this callback data when the user presses the button. You can use up to 64 UTF-8 bytes. The minimum length is 1 character. |
 | `id` | string | Yes | This UUID identifies the callback query. The format is `uuid`. |

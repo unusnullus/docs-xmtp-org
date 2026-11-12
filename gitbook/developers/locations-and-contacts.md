@@ -178,7 +178,7 @@ Call `messages.edit` for your bot's active live location. Use the last returned 
 }
 ```
 
-The typed methods are `messagesEdit` in TypeScript and `messages_edit` in Python and Rust. Use the `revision` returned by your send or last edit for the next request. A stale edit returns HTTP 409 `revision_conflict`.
+The typed methods are `messagesEdit` in TypeScript and `messages_edit` in Python and Rust. Use the `revision` returned by your send or last edit for the next request. A stale edit returns HTTP 409 `revision_conflict`. Editing a live location that has stopped or expired returns HTTP 400 `message_not_editable` with `reason: live_period_ended`.
 
 Omitting accuracy, heading, proximity radius or duration keeps its accepted value. You can make one changed live edit per five seconds per message, in addition to the normal [edit limits](limits.md). A faster change returns `rate_limited` with a retry delay. An identical edit keeps the revision and does not consume that live edit allowance.
 
@@ -214,10 +214,10 @@ Your bot can send an ARX account card for:
 For a test bot, the chat or selection must come from the bot owner or a current tester. Include the account's user ID. For HTTP, a contact body looks like this:
 
 ```json
-{"content":{"type":"contact","user_id":"4398046511100"}}
+{"content":{"type":"contact","user_id":"987654321"}}
 ```
 
-ARX resolves the name and handle. Supplying a name cannot override that identity. The request rejects `username`, phone, vCard and wallet fields for this variant. If you cannot share the account, the API returns HTTP 403 `contact_not_shareable`.
+ARX resolves the name and handle. Supplying a name cannot override that identity. The request rejects `username`, phone, vCard and wallet fields for this variant. A user outside the bot's scope returns HTTP 400 `invalid_parameter` with reason `user_not_in_scope`. Other sharing-denial cases can return HTTP 403 `contact_not_shareable`.
 
 ## Send a manual card <a href="#send-a-manual-card" id="send-a-manual-card"></a>
 
@@ -227,8 +227,8 @@ A manual contact is text supplied by your bot, without a verified ARX identity. 
 {
   "content": {
     "type": "contact",
-    "name": "Ana López",
-    "phone_number": "+50255550100"
+    "name": "Example Contact",
+    "phone_number": "+15555550100"
   }
 }
 ```
@@ -241,4 +241,10 @@ Do not add `user_id` or `username` to a manual card. Contact inputs reject unkno
 
 When an active location enters another person's alert radius, your bot can receive a service message with `type: proximity_alert_triggered`, `traveler`, `watcher` and `distance` in rounded meters. One crossing emits one event. Moving beyond 1.1 times the radius allows a later entry to emit another.
 
-Changing only heading or duration does not create a crossing. A location report cannot prove physical presence. Continue with [Updates](updates.md) to handle these service messages, or [the interactive reference](reference/interactive.md) for live location operations.
+Changing only heading or duration does not create a crossing. A location report cannot prove physical presence.
+
+## In groups and topics <a href="#in-groups-and-topics" id="in-groups-and-topics"></a>
+
+Supergroups do not accept `location`, `venue` or `contact` content from bots, and reply keyboards with `request_location` or `request_contact` are private-chat only. See [Groups](groups.md).
+
+Continue with [Updates](updates.md) to handle these service messages, or [the interactive reference](reference/interactive.md) for live location operations.

@@ -11,5 +11,6 @@ The text and delivery settings for a new text message.
 | `reply_markup` | [ReplyMarkup](replymarkup.md) | No | This defines the keyboard attached to the message. The type field selects its variant. |
 | `reply_to` | [InputReply](inputreply.md) | No | This identifies the reply target and optional quote for the message. |
 | `silent` | boolean | No | Set this to true to send or pin the message without a notification sound. |
+| `topic_id` | string | No | This is the topic ID within the chat, when the event belongs to a topic. The value must match `^[1-9][0-9]*$`. |
 
 Return to the [type index](../types.md) or find an operation in the [API index](../../api.md).

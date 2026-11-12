@@ -2,6 +2,12 @@
 
 * [Polling and webhooks](updates.md): Configure update filters, poll safely and verify webhook deliveries with the SDKs.
 * [Commands & profile](commands-and-profile.md): Configure command lists, menu buttons and localized profile text.
+* [Send messages](messages.md): Choose a content type, set delivery options and keep the IDs you need to change a message later.
+* [Albums](messages/albums.md): Send 2 to 10 photos, videos, live photos, audio files or documents as one grouped message.
+* [Stickers and dice](messages/stickers-and-dice.md): Send static, animated and video stickers, and dice messages with a result that ARX generates.
+* [Replies and quotes](messages/replies.md): Reply to a message, quote an exact excerpt, and handle reply targets that no longer exist.
+* [Edit and delete](messages/edit-and-delete.md): Change your bot's messages with revision checks, and delete messages one at a time or in batches.
+* [Reactions and pins](messages/reactions-and-pins.md): React to messages with an allowed emoji, read users' reactions, and pin or unpin messages.
 * [Formatting](formatting.md): Format text, captions and rich messages with ARX Markdown, HTML or entities.
 * [Keyboards](keyboards.md): Add message buttons, answer callbacks and collect input with reply keyboards.
 * [Deep links](deep-links.md): Start your bot with a parameter and connect an ARX user to your application.

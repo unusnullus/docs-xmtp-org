@@ -31,7 +31,7 @@ Deleting a more specific list allows a less specific list to apply. Use `command
 
 | Parameter | Location | Type | Required | Description and constraints |
 | --- | --- | --- | --- | --- |
-| `scope` | query | `"default"` or `"all_private_chats"` or `"all_group_chats"` or `"all_chat_administrators"` or `"chat"` or `"chat_administrators"` or `"chat_member"` | No | Choose the command scope. chat, chat_administrators, and chat_member require chat_id. Only chat_member requires user_id. Omit the IDs for all other scopes. The default is `"default"`. |
+| `scope` | query | `"default"` or `"all_private_chats"` or `"all_group_chats"` or `"all_chat_administrators"` or `"chat"` or `"chat_administrators"` or `"chat_member"` | No | Choose the command scope. chat, chat_administrators, and chat_member require chat_id. Only chat_member requires user_id. Omit the IDs for all other scopes. Group members see chat_administrators and all_chat_administrators commands only while they are chat administrators. The default is `"default"`. |
 | `chat_id` | query | string | No | Supply the chat ID for chat, chat_administrators, or chat_member scope. Omit it for every other scope. The value must match `^[1-9][0-9]*$`. |
 | `user_id` | query | string | No | Supply the user ID for chat_member scope. Omit it for every other scope. The value must match `^[1-9][0-9]*$`. |
 | `language_code` | query | string | No | Use a valid two-letter BCP 47 language code, or an empty string for the default command set. The value must match `^([a-z]{2})?$`. |
@@ -54,7 +54,7 @@ An empty JSON object. Use `{}` when an operation requires a body but has no sett
 
 ### Errors <a href="#errors" id="errors"></a>
 
-HTTP 400 `invalid_parameter` means the scope, language, or scope-specific IDs are invalid. Correct the selection before retrying.
+HTTP 400 `invalid_parameter` means the scope, language, or scope-specific IDs are invalid. HTTP 404 `chat_not_found` means the chat or member named by a chat scope is missing or not available to your bot. Correct the selection before retrying.
 
 ### Example <a href="#example" id="example"></a>
 
@@ -150,7 +150,7 @@ Omit `scope` to select `default`, and omit `language_code` to select the unlocal
 
 | Parameter | Location | Type | Required | Description and constraints |
 | --- | --- | --- | --- | --- |
-| `scope` | query | `"default"` or `"all_private_chats"` or `"all_group_chats"` or `"all_chat_administrators"` or `"chat"` or `"chat_administrators"` or `"chat_member"` | No | Choose the command scope. chat, chat_administrators, and chat_member require chat_id. Only chat_member requires user_id. Omit the IDs for all other scopes. The default is `"default"`. |
+| `scope` | query | `"default"` or `"all_private_chats"` or `"all_group_chats"` or `"all_chat_administrators"` or `"chat"` or `"chat_administrators"` or `"chat_member"` | No | Choose the command scope. chat, chat_administrators, and chat_member require chat_id. Only chat_member requires user_id. Omit the IDs for all other scopes. Group members see chat_administrators and all_chat_administrators commands only while they are chat administrators. The default is `"default"`. |
 | `chat_id` | query | string | No | Supply the chat ID for chat, chat_administrators, or chat_member scope. Omit it for every other scope. The value must match `^[1-9][0-9]*$`. |
 | `user_id` | query | string | No | Supply the user ID for chat_member scope. Omit it for every other scope. The value must match `^[1-9][0-9]*$`. |
 | `language_code` | query | string | No | Use a valid two-letter BCP 47 language code, or an empty string for the default command set. The value must match `^([a-z]{2})?$`. |
@@ -167,7 +167,7 @@ Do not send a request body.
 
 ### Errors <a href="#errors-1" id="errors-1"></a>
 
-HTTP 400 `invalid_parameter` means the scope or language is invalid, or a scope-specific ID is missing. Check the scope fields before retrying.
+HTTP 400 `invalid_parameter` means the scope or language is invalid, or a scope-specific ID is missing. HTTP 404 `chat_not_found` means the chat or member named by a chat scope is missing or not available to your bot. Check the scope fields before retrying.
 
 ### Example <a href="#example-1" id="example-1"></a>
 
@@ -262,9 +262,9 @@ Example success response (HTTP 200). The SDK methods return `result`:
 
 `PUT /bot-api/v1/commands`
 
-Replace the command list for one scope and language. The response includes the accepted commands and their configuration versions.
+Replace the command list for one scope and language. The response includes the stored commands, the selection, and the bot's new `config_version` and `bot_ui_version`.
 
-Send the complete list, with up to 100 commands. Each command uses 1 to 32 lowercase ASCII letters, digits, or underscores, without a leading slash. Each description contains 1 to 256 UTF-16 code units. An empty list clears this selection. Use `commands.resolve` to check the result of fallback rules.
+Send the complete list, with up to 100 commands. Each command uses 1 to 32 lowercase ASCII letters, digits, or underscores, without a leading slash. Each description contains 1 to 256 UTF-16 code units. Command names must be unique within the list, and a description cannot be blank. An empty list stores an empty menu for this selection, which also hides less specific lists. To fall back to a less specific list instead, use `commands.delete`. Use `commands.resolve` to check the result of fallback rules.
 
 See [Commands & profile](../commands-and-profile.md) for scopes, localization, and ephemeral commands.
 
@@ -272,7 +272,7 @@ See [Commands & profile](../commands-and-profile.md) for scopes, localization, a
 
 | Parameter | Location | Type | Required | Description and constraints |
 | --- | --- | --- | --- | --- |
-| `scope` | query | `"default"` or `"all_private_chats"` or `"all_group_chats"` or `"all_chat_administrators"` or `"chat"` or `"chat_administrators"` or `"chat_member"` | No | Choose the command scope. chat, chat_administrators, and chat_member require chat_id. Only chat_member requires user_id. Omit the IDs for all other scopes. The default is `"default"`. |
+| `scope` | query | `"default"` or `"all_private_chats"` or `"all_group_chats"` or `"all_chat_administrators"` or `"chat"` or `"chat_administrators"` or `"chat_member"` | No | Choose the command scope. chat, chat_administrators, and chat_member require chat_id. Only chat_member requires user_id. Omit the IDs for all other scopes. Group members see chat_administrators and all_chat_administrators commands only while they are chat administrators. The default is `"default"`. |
 | `chat_id` | query | string | No | Supply the chat ID for chat, chat_administrators, or chat_member scope. Omit it for every other scope. The value must match `^[1-9][0-9]*$`. |
 | `user_id` | query | string | No | Supply the user ID for chat_member scope. Omit it for every other scope. The value must match `^[1-9][0-9]*$`. |
 | `language_code` | query | string | No | Use a valid two-letter BCP 47 language code, or an empty string for the default command set. The value must match `^([a-z]{2})?$`. |
@@ -297,7 +297,7 @@ The ordered command list to store for the requested scope and language. Only the
 
 ### Errors <a href="#errors-2" id="errors-2"></a>
 
-HTTP 400 `invalid_parameter` means a command, scope, language, or scope-specific ID is invalid. Correct the named field and send the complete replacement list.
+HTTP 400 `invalid_parameter` means a command, scope, language, or scope-specific ID is invalid. Correct the named field and send the complete replacement list. HTTP 404 `chat_not_found` means the chat or member named by a chat scope is missing or not available to your bot.
 
 ### Example <a href="#example-2" id="example-2"></a>
 
@@ -445,7 +445,7 @@ Do not send a request body.
 
 ### Errors <a href="#errors-3" id="errors-3"></a>
 
-HTTP 400 `invalid_parameter` means a user ID, chat ID, or language is invalid. Use the IDs from the private chat you want to inspect.
+HTTP 400 `invalid_parameter` means a user ID, chat ID, or language is malformed, or a user ID was sent without a chat ID. HTTP 404 `chat_not_found` means the chat is not a private chat with your bot, or the user ID does not belong to that chat.
 
 ### Example <a href="#example-3" id="example-3"></a>
 
@@ -548,7 +548,7 @@ Example success response (HTTP 200). The SDK methods return `result`:
 
 `GET /bot-api/v1/default_admin_rights`
 
-Read the administrator rights your bot suggests for the selected target. Pass `groups` or `channels` as `target`.
+Read the administrator rights your bot suggests for the selected target. Pass `groups` (the default) or `channels` as `target`.
 
 These values are suggestions. Reading or saving them does not grant access to a chat. See [Commands & profile](../commands-and-profile.md) for bot configuration and [Not available yet](../not-available-yet.md) for availability.
 
@@ -657,9 +657,9 @@ Example success response (HTTP 200). The SDK methods return `result`:
 
 `PUT /bot-api/v1/default_admin_rights`
 
-Save the administrator rights your bot suggests for the selected target. Use `rights: null` to clear the suggestions.
+Save the administrator rights your bot suggests when it is added to a group or channel. Pass `groups` (the default) or `channels` as `target`. Use `rights: null` to clear the suggestions.
 
-These values do not grant your bot any permissions. Use only the flags accepted by the request schema. See [Commands & profile](../commands-and-profile.md) for configuration and [Not available yet](../not-available-yet.md) for availability.
+These values do not grant your bot any permissions. See [Commands & profile](../commands-and-profile.md) for configuration and [Not available yet](../not-available-yet.md) for availability.
 
 ### Parameters <a href="#parameters-5" id="parameters-5"></a>
 
@@ -687,7 +687,7 @@ The default administrator rights your bot requests for groups or channels. Only 
 
 ### Errors <a href="#errors-5" id="errors-5"></a>
 
-HTTP 400 `invalid_parameter` means the target or rights are invalid. Check the accepted flags and omit rights that cannot be enabled.
+HTTP 400 `invalid_parameter` means `target` is invalid, a right is unknown or not a boolean, or `can_post_messages` or `can_edit_messages` is `true` for `groups`. HTTP 403 `capability_not_available` means a story, video chat or direct message right is `true`.
 
 ### Example <a href="#example-5" id="example-5"></a>
 
@@ -797,7 +797,7 @@ Example success response (HTTP 200). The SDK methods return `result`:
 
 Read the configured menu button for your bot or one private chat. Omit `chat_id` to read the bot default.
 
-A chat value of `default` uses the bot's default button. The bot's own default resolves to commands. See [Commands & profile](../commands-and-profile.md) to configure commands and menu behavior.
+A chat without its own button returns `type: default`, which means the bot default applies. If no bot default is set, the bot default reads as `type: commands`. See [Commands & profile](../commands-and-profile.md) to configure commands and menu behavior.
 
 ### Parameters <a href="#parameters-6" id="parameters-6"></a>
 
@@ -906,7 +906,7 @@ Example success response (HTTP 200). The SDK methods return `result`:
 
 Set the menu button for your bot or one private chat. Omit `chat_id` to set the bot default.
 
-Use `type: default` for a chat to remove its override. Use `type: commands` to show the command menu. See [Commands & profile](../commands-and-profile.md) for the corresponding command lists.
+Use `type: default` for a chat to remove its override. Use `type: commands` to show the command menu. Use `type: mini_app` with `text` (1 to 64 characters) and `url` to open a Mini App from the menu. See [Commands & profile](../commands-and-profile.md) for the corresponding command lists.
 
 ### Parameters <a href="#parameters-7" id="parameters-7"></a>
 
@@ -920,11 +920,27 @@ Content type: `application/json`. You must include the body.
 
 [MenuButton](types/menubutton.md)
 
-The menu button configuration for your bot or one private chat. Only the listed fields are allowed.
+The menu button configuration for your bot or one private chat.
+
+Supply exactly one of the following forms. Required fields apply within each form.
+
+**When `type` is `"commands"` or `"default"`:**
+
+Only the listed fields are allowed.
 
 | Field | Type | Required | Description and constraints |
 | --- | --- | --- | --- |
-| `type` | `"commands"` or `"default"` | Yes | The menu button kind. commands opens the command menu; default restores the default button. |
+| `type` | `"commands"` or `"default"` | Yes | Choose the command menu or the inherited menu. |
+
+**When `type` is `"mini_app"`:**
+
+Only the listed fields are allowed.
+
+| Field | Type | Required | Description and constraints |
+| --- | --- | --- | --- |
+| `text` | string | Yes | The label displayed on this button. The minimum length is 1 character. The maximum length is 64 characters. |
+| `type` | `"mini_app"` | Yes | Open a Mini App registered by this bot. |
+| `url` | string | Yes | The link opened when the user activates this button or text link. The format is `uri`. The maximum length is 2,048 characters. |
 
 ### Response <a href="#response-7" id="response-7"></a>
 
@@ -974,7 +990,7 @@ import os
 from arx_nexo import Client, Config, models
 
 with Client(Config(token=os.environ["ARX_BOT_TOKEN"], base_url="https://signal.arx.pro/bot-api/v1")) as bot:
-    body = models.MenuButton(type='commands')
+    body = models.MenuButton(root=models.MenuButtonVariant1(type='commands'))
     result = bot.menu_button_set(body=body, key=os.environ["REQUEST_KEY"])
     print(result)
 ```
@@ -991,7 +1007,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let arx_bot_token = std::env::var("ARX_BOT_TOKEN")?;
     let request_key = std::env::var("REQUEST_KEY")?;
     let bot = Client::new(Config::new(arx_bot_token, "https://signal.arx.pro/bot-api/v1", false)?)?;
-    let body = models::MenuButton::new(models::MenuButtonType::Commands);
+    let body = models::MenuButton::MenuButtonVariant1(
+        Box::new(models::MenuButtonVariant1::new(models::MenuButtonVariant1Type::Commands)),
+    );
     let query = [];
     let result = bot.menu_button_set(&query, Some(&body), Some(&request_key)).await?;
     println!("{:?}", result);
@@ -1169,10 +1187,10 @@ Change the default profile text or one localization. Omitted fields keep their v
 
 | Field | Type | Required | Description and constraints |
 | --- | --- | --- | --- |
-| `description` | string or null | No | This is the profile description for your bot. You can use up to 512 UTF-16 code units after markup is parsed. |
+| `description` | string or null | No | You can use up to 512 UTF-16 code units after markup is parsed. |
 | `language_code` | string | No | This is the language tag for this profile or command set. An empty string selects the default. The maximum length is 32 characters. |
-| `name` | string or null | No | This is the display name of the user, bot, contact, or provider. You can use up to 64 UTF-16 code units after markup is parsed. |
-| `short_description` | string or null | No | This is the short profile description displayed for your bot. You can use up to 120 UTF-16 code units after markup is parsed. |
+| `name` | string or null | No | You can use up to 64 UTF-16 code units after markup is parsed. |
+| `short_description` | string or null | No | You can use up to 120 UTF-16 code units after markup is parsed. |
 
 ### Response <a href="#response-9" id="response-9"></a>
 
@@ -1182,7 +1200,7 @@ Change the default profile text or one localization. Omitted fields keep their v
 
 ### Errors <a href="#errors-9" id="errors-9"></a>
 
-HTTP 400 `invalid_parameter` identifies an invalid language or text field. Keep the default name nonempty and stay within the text limits.
+HTTP 400 `invalid_parameter` identifies an invalid language or text field. Keep the default name nonempty and stay within the text limits. HTTP 403 `owner_not_eligible` means the bot owner must resolve their account eligibility before the profile can change.
 
 ### Example <a href="#example-9" id="example-9"></a>
 
@@ -1438,7 +1456,7 @@ The request deadline is 3,600 seconds.
 
 ### Errors <a href="#errors-11" id="errors-11"></a>
 
-HTTP 413 `file_too_large` means the avatar exceeds its size limit. HTTP 400 `file_type_mismatch` means the file bytes do not match the requested media kind. Check the profile media requirements before uploading again.
+HTTP 413 `file_too_large` means the avatar exceeds its size limit. HTTP 400 `file_type_not_allowed` means the file does not meet the avatar requirements, for example an unsupported format, a non-square or longer than ten-second video, or an invalid `main_frame_seconds`. Check the profile media requirements before uploading again.
 
 ### Example <a href="#example-11" id="example-11"></a>
 

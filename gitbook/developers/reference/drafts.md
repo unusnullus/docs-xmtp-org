@@ -14,7 +14,7 @@ Each route uses the configured API base URL. [Shared request rules and errors](.
 
 `POST /bot-api/v1/chats/{chat_id}/actions`
 
-Show an activity indicator while your bot prepares a reply. Send a message when the work is complete.
+Show an activity indicator in a private chat while your bot prepares a reply. Send a message when the work is complete.
 
 The indicator lasts up to five seconds and disappears when your bot sends a message. Repeated calls within one second are combined. Choose an action from the request's accepted values.
 
@@ -44,7 +44,7 @@ The temporary activity your bot displays in a chat. Only the listed fields are a
 
 ### Errors <a href="#errors" id="errors"></a>
 
-HTTP 403 `bot_blocked_by_user` means you should stop sending to that user. See [Drafts](../drafts.md) when you also want to show the reply as it develops.
+HTTP 404 `chat_not_found` means the chat is not a private chat with your bot. HTTP 403 `bot_blocked_by_user` means the user blocked your bot; stop sending to that user. See [Drafts](../drafts.md) when you also want to show the reply as it develops.
 
 ### Example <a href="#example" id="example"></a>
 
@@ -258,7 +258,7 @@ Example success response (HTTP 200). The SDK methods return `result`:
 
 Show a temporary draft while your bot generates a reply. Supply exactly one of `text` or `rich`, then refresh the draft within 30 seconds if generation continues.
 
-Use an existing library file ID for media in a rich draft. Send the final reply with `messages.send`. A draft does not become a message by itself. The result is `true`. Repeating the same key and request returns `true` without extending the draft's lifetime.
+Use an existing library file ID for media in a rich draft. Send the final reply with `messages.send`. A draft does not become a message by itself. The result is `true`.
 
 ### Parameters <a href="#parameters-2" id="parameters-2"></a>
 
@@ -282,7 +282,7 @@ The text or rich content and stop controls for a temporary draft. Use drafts in 
 | `format` | `"plain"` or `"html"` or `"markdown"` | No | Choose the markup format used to parse text. Use this instead of entities. |
 | `keep_on_stop` | boolean | No | This is true when the current draft remains visible when the user stops generation. The default is `false`. |
 | `rich` | [InputDraftRich](types/inputdraftrich.md) | No | This contains structured rich message content. |
-| `text` | string | No | The temporary draft text shown while your bot generates a response. You can use 0 to 4,096 UTF-16 code units after markup is parsed. An empty string displays the thinking indicator. |
+| `text` | string | No | You can use 0 to 4,096 UTF-16 code units after markup is parsed. An empty string displays the thinking indicator. |
 
 Supply exactly one of the following forms. Required fields apply within each form.
 
@@ -298,7 +298,7 @@ Supply exactly one of the following forms. Required fields apply within each for
 
 ### Errors <a href="#errors-2" id="errors-2"></a>
 
-HTTP 409 `version_conflict` with reason `draft_retired` means this generation has ended. Use a new draft ID for a new generation. HTTP 409 `idempotency_key_reused` means the same key was used with different parameters. See [Drafts](../drafts.md) for Stop handling and the final-send sequence.
+HTTP 409 `version_conflict` with reason `draft_retired` means this generation has ended. Use a new draft ID for a new generation. See [Drafts](../drafts.md) for Stop handling and the final-send sequence.
 
 ### Example <a href="#example-2" id="example-2"></a>
 

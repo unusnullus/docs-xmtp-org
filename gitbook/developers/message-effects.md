@@ -126,10 +126,14 @@ The send returns the accepted `Message`. Keep its `message_id` if you need to ed
 | `available_in` | The chat kinds that support the effect; the current catalog uses `private`. |
 | `asset_version` | The version of the animation asset. |
 
-Do not hardcode an effect ID or assume that a previously selected effect remains available. Reading the catalog does not send or choose an effect. If the user's app cannot display the animation, it still displays the message content.
+`platform.get` returns the same catalog in `message_effects`. Do not hardcode an effect ID or assume that a previously selected effect remains available. Reading the catalog does not send or choose an effect. If the user's app cannot display the animation, it still displays the message content.
 
 ## Handle an invalid effect <a href="#handle-an-invalid-effect" id="handle-an-invalid-effect"></a>
 
 An unknown or retired ID returns HTTP 400 `invalid_parameter` with `reason: invalid_message_options`. Refresh the catalog and select an available effect, or send the content without `effect_id`.
 
-Continue with [Copy and forward](copy-and-forward.md) to apply an effect while reusing a message, or [the message reference](reference/messages.md) for send options.
+## In groups and topics <a href="#in-groups-and-topics" id="in-groups-and-topics"></a>
+
+Effects play in private chats only. A Supergroup rejects `effect_id` with HTTP 403 `capability_not_available`. See [Groups](groups.md).
+
+Continue with [Copy and forward](copy-and-forward.md) to apply an effect while reusing a message, [Albums](messages/albums.md) to add one to a media group, or [the message reference](reference/messages.md) for send options.

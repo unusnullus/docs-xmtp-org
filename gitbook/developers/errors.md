@@ -11,7 +11,7 @@ You can decide how to recover from a failed request by reading `error.code` and 
   "ok": false,
   "error": {
     "code": "rate_limited",
-    "message": "Please retry later",
+    "message": "rate_limited",
     "request_id": "019a0ff4-12c0-7000-8000-000000000001",
     "retry_after": 3,
     "scope": "chat"
@@ -19,9 +19,9 @@ You can decide how to recover from a failed request by reading `error.code` and 
 }
 ```
 
-The required error fields are `code`, `message` and `request_id`. Optional fields include `field`, `reason`, `details`, `dependency`, `retry_after`, `retry_after_ms` and `scope`. `field` identifies the affected input. `details` can be an object, an array of diagnostic objects or null. Read only the fields you need and allow additional diagnostic fields.
+The required error fields are `code`, `message` and `request_id`. Optional fields include `field`, `reason`, `details`, `retry_after`, `retry_after_ms` and `scope`. `retry_after_ms` and `scope` appear only on some rate-limit responses. Ignore any other diagnostic field. `field` identifies the affected input. `details` can be an object, an array of diagnostic objects or null. Read only the fields you need and allow additional diagnostic fields.
 
-This catalog covers the 71 Bot API codes. NexoCreator reports account and device-approval problems in its own chat; your bot never receives them. The HTTP statuses below are the Bot API statuses.
+This catalog covers every public Bot API code. Feature-specific codes, such as group, Mini App or connected-account codes, appear only when your bot uses that feature. NexoCreator reports account and device-approval problems in its own chat; your bot never receives them. The HTTP statuses below are the Bot API statuses. If you receive a code that is not listed, handle it by its HTTP status and keep `request_id`.
 
 ## Request and content errors <a href="#request-and-content-errors" id="request-and-content-errors"></a>
 
@@ -36,8 +36,8 @@ This catalog covers the 71 Bot API codes. NexoCreator reports account and device
 | `quote_not_found` | 400 | Match the source quote's text, entities and position, or omit the quote. |
 | `poll_option_invalid` | 400 | Read the current poll and select an option that still exists. |
 | `request_not_valid` | 400 | Read the current source message and use a valid request or checklist-task reference. |
-| `reaction_not_allowed` | 400 | Choose a currently allowed reaction from `platform.get` and respect the per-message reaction limit. |
-| `album_type_mismatch` | 400 | Use a permitted album combination. Audio and document albums each contain only their own type. |
+| `reaction_not_allowed` | 400 | Send at most one reaction, chosen from `platform.get` `reactions.allowed_emoji`. |
+| `album_type_mismatch` | 400 | An album item edit changed the item's family. Keep a visual item visual, an audio item audio and a document a document. |
 | `message_not_editable` | 400 | Read the restriction in `reason`. Check message authorship and which fields can be edited. |
 
 An identical edit returns the current message without a new revision. It does not produce a separate error.
@@ -64,6 +64,8 @@ An identical edit returns the current message without a new revision. It does no
 | `message_cant_be_deleted` | 403 | Inspect the source and deletion rules. Another restriction prevents deletion. |
 | `checklist_not_editable` | 403 | Respect the checklist's permissions and editability rules. |
 | `contact_not_shareable` | 403 | Obtain the required sharing consent or send a contact the user is allowed to share. |
+| `test_bot_access_denied` | 403 | A TESTBOT works only with its owner and invited testers. Invite the account in NexoCreator or use a regular bot. |
+| `bot_access_restricted` | 403 | The target bot accepts only its owner and the people it allows. Ask its owner for access instead of retrying. |
 
 Your bot cannot enumerate users or infer resource existence from these responses. An inaccessible resource can return the same not-found code as a nonexistent one.
 
@@ -116,19 +118,130 @@ Your bot cannot enumerate users or infer resource existence from these responses
 | `webhook_active` | 409 | Delete the webhook before switching to polling. |
 | `poll_closed` | 409 | Read the final poll state and leave the closed poll unchanged. |
 | `pin_limit_reached` | 409 | Unpin a message before pinning another one. |
-| `query_already_answered` | 409 | Keep the original callback answer. Do not attempt a different answer. |
-| `query_expired` | 410 | The callback answer window has closed. Ask the user to press the button again if the action is still relevant. |
+| `query_already_answered` | 409 | Keep the original answer to the callback, payment, join or inline query. Do not attempt a different answer. |
+| `query_expired` | 410 | The answer deadline has passed. For a callback, ask the user to press the button again if the action is still relevant. |
 | `callback_expired` | 410 | The callback context is no longer valid. Ask the user to open current controls. |
 | `cursor_expired` | 410 | Restart pagination instead of reusing the old cursor. |
 | `snapshot_expired` | 410 | Restart the paginated view to read current results. |
 
 Do not treat `draft_retired` as an error code. It is a reason attached to `version_conflict`. See [Drafts](drafts.md) for stop and retirement behavior, and [Lifecycle](lifecycle.md) for handover recovery.
 
+## Groups, channels and topics <a href="#groups-channels-and-topics" id="groups-channels-and-topics"></a>
+
+| Code | HTTP | What to do |
+| --- | --- | --- |
+| `send_permission_denied` | 403 | The group's permissions do not allow this content for your bot. Read `details.permission`, refresh the group and send only permitted content. |
+| `not_enough_rights` | 403 | Your bot lacks the administrator right this action needs. Ask a group owner to grant it, then retry. |
+| `rights_not_subset` | 403 | Request only rights your bot holds and can delegate. |
+| `invalid_rights` | 400 | Correct the combination of administrator rights in the request. |
+| `admin_not_editable` | 403 | Your bot can change only administrators it promoted. Leave this administrator unchanged. |
+| `history_access_required` | 403 | Reading group history needs access to all group messages. Turn off the bot's group privacy, or ask an administrator to promote the bot. |
+| `slow_mode_active` | 429 | Slow mode applies to human members, not to your bot's sends. If you receive it, wait `retry_after` seconds. |
+| `message_rejected_by_antispam` | 403 | Anti-spam applies to human members, not to your bot's sends. Do not resend the same content automatically. |
+| `send_as_not_allowed` | 403 | The selected sender identity is unavailable. Send as your bot. |
+| `group_moderated` | 403 | Group moderation currently prevents this action. Wait for the moderation state to change. |
+| `group_deleting` | 410 | The group is being deleted. Stop work for this group. |
+| `topic_not_found` | 404 | Use a topic that exists in this chat. In a group forum, track topics from topic service messages; in a private chat, list them with `topics.list`. |
+| `topic_closed` | 403 | The topic is closed. Reopen it if your bot can manage topics, or post elsewhere. |
+| `forum_disabled` | 409 | Topics are turned off in this group. Send without `topic_id`. |
+| `topics_limit_reached` | 409 | Delete or reuse a topic before creating another. |
+| `settings_version_conflict` | 409 | Read the current group settings, then submit your change against that version. |
+| `handle_unavailable` | 409 | Choose another public username for the group. |
+| `user_banned_from_chat` | 403 | The user is banned from this group. Unban them first if that is your intent. |
+| `user_privacy_restricts_add` | 403 | The user's privacy settings prevent adding them. Send them an invitation link instead. |
+| `bot_cannot_join_groups` | 403 | The bot is configured not to join groups. Turn on group joining with `/setjoingroups` in NexoCreator if the bot should work in groups. |
+| `group_member_limit_reached` | 409 | The group is full. Remove members before admitting others. |
+| `group_admins_limit_reached` | 409 | The group has its maximum number of administrators. Demote one before promoting another. |
+| `group_bots_limit_reached` | 409 | The group has its maximum number of bots. Remove a bot before adding another. |
+| `groups_per_account_limit_reached` | 409 | The account belongs to the maximum number of groups and cannot join another. |
+| `invite_link_invalid` | 404 | The invitation does not exist or was revoked. Create a new one. |
+| `invite_link_expired` | 410 | Create a new invitation. |
+| `invite_link_limit_reached` | 409 | The invitation reached its member limit, or your bot has too many invitations. Revoke an unused invitation or create one without a member limit. |
+| `invite_link_not_editable` | 403 | Your bot can edit or revoke only invitations it created. |
+| `join_request_not_found` | 404 | The request is no longer pending or is not visible to your bot. Read the next `chat_join_request` update instead. |
+| `join_request_already_pending` | 409 | The account already has a pending request. Wait for the decision. |
+| `join_request_already_processed` | 409 | Another administrator decided first, or the request expired. Keep the existing decision. |
+| `join_rate_limited` | 429 | Group admissions are being rate limited. Wait for `retry_after` before approving more requests. |
+| `ownership_transfer_invalid` | 409 | The transfer target or confirmation is not valid. Restart the transfer from the group owner's app. |
+| `ownership_offer_invalid` | 409 | The ownership offer expired or was already used. Ask for a new offer. |
+| `guest_bots_disabled` | 403 | An administrator turned off guest bot invocations in this group. Do not retry there. |
+| `ephemeral_not_found` | 410 | The ephemeral message expired or its audience changed. Do not replace it with a regular message ID. |
+| `ephemeral_not_allowed` | 403 | Use only the operations that support ephemeral content. |
+| `ephemeral_window_expired` | 403 | The response window for the original trigger closed. Wait for a new trigger. |
+| `receiver_not_member` | 403 | The intended recipient is no longer a member of the group. Drop the ephemeral reply. |
+
+Membership and permissions can change between two requests. When a group error says your bot lacks access or rights, refresh the group with `chats.get` or `members.get` before deciding what to do.
+
+## Queries, Mini Apps and inline results <a href="#queries-mini-apps-and-inline-results" id="queries-mini-apps-and-inline-results"></a>
+
+| Code | HTTP | What to do |
+| --- | --- | --- |
+| `query_not_found` | 404 | The query does not exist or belongs to another bot. Use the ID from your own update. |
+| `result_invalid` | 400 | Correct the result field named in `field`. |
+| `prepared_message_invalid` | 400 | Correct the prepared result or its allowed destination types. |
+| `prepared_message_expired` | 410 | Prepared messages last 24 hours. Save a new one. |
+| `inline_media_unavailable` | 400 | The result media could not be used. No message was sent. Choose another file. |
+| `mini_app_not_found` | 404 | Check the Mini App identifier and that it belongs to your bot. |
+| `mini_app_disabled` | 403 | Mini Apps or this app are turned off for your bot. Review its configuration in NexoCreator. |
+| `mini_app_origin_not_registered` | 400 | Register the URL's origin for your bot before sending a Mini App button with it. |
+| `mini_app_entry_not_allowed` | 403 | This launch entry is not allowed in the current chat or installation. Use a supported entry. |
+| `mini_app_attach_menu_unavailable` | 403 | The app is not eligible for the attachment or side menu. |
+| `mini_app_owner_input_invalid` | 400 | Correct the configuration field named in `field`. |
+| `mini_app_limit_reached` | 409 | Remove an unused configuration entry before adding another. |
+| `mini_app_session_expired` | 410 | Ask the user to open the app again. |
+| `mini_app_session_revoked` | 403 | The session is no longer authorized. Start a new session. |
+| `mini_app_action_not_allowed` | 409 | The action is unavailable for this launch or was already completed. Do not repeat it. |
+| `mini_app_payload_too_large` | 400 | Reduce the payload for this action. |
+| `mini_app_storage_quota_exceeded` | 409 | Remove or replace a storage key for this user before adding another. |
+| `mini_app_storage_invalid` | 400 | Correct the key or value named in `field`. |
+| `mini_app_result_unavailable` | 410 | The pending result expired or belongs to another installation. Ask the user to repeat the action. |
+| `mini_app_prepared_button_unavailable` | 410 | The prepared button expired or belongs to another user. Save a new one. |
+| `mini_app_privacy_policy_required` | 403 | Add a privacy policy to your bot in NexoCreator before using this action. |
+| `mini_app_mobile_restricted` | 403 | The app or bot is restricted on the user's app store build. Offer another path. |
+| `mini_app_query_too_early` | 429 | Wait `retry_after` before answering this Mini App query. |
+
+## Connected accounts <a href="#connected-accounts" id="connected-accounts"></a>
+
+| Code | HTTP | What to do |
+| --- | --- | --- |
+| `business_mode_disabled` | 403 | Enable connected-account mode for the bot before using these operations. |
+| `business_connection_not_found` | 404 | The connection does not exist or belongs to another bot. Use the ID from a `business_connection` update. |
+| `business_connection_inactive` | 403 | The connection is inactive. Stop work for it until a `business_connection` update reports it active again. |
+| `business_endpoint_not_registered` | 409 | Register your endpoint for this connection first. |
+| `business_right_missing` | 403 | The account owner has not granted the right this action needs. |
+| `business_chat_not_in_scope` | 403 | Use a chat that belongs to the current connection. |
+| `business_requires_envelope` | 400 | Encrypt the operation with the SDK's Business runtime and send it with `business_envelopes.send`. |
+| `business_event_type_not_allowed` | 403 | The encrypted event type is not allowed for this operation. |
+| `business_reply_window_closed` | 403 | The window for this operation has closed. Do not retry the same operation. |
+| `business_recipient_not_allowed` | 403 | A recipient device is not part of this conversation. Refresh the device list. |
+| `business_peer_client_outdated` | 400 | A recipient's app is too old for this feature. Do not retry until the device list changes. |
+| `business_owner_copies_missing` | 400 | Include a copy for every current owner device. Refresh the owner device list. |
+| `business_commitment_mismatch` | 400 | Every encrypted copy must carry the same content commitment. Rebuild the envelope. |
+| `b2b_history_export_quota_exceeded` | 429 | The history export quota for this bot pair is used up. Wait before exporting again. |
+
+## Payments <a href="#payments" id="payments"></a>
+
+| Code | HTTP | What to do |
+| --- | --- | --- |
+| `charge_not_found` | 404 | Use a charge ID from your own `successful_payment` message. A charge of another bot returns the same code. |
+| `subscription_not_found` | 404 | Use a subscription ID from your own `subscription_updated` update or `subscriptions.list`. |
+| `payment_not_found` | 404 | Check the payment ID and use one from your own payment updates. |
+| `merchant_not_ready` | 409 | Complete the checklist returned by `payment_readiness.get` (NexoCreator → Payments) before creating invoices. |
+| `refund_amount_exceeded` | 400 | Refund no more than the amount still refundable on the charge. |
+
+## Managed bots <a href="#managed-bots" id="managed-bots"></a>
+
+| Code | HTTP | What to do |
+| --- | --- | --- |
+| `managed_mode_disabled` | 403 | Managed bots are unavailable to your bot. Do not retry. |
+| `managed_bot_detached` | 403 | Your bot no longer manages this bot. Stop work for it and remove any token you stored. |
+| `token_not_issued` | 409 | The managed bot has no current token. Rotate the token with `managed_bots.rotate_token`. |
+
 ## Temporary failures <a href="#temporary-failures" id="temporary-failures"></a>
 
 | Code | HTTP | What to do |
 | --- | --- | --- |
-| `rate_limited` | 429 | Wait for the requested delay and pace the affected scope. |
+| `rate_limited` | 429 | Wait for the requested delay and pace the affected scope. See [Limits](limits.md#handle-a-rate-limit). |
 | `upstream_unavailable` | 503 | Honor `Retry-After` when present and use bounded retries with the original idempotency key. |
 | `timeout` | 504 | The outcome may be uncertain. Keep the original idempotency key and reconcile before initiating another action. |
 

@@ -12,6 +12,5 @@ The capabilities, supported media and reactions, effects, and limits reported by
 | `reactions.allowed_emoji` | Array of string | Yes | You can use these emoji for message reactions. |
 | `revision` | string | Yes | This is the version of the platform catalog, encoded as a decimal string. The value must match `^[0-9]+$`. |
 | `send_profile` | `"standard"` or `"restricted"` | Yes | This is the send rate profile currently applied to your bot. |
-| `webhook_egress_cidrs` | Array of string | Yes | The platform sends webhook requests from these IP ranges. Use them when configuring your endpoint's firewall. |
 
 Return to the [type index](../types.md) or find an operation in the [API index](../../api.md).

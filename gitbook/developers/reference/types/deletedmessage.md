@@ -9,5 +9,6 @@ The identity of a message reported as deleted.
 | `message_id` | string | Yes | This is the message ID within its chat, encoded as a decimal string. The value must match `^[1-9][0-9]*$`. |
 | `revision` | string | Yes | This is the deleted message's revision, encoded as a decimal string. The value must match `^[0-9]+$`. |
 | `state_version` | string | No | This version orders changes to the message's state and is encoded as a decimal string. The value must match `^[0-9]+$`. |
+| `topic_id` | string | No | This is the topic ID within the chat, when the event belongs to a topic. The value must match `^[1-9][0-9]*$`. |
 
 Return to the [type index](../types.md) or find an operation in the [API index](../../api.md).

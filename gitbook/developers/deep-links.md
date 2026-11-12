@@ -111,4 +111,4 @@ Generate a short-lived, opaque code that you can use only once. Store its accoun
 
 Keep the account-linking action idempotent because [updates can repeat](updates.md#order-and-duplicates). Ask the user to confirm the account you are about to link when the action changes access to their data.
 
-For message buttons that carry these links, continue with [Keyboards](keyboards.md). Other link entry points are listed on [Not available yet](not-available-yet.md).
+A Start link always opens the user's private chat with your bot. To work with your bot in a group, see [Groups](groups.md). For message buttons that carry these links, continue with [Keyboards](keyboards.md). Other link entry points are listed on [Not available yet](not-available-yet.md).

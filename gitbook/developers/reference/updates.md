@@ -27,7 +27,7 @@ Use one active polling consumer per bot. After successfully processing or durabl
 | `offset` | query | string | No | Pass the last processed update_id plus one to acknowledge earlier visible updates. A negative value -N keeps only the last N queued updates. The value must fit in a signed 64-bit integer. The value must match `^-?[0-9]+$`. |
 | `limit` | query | integer | No | Set the maximum number of results to return. A response may contain fewer results. The minimum is 1. The maximum is 100. The default is `100`. |
 | `timeout_seconds` | query | integer | No | Set the maximum time to wait for updates, in seconds. Zero returns immediately. The maximum is 50 seconds. The minimum is 0. The maximum is 50. The default is `0`. |
-| `allowed_updates` | query | string | No | Use a comma-separated list of update types. Omit it to keep the saved filter, or use an empty value to restore the default filter. The update types currently delivered are message, edited_message, callback_query, poll, poll_answer, my_chat_member, stopped_message_generation, messages_deleted, message_reaction, and updates_dropped. messages_deleted and message_reaction require opt-in. chat_member and message_reaction_count also require opt-in but do not currently produce updates. Other accepted update type names do not currently produce events. The value default selects the default set alongside any explicitly selected types. You always receive updates_dropped, regardless of the filter. The maximum length is 2,048 characters. |
+| `allowed_updates` | query | string | No | Use a comma-separated list of update types. Omit it to keep the saved filter, or use an empty value to restore the default filter. The update types currently delivered are message, edited_message, channel_post, edited_channel_post, callback_query, poll, poll_answer, my_chat_member, chat_member, chat_join_request, stopped_message_generation, managed_bot, messages_deleted, message_reaction, pre_checkout_query, subscription_updated, renewal_due, refund_request_updated, and updates_dropped. messages_deleted and message_reaction require opt-in. chat_member requires opt-in and reports group membership changes. chat_join_request reports group join requests. pre_checkout_query and subscription_updated report payment approval requests and subscription changes; renewal_due reports manual renewal reminders; refund_request_updated reports refund progress. message_reaction_count does not currently produce updates. Other accepted update type names may be reserved. The value default selects the default set alongside any explicitly selected types. You always receive updates_dropped, regardless of the filter. The maximum length is 2,048 characters. |
 
 ### Request <a href="#request" id="request"></a>
 
@@ -164,7 +164,7 @@ Example success response (HTTP 200). The SDK methods return `result`:
 
 Remove the webhook so your bot can receive updates through polling.
 
-Queued updates remain unless you set `drop_pending_updates: true`. Requests already sent to the previous endpoint can still arrive, so keep handling duplicates during the switch. Continue with [Updates](../updates.md) for polling offsets and delivery transitions.
+Queued updates remain unless you add the query parameter `drop_pending_updates=true`. Send no body. Requests already sent to the previous endpoint can still arrive, so keep handling duplicates during the switch. Continue with [Updates](../updates.md) for polling offsets and delivery transitions.
 
 ### Parameters <a href="#parameters-1" id="parameters-1"></a>
 
@@ -184,7 +184,7 @@ Do not send a request body.
 
 ### Errors <a href="#errors-1" id="errors-1"></a>
 
-HTTP 409 `idempotency_key_reused` means the same key was used for different webhook deletion parameters. Use the original request to retry that action.
+HTTP 409 `idempotency_key_reused` means the same key was used for different webhook deletion parameters. Use the original request to retry that action. HTTP 409 `delivery_mode_conflict` means the platform manages this bot's delivery, so there is no webhook to remove. HTTP 429 `rate_limited` means you changed webhook settings too often; retry after `retry_after`.
 
 ### Example <a href="#example-1" id="example-1"></a>
 
@@ -408,7 +408,7 @@ The HTTPS endpoint, verification settings, and update filter for webhook deliver
 
 | Field | Type | Required | Description and constraints |
 | --- | --- | --- | --- |
-| `allowed_updates` | Array of `"message"` or `"edited_message"` or `"channel_post"` or `"edited_channel_post"` or `"callback_query"` or `"inline_query"` or `"chosen_inline_result"` or `"shipping_query"` or `"pre_checkout_query"` or `"purchased_paid_media"` or `"subscription_updated"` or `"refund_request_updated"` or `"login_grant_revoked"` or `"poll"` or `"poll_answer"` or `"my_chat_member"` or `"chat_join_request"` or `"stopped_message_generation"` or `"managed_bot"` or `"guest_message"` or `"business_connection"` or `"business_envelope"` or `"business_transfer_updated"` or `"gift_purchase_updated"` or `"chat_boost"` or `"removed_chat_boost"` or `"default"` or `"updates_dropped"` or `"messages_deleted"` or `"chat_member"` or `"message_reaction"` or `"message_reaction_count"` | No | Select the update types to receive. Omit this field to keep the saved filter, or send an empty list to restore the default filter. The update types currently delivered are message, edited_message, callback_query, poll, poll_answer, my_chat_member, stopped_message_generation, messages_deleted, message_reaction, and updates_dropped. messages_deleted and message_reaction require opt-in. chat_member and message_reaction_count also require opt-in but do not currently produce updates. Other accepted update type names do not currently produce events. The value default selects the default set alongside any explicitly selected types. You always receive updates_dropped, regardless of the filter. Filter changes apply to new events. |
+| `allowed_updates` | Array of `"message"` or `"edited_message"` or `"channel_post"` or `"edited_channel_post"` or `"callback_query"` or `"inline_query"` or `"chosen_inline_result"` or `"shipping_query"` or `"pre_checkout_query"` or `"purchased_paid_media"` or `"subscription_updated"` or `"refund_request_updated"` or `"login_grant_revoked"` or `"poll"` or `"poll_answer"` or `"my_chat_member"` or `"chat_join_request"` or `"stopped_message_generation"` or `"managed_bot"` or `"guest_message"` or `"business_connection"` or `"business_envelope"` or `"business_transfer_updated"` or `"gift_purchase_updated"` or `"chat_boost"` or `"removed_chat_boost"` or `"business_message"` or `"edited_business_message"` or `"deleted_business_messages"` or `"default"` or `"updates_dropped"` or `"messages_deleted"` or `"chat_member"` or `"message_reaction"` or `"message_reaction_count"` | No | Filter changes apply to new events. |
 | `certificate` | object | No | Use this custom PEM X.509 certificate to verify your webhook server. Only the listed fields are allowed. |
 | `certificate.attach` | string | Yes | This is the name of the binary part in the same multipart request. Use the part name without an attach:// prefix. The value must match `^[A-Za-z0-9_-]{1,64}$`. |
 | `drop_pending_updates` | boolean | No | Set this to true to discard queued updates when applying this delivery change. The default is `false`. |
@@ -434,7 +434,7 @@ Send webhook settings in the JSON `payload` part. To supply a custom certificate
 
 ### Errors <a href="#errors-3" id="errors-3"></a>
 
-HTTP 400 `invalid_parameter` can identify an invalid URL, address, certificate, or setting. HTTP 409 `delivery_mode_conflict` means you should check the active delivery mode before retrying. See [Updates](../updates.md) for the complete settings and handler requirements.
+HTTP 400 `invalid_parameter` can identify an invalid URL, address, certificate, or setting. HTTP 409 `delivery_mode_conflict` means the platform manages this bot's delivery (`mode` is `internal` in `webhook.get`), so you cannot configure a webhook for it. See [Updates](../updates.md) for the complete settings and handler requirements.
 
 ### Example <a href="#example-3" id="example-3"></a>
 
@@ -581,7 +581,7 @@ An empty JSON object. Use `{}` when an operation requires a body but has no sett
 
 ### Errors <a href="#errors-4" id="errors-4"></a>
 
-HTTP 400 `invalid_parameter` means you should check your webhook settings. See [Updates](../updates.md) for ping handling and signature verification.
+HTTP 409 `delivery_mode_conflict` means no webhook is configured; set one with `webhook.set` first. HTTP 429 `rate_limited` means you ran a test less than ten seconds ago or all webhook connections are busy; retry after `retry_after`. HTTP 400 `invalid_parameter` means the request carried a query string, a body other than `{}`, or an invalid `Idempotency-Key`. See [Updates](../updates.md) for ping handling and signature verification.
 
 ### Example <a href="#example-4" id="example-4"></a>
 

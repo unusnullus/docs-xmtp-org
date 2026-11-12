@@ -4,7 +4,7 @@ description: "Check effective sending allowances, payload sizes and time windows
 
 # Limits and rate limits
 
-You can pace your bot and reject oversized input before sending a request. Read `platform.get` for the bot's effective limits. The values below describe the defaults, while the returned sending intervals and bursts describe the policy currently applied to your bot.
+You can pace your bot and reject oversized input before sending a request. Read `platform.get` for the bot's effective limits. The values below are defaults. The intervals and bursts that `platform.get` returns are the policy applied to your bot now.
 
 ## Effective sending policy <a href="#effective-sending-policy" id="effective-sending-policy"></a>
 
@@ -26,9 +26,11 @@ A restricted bot can continue in existing chats with lower allowances. It is hid
 
 | Operation | Default allowance | Burst or additional rule |
 | --- | --- | --- |
+| All requests | 300 requests per second per bot. | Burst of 600. |
 | Private messages | One message per second in each chat. | Five per chat. |
 | Global messages | 30 message units per second across the bot. | 120 units. |
-| Message mutations such as edits | 60 requests per second across the bot. | 120 requests. Edits other than live-location updates also allow one per second in each chat, with a burst of five. |
+| Chat operations other than sends, such as edits, deletions and history reads | 60 requests per second across the bot. | 120 requests. Edits other than live-location updates also allow one per second in each chat, with a burst of five. |
+| History reads (`messages.history`, `messages.get`) | Five per second per bot. | Burst of 20. |
 | Draft changes | Five changes per second in each chat. | Coalesce intermediate changes before sending. |
 | Chat actions | One per second in each chat. | Repeated actions within the interval are combined. |
 | Polling | Ten requests per second per bot. | Burst of 20. Run one poller. |
@@ -39,7 +41,7 @@ A message unit is one message sent by your bot. An album or forward or copy batc
 
 ## Handle a rate limit <a href="#handle-a-rate-limit" id="handle-a-rate-limit"></a>
 
-On HTTP 429, read `scope` and wait at least as long as the server requests. Use the greatest available value among `Retry-After`, `error.retry_after` in seconds and `error.retry_after_ms` converted to seconds, then add jitter. Pace each chat separately while respecting the bot's global interval.
+On HTTP 429, read `error.scope`, or `error.details.scope` when the top-level field is absent, and wait at least as long as the server requests. Use the greatest available value among `Retry-After`, `error.retry_after` in seconds and `error.retry_after_ms` converted to seconds, then add jitter. Pace each chat separately while respecting the bot's global interval.
 
 The `scope` identifies which allowance you reached:
 
@@ -49,12 +51,12 @@ The `scope` identifies which allowance you reached:
 | `bot` | Requests or message units across your bot. |
 | `ip` | Requests from your service's IP address. |
 | `authentication` | Token-authentication attempts. |
-| `operation` | Calls to the affected operation, such as polling or webhook testing. |
+| `operation` | Polling requests. |
 | `configuration` | Changes to your bot's profile, commands or delivery settings. |
 | `upload` | Concurrent uploads. |
 | `file` | File work, including library quota or temporary capacity limits. |
 
-If you receive another scope value, still honor the wait and retain it in your diagnostics.
+Some limits, such as `webhook.test`, return no scope. Honor the wait anyway. If you receive another scope value, still honor the wait and retain it in your diagnostics.
 
 Retry a change with its original idempotency key, body and file bytes. The SDKs already retry eligible failures within their attempt and deadline limits. Avoid wrapping them in an unlimited retry loop. [Errors](errors.md#retries-and-sdk-behavior) explains which failures are retried and how to handle an uncertain result.
 
@@ -92,6 +94,7 @@ One KiB is 1,024 bytes, and one MiB is 1,048,576 bytes. These limits use binary 
 | Other media upload | 50 MiB (52,428,800 bytes). Thumbnails have a smaller limit. |
 | Photo fetched by URL | 5 MiB (5,242,880 bytes). |
 | Other media fetched by URL | 20 MiB (20,971,520 bytes), where that media type accepts URLs. |
+| Sticker upload | 512 KiB (524,288 bytes) for a static WebP sticker, 256 KiB for a WebM video sticker and 64 KiB compressed for a TGS animated sticker. See [Stickers and dice](messages/stickers-and-dice.md#sticker-formats). |
 | Bot download | 20 MiB (20,971,520 bytes) for the complete original, including requests for a byte range. |
 | Bot file library | 5 GiB (5,368,709,120 bytes). |
 | Encoded message | 786,432 bytes (768 KiB), including its reply and service context. |
@@ -108,6 +111,7 @@ Use [Files and media](files.md) for the full table of types, MIME values, thumbn
 | --- | --- |
 | Album | 2 to 10 items. |
 | Forward, copy or delete batch | Up to 100 message IDs. |
+| Pinned messages in a private chat | 1,000. |
 | Polling result | 1 to 100 updates requested. |
 | Long-poll timeout | 0 to 50 seconds. Set your client's request deadline above the chosen wait. |
 | Poll opening period or future close | 5 to 2,628,000 seconds (about 30 days). |
@@ -118,7 +122,46 @@ Use [Files and media](files.md) for the full table of types, MIME values, thumbn
 | Idempotency response | 24 hours. |
 | Compact idempotency receipt | Seven days. |
 
-After the response body expires, `idempotency_key_expired` can include `details.result_ref`. Reconcile that result before deciding whether a new action is necessary. Do not choose a fresh key just to bypass an expired receipt. See [Making requests](making-requests.md).
+After the response body expires, `idempotency_key_expired` can include `details.result_ref`. Reconcile that result before deciding whether a new action is necessary. Do not choose a fresh key to bypass an expired receipt. See [Making requests](making-requests.md).
+
+## Webhooks and update delivery <a href="#webhooks-and-update-delivery" id="webhooks-and-update-delivery"></a>
+
+| Setting or behavior | Limit |
+| --- | --- |
+| Webhook URL | HTTPS on port 443, 80, 88 or 8443, up to 2,048 bytes. |
+| Simultaneous webhook requests (`max_connections`) | 1 to 100. The default is 40. |
+| Webhook `secret_token` | 1 to 256 ASCII letters, digits, underscores or hyphens. |
+| Custom webhook certificate | One PEM X.509 certificate of up to 16 KiB. |
+| Webhook response deadline | 30 seconds, with 5 seconds to connect. |
+| Webhook response body with an operation | Up to 1 MiB. A larger body still acknowledges the update. |
+| `Retry-After` honored from your receiver | 1 second to 1 hour. |
+| Signature timestamp tolerance in the SDK verifiers | 300 seconds. |
+| Pending updates per bot | 1,000,000. Older unacknowledged updates are dropped beyond this. |
+| Update retention | 24 hours. |
+| `allowed_updates` in a polling query | Up to 2,048 bytes. |
+
+[Polling and webhooks](updates.md#acknowledgements-and-retries) explains retry timing and what happens when a receiver keeps failing.
+
+## Groups and topics <a href="#groups-and-topics" id="groups-and-topics"></a>
+
+| Property | Limit |
+| --- | --- |
+| Group title | 1 to 128 characters. |
+| Group description | Up to 255 characters. |
+| Topic name | 1 to 128 characters. |
+| Administrator custom title | Up to 16 characters, without emoji or control characters. |
+| Invitation member limit | 1 to 99,999 concurrent members. It cannot be combined with join requests. |
+| Member restriction duration | 30 seconds to 366 days. A shorter, longer or omitted duration makes the restriction permanent. |
+| History page (`messages.history`) | 1 to 100 messages, 50 by default. |
+| Bots in one group | 20. |
+| Administrators in one group | 50. |
+| Pinned messages in one group | 1,000. |
+| Active invite links | 1,000 per creator in each group. |
+| Active topics in one forum | 10,000. |
+| Pending join request | 30 days, then it expires. |
+| Bot deletion window in a group | 48 hours after the message was sent, including your bot's own messages. |
+
+The group's member permissions also apply to your bot. A send of a content type the group does not allow fails with `send_permission_denied`, and `details.permission` names it. Slow mode and anti-spam apply to people, not to bots. See [Errors](errors.md#groups-channels-and-topics).
 
 ## Bot profile and ownership <a href="#bot-profile-and-ownership" id="bot-profile-and-ownership"></a>
 

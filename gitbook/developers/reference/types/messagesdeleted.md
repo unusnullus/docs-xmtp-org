@@ -7,5 +7,6 @@ The messages reported as deleted from one chat.
 | `chat` | [Chat](chat.md) | No | This identifies the chat associated with the message or event. |
 | `message_ids` | Array of string | Yes | These are message IDs within the specified chat, encoded as decimal strings. |
 | `message_ids[]` | string | Per item | The value must match `^[1-9][0-9]*$`. |
+| `topic_id` | string | No | This is the topic ID within the chat, when the event belongs to a topic. The value must match `^[1-9][0-9]*$`. |
 
 Return to the [type index](../types.md) or find an operation in the [API index](../../api.md).

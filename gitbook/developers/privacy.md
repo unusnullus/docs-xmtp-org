@@ -14,7 +14,8 @@ Starting a bot does not give it access to your other conversations or their encr
 | --- | --- |
 | Your user ID, name, available handle and app language. | Your other conversations, encryption keys, device IDs or IP address. |
 | Messages, files, commands and button presses in the bot chat. | Your phone number or wallet address automatically. |
-| Contacts and locations you choose to send. | Access to other ARX chats. |
+| Contacts and locations you choose to send. | Access to other ARX chats, unless you connect the bot to your account. |
+| Chats you choose to share through a Business connection. | Chats you did not choose. |
 
 Photos, audio, video, documents and contact cards can contain personal information. The developer can read content you copy into the bot chat, including material from another conversation. Share only what the service needs.
 
@@ -22,7 +23,7 @@ Photos, audio, video, documents and contact cards can contain personal informati
 
 Open Privacy policy in the bot's profile before sending sensitive information. A bot may link its own policy or adopt the standard ARX bot policy. You can also try `/privacy` or `/help` if the bot supports them.
 
-Check what the developer collects, why it is needed, how long it is retained, which providers receive it and how to contact the developer. Some bots send content to external services, such as AI providers. [Official bots](official-bots.md) describes the data used by ARX's official bots.
+Check what the developer collects, why it is needed, how long it is retained, which providers receive it and how to contact the developer. Some bots send content to external services, such as AI providers.
 
 ## Block a bot <a href="#block-a-bot" id="block-a-bot"></a>
 

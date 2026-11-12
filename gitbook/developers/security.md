@@ -34,13 +34,13 @@ Suspension also cancels outstanding ownership offers. It does not itself rotate 
 
 ## Verify updates before acting <a href="#verify-updates-before-acting" id="verify-updates-before-acting"></a>
 
-For webhooks, verify the signature over the raw request bytes, validate the timestamp and check the secret header you set before parsing or accepting work. Compare signatures in constant time and keep your clock synchronized. IP allowlisting, when `platform.get.webhook_egress_cidrs` supplies ranges, is an additional check.
+For webhooks, verify the signature over the raw request bytes, validate the timestamp and check the secret header you set before parsing or accepting work. Compare signatures in constant time and keep your clock synchronized. Signature verification is always required. Without an SDK, follow [Verify without an SDK](updates.md#verify-without-an-sdk).
 
 Save an update and its `update_id` durably before acknowledging it. Use your own receipt for external effects such as sending an email, so redelivery does not repeat the action. The API's idempotency key covers API operations, not effects in your own services. See [Updates](updates.md) for acknowledgement and redelivery rules.
 
 ## Validate user input and files <a href="#validate-user-input-and-files" id="validate-user-input-and-files"></a>
 
-Authorize commands and callbacks on your server. A visible command or button does not establish permission. Keep sensitive callback state behind a short opaque identifier, and make account-linking codes expire after one use.
+Authorize commands and callbacks on your server. A visible command or button does not establish permission. In a group, any member can press your bot's buttons and send it commands; check the sender's ID and, where it matters, their role with `members.get` before acting. Keep sensitive callback state behind a short opaque identifier, and make account-linking codes expire after one use.
 
 Limit file size and processing time, sanitize filenames and isolate converters. Treat extensions and supplied MIME types as untrusted, even when ARX has validated the media. Follow the [file access and retention rules](files.md#file-identity-and-retention) when deciding what to store.
 
@@ -48,7 +48,7 @@ If your service fetches user-supplied URLs, validate the destination address and
 
 ## Explain your data use <a href="#explain-your-data-use" id="explain-your-data-use"></a>
 
-Your bot can receive user IDs, available handles, language and shared content. Contacts and locations require the user's action. A manually entered contact is unverified input. The Bot API does not supply other conversations, user IP addresses, device IDs or encryption keys.
+Your bot can receive user IDs, available handles, language and shared content. In groups, it also receives members' messages and membership changes, limited by its group privacy setting and administrator rights. Contacts and locations require the user's action. A manually entered contact is unverified input. The Bot API does not supply other conversations, user IP addresses, device IDs or encryption keys.
 
 Publish a privacy policy that explains purpose, retention, external providers and a contact for data requests. Routine logs should use a sanitized `request_id` rather than message content or credentials. Opt in to `messages_deleted` if your service needs deletion updates, and define how those updates affect your own stored copies.
 
