@@ -1,5 +1,10 @@
 # 7 Tokenomics
 
+{% hint style="info" %}
+**Status**
+This section describes the planned token model. It is not live. The token, staking, and governance contracts are currently deployed on the Sepolia testnet; see [Architecture](../../usdarx/architecture.md).
+{% endhint %}
+
 The ARX token is the core economic engine of the ecosystem. It defines how value is generated, distributed, and sustained among users, validators, developers, and governance participants. Designed for long-term equilibrium, the token supports every layer of network coordination including payments, staking, rewards, and decision-making.
 
 ### Framework Overview
