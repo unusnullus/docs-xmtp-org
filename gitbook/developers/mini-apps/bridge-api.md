@@ -21,8 +21,8 @@ To pin an exact bridge version instead, load its versioned path with Subresource
 
 ```html
 <script
-  src="https://www.arx.pro/js/mini-apps/5f487ef36452209a50a554244f281e84fab80b6ee5a5fb512849597cb14a45f9/aerx-web-app.js"
-  integrity="sha384-0DFoLHxeT+okx4BEJgAgL9/RfqLtsWq58Dg6th6e37/LWWJlZzZmDbZ69o5KtNkv"
+  src="https://www.arx.pro/js/mini-apps/bd1e69fd9da5f2af606649b317ff7423d57abe0219bd65feeb173518619d335e/aerx-web-app.js"
+  integrity="sha384-z2gMeCS7JEaPszwxNNB0lKuUqKdaosWMkpNKsGFS4BGNKd827IQz6OOpyp558yZa"
   crossorigin="anonymous"></script>
 ```
 
