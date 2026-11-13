@@ -8,7 +8,7 @@ ARX operates at the strategic intersection of three high-growth verticals. Toget
 
 * **Communication:** Private, encrypted messaging that serves as the primary entry point to all ARX services.
 * **Fintech:** A robust suite including a multi-chain wallet, pay-links, and a crypto card for seamless peer-to-peer and business transactions.
-* **Connection:** A decentralized VPN (dVPN) and eSIM infrastructure providing private and censorship-resistant network access.
+* **Connection:** A built-in VPN and eSIM data plans providing private network access.
 
 ---
 
