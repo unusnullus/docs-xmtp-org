@@ -1,6 +1,6 @@
 # GroupInviteUrl
 
-GroupInviteUrl is a group contract model. Availability is controlled by the evaluated group feature flags.
+GroupInviteUrl describes a public group payload.
 
 The value has the type string.
 

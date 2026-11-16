@@ -57,7 +57,7 @@ Find the models for your workflow below. Each entry explains what you send or re
 | [CallbackAnswer](types/callbackanswer.md) | The notification, alert, or bot start link used to answer an inline button press. |
 | [CallbackQuery](types/callbackquery.md) | An inline button press received by your bot. |
 | [GroupCallbackQuery](types/groupcallbackquery.md) | A callback from a current group member, resolved from the canonical message/button. |
-| [GroupUpdateCallbackQuery](types/groupupdatecallbackquery.md) | GroupUpdateCallbackQuery is a group contract model. |
+| [GroupUpdateCallbackQuery](types/groupupdatecallbackquery.md) | GroupUpdateCallbackQuery describes a public group payload. |
 | [InlineButton](types/inlinebutton.md) | An inline keyboard button. |
 | [InlineButtonCallback](types/inlinebuttoncallback.md) | A button that sends a callback query to your bot. |
 | [InlineButtonCopyText](types/inlinebuttoncopytext.md) | A button that copies its configured text to the user's clipboard. |
@@ -144,8 +144,8 @@ Find the models for your workflow below. Each entry explains what you send or re
 | [BusinessEndpointSignedPrekey](types/businessendpointsignedprekey.md) | Public Business endpoint data for BusinessEndpointSignedPrekey. |
 | [BusinessEnvelope](types/businessenvelope.md) | An encrypted Business event. |
 | [BusinessEnvelopeAcceptance](types/businessenvelopeacceptance.md) | Confirmation that the complete operation was recorded for delivery. |
-| [ChannelChat](types/channelchat.md) | The identity of a public channel. |
-| [ChannelChatFullInfo](types/channelchatfullinfo.md) | Current public channel FullInfo for a bot member or administrator. |
+| [ChannelChat](types/channelchat.md) | The identity of a channel. |
+| [ChannelChatFullInfo](types/channelchatfullinfo.md) | Current public or private channel FullInfo for a current bot administrator. |
 | [ChannelMember](types/channelmember.md) | A channel membership with its status and administrator rights. |
 | [ChannelMemberUpdated](types/channelmemberupdated.md) | A change to your bot's membership in a channel. |
 | [Content](types/content.md) | The content of a received message. |
@@ -166,18 +166,18 @@ Find the models for your workflow below. Each entry explains what you send or re
 | [ForumTopicCapabilities](types/forumtopiccapabilities.md) | Operations currently available to your bot for this forum topic. |
 | [ForwardMessages](types/forwardmessages.md) | The source message IDs and delivery options for a forward request. |
 | [ForwardOrigin](types/forwardorigin.md) | The original sender and source message attribution retained by a forwarded message. |
-| [GroupAdministrators](types/groupadministrators.md) | GroupAdministrators is a group contract model. |
+| [GroupAdministrators](types/groupadministrators.md) | GroupAdministrators describes a public group payload. |
 | [GroupBanMember](types/groupbanmember.md) | Arguments for members.ban in Super Groups with group moderation enabled. |
 | [GroupChat](types/groupchat.md) | A server-managed Super Group visible to a bot. |
 | [GroupChatFullInfo](types/groupchatfullinfo.md) | Group metadata available to a member bot. invite_link is the bot's own primary link. has_visible_history and has_aggressive_anti_spam_enabled are administrator-only. |
-| [GroupContentMessage](types/groupcontentmessage.md) | GroupContentMessage is a group contract model. |
+| [GroupContentMessage](types/groupcontentmessage.md) | GroupContentMessage describes a public group payload. |
 | [GroupCreateInviteLink](types/groupcreateinvitelink.md) | Arguments for invite_links.create in Super Groups with group moderation enabled. |
 | [GroupEditInviteLink](types/groupeditinvitelink.md) | Arguments for invite_links.edit in Super Groups with group moderation enabled. |
-| [GroupExternalOriginChannel](types/groupexternaloriginchannel.md) | GroupExternalOriginChannel is a group contract model. |
-| [GroupExternalOriginChat](types/groupexternaloriginchat.md) | GroupExternalOriginChat is a group contract model. |
+| [GroupExternalOriginChannel](types/groupexternaloriginchannel.md) | GroupExternalOriginChannel describes a public group payload. |
+| [GroupExternalOriginChat](types/groupexternaloriginchat.md) | GroupExternalOriginChat describes a public group payload. |
 | [GroupExternalOriginHidden](types/groupexternaloriginhidden.md) | The original time without a private source or author identifier. |
-| [GroupExternalOriginUser](types/groupexternaloriginuser.md) | GroupExternalOriginUser is a group contract model. |
-| [GroupExternalOriginVisible](types/groupexternaloriginvisible.md) | GroupExternalOriginVisible is a group contract model. |
+| [GroupExternalOriginUser](types/groupexternaloriginuser.md) | GroupExternalOriginUser describes a public group payload. |
+| [GroupExternalOriginVisible](types/groupexternaloriginvisible.md) | GroupExternalOriginVisible describes a public group payload. |
 | [GroupExternalReplyHidden](types/groupexternalreplyhidden.md) | A private or otherwise hidden source summary. |
 | [GroupExternalReplyInfo](types/groupexternalreplyinfo.md) | An external reply summary. |
 | [GroupExternalReplyVisible](types/groupexternalreplyvisible.md) | An admitted public group or channel source, with both canonical source IDs. |
@@ -188,36 +188,36 @@ Find the models for your workflow below. Each entry explains what you send or re
 | [GroupForumEdit](types/groupforumedit.md) | Change a group forum topic's name or icon. |
 | [GroupForumReopen](types/groupforumreopen.md) | Reopen an existing group forum topic. |
 | [GroupGetMessages](types/groupgetmessages.md) | The message IDs to read, for example the message_id of a reply reference. |
-| [GroupInaccessibleMessage](types/groupinaccessiblemessage.md) | GroupInaccessibleMessage is a group contract model. |
+| [GroupInaccessibleMessage](types/groupinaccessiblemessage.md) | GroupInaccessibleMessage describes a public group payload. |
 | [GroupInviteLink](types/groupinvitelink.md) | A bot's own invite link. invite_code is the hash segment used by Bot API paths; the human API's internal link_id is not exposed. |
-| [GroupInviteUrl](types/groupinviteurl.md) | GroupInviteUrl is a group contract model. |
-| [GroupJoinRequest](types/groupjoinrequest.md) | GroupJoinRequest is a group contract model. |
+| [GroupInviteUrl](types/groupinviteurl.md) | GroupInviteUrl describes a public group payload. |
+| [GroupJoinRequest](types/groupjoinrequest.md) | GroupJoinRequest describes a public group payload. |
 | [GroupListAdministrators](types/grouplistadministrators.md) | Arguments for members.list_admins in Super Groups with group moderation enabled. |
 | [GroupMember](types/groupmember.md) | An authoritative membership variant. |
-| [GroupMemberAdministrator](types/groupmemberadministrator.md) | GroupMemberAdministrator is a group contract model. |
-| [GroupMemberBanned](types/groupmemberbanned.md) | GroupMemberBanned is a group contract model. |
-| [GroupMemberCount](types/groupmembercount.md) | GroupMemberCount is a group contract model. |
-| [GroupMemberLeft](types/groupmemberleft.md) | GroupMemberLeft is a group contract model. |
-| [GroupMemberMember](types/groupmembermember.md) | GroupMemberMember is a group contract model. |
-| [GroupMemberOwner](types/groupmemberowner.md) | GroupMemberOwner is a group contract model. |
-| [GroupMemberRestricted](types/groupmemberrestricted.md) | GroupMemberRestricted is a group contract model. |
+| [GroupMemberAdministrator](types/groupmemberadministrator.md) | GroupMemberAdministrator describes a public group payload. |
+| [GroupMemberBanned](types/groupmemberbanned.md) | GroupMemberBanned describes a public group payload. |
+| [GroupMemberCount](types/groupmembercount.md) | GroupMemberCount describes a public group payload. |
+| [GroupMemberLeft](types/groupmemberleft.md) | GroupMemberLeft describes a public group payload. |
+| [GroupMemberMember](types/groupmembermember.md) | GroupMemberMember describes a public group payload. |
+| [GroupMemberOwner](types/groupmemberowner.md) | GroupMemberOwner describes a public group payload. |
+| [GroupMemberRestricted](types/groupmemberrestricted.md) | GroupMemberRestricted describes a public group payload. |
 | [GroupMemberUpdated](types/groupmemberupdated.md) | A membership transition. user is the actor, while old.user and new.user identify the subject. |
 | [GroupMessage](types/groupmessage.md) | A group message already routed to this bot. |
-| [GroupMessageHistory](types/groupmessagehistory.md) | One page of group history visible to your bot. |
-| [GroupMessageReaction](types/groupmessagereaction.md) | GroupMessageReaction is a group contract model. |
+| [GroupMessageHistory](types/groupmessagehistory.md) | One page of group or admin-authorized channel history visible to your bot. |
+| [GroupMessageReaction](types/groupmessagereaction.md) | GroupMessageReaction describes a public group payload. |
 | [GroupMessageReactionCount](types/groupmessagereactioncount.md) | Anonymous reaction totals, at most once per message per minute and with at most two minutes delay. |
 | [GroupMessages](types/groupmessages.md) | The requested messages your bot can currently read, in ascending message_id order. |
-| [GroupMessagesDeleted](types/groupmessagesdeleted.md) | GroupMessagesDeleted is a group contract model. |
+| [GroupMessagesDeleted](types/groupmessagesdeleted.md) | GroupMessagesDeleted describes a public group payload. |
 | [GroupPermissions](types/grouppermissions.md) | Group defaults or member restrictions. |
 | [GroupPromoteMember](types/grouppromotemember.md) | Arguments for members.promote in Super Groups with group moderation enabled. |
-| [GroupQuotedContentMessage](types/groupquotedcontentmessage.md) | GroupQuotedContentMessage is a group contract model. |
-| [GroupQuotedMessage](types/groupquotedmessage.md) | GroupQuotedMessage is a group contract model. |
-| [GroupQuotedServiceMessage](types/groupquotedservicemessage.md) | GroupQuotedServiceMessage is a group contract model. |
+| [GroupQuotedContentMessage](types/groupquotedcontentmessage.md) | GroupQuotedContentMessage describes a public group payload. |
+| [GroupQuotedMessage](types/groupquotedmessage.md) | GroupQuotedMessage describes a public group payload. |
+| [GroupQuotedServiceMessage](types/groupquotedservicemessage.md) | GroupQuotedServiceMessage describes a public group payload. |
 | [GroupReply](types/groupreply.md) | One level of an admitted local quote, a content-free message_id reference for an edit, or an admitted external source summary. |
 | [GroupRequestChat](types/grouprequestchat.md) | The request_chat action fields. |
 | [GroupRestrictMember](types/grouprestrictmember.md) | Arguments for members.restrict in Super Groups with group moderation enabled. |
 | [GroupSenderChat](types/groupsenderchat.md) | The real group or channel identity of an anonymous sender or automatic forward. |
-| [GroupServiceMessage](types/groupservicemessage.md) | GroupServiceMessage is a group contract model. |
+| [GroupServiceMessage](types/groupservicemessage.md) | GroupServiceMessage describes a public group payload. |
 | [GroupSetChatPhoto](types/groupsetchatphoto.md) | Arguments for chats.set_photo in Super Groups with group moderation enabled. |
 | [GroupSetCustomTitle](types/groupsetcustomtitle.md) | Arguments for members.set_custom_title in Super Groups with group moderation enabled. |
 | [GroupSetMemberTag](types/groupsetmembertag.md) | Arguments reserved for member tags; no Bot API route is registered for this model. |
@@ -225,14 +225,14 @@ Find the models for your workflow below. Each entry explains what you send or re
 | [GroupUnbanMember](types/groupunbanmember.md) | Arguments for members.unban in Super Groups with group moderation enabled. |
 | [GroupUpdate](types/groupupdate.md) | Each group update contains exactly one payload matching type. |
 | [GroupUpdateChat](types/groupupdatechat.md) | Arguments for chats.update in Super Groups with group moderation enabled. |
-| [GroupUpdateChatJoinRequest](types/groupupdatechatjoinrequest.md) | GroupUpdateChatJoinRequest is a group contract model. |
-| [GroupUpdateChatMember](types/groupupdatechatmember.md) | GroupUpdateChatMember is a group contract model. |
-| [GroupUpdateEditedMessage](types/groupupdateeditedmessage.md) | GroupUpdateEditedMessage is a group contract model. |
-| [GroupUpdateMessage](types/groupupdatemessage.md) | GroupUpdateMessage is a group contract model. |
-| [GroupUpdateMessageReaction](types/groupupdatemessagereaction.md) | GroupUpdateMessageReaction is a group contract model. |
-| [GroupUpdateMessageReactionCount](types/groupupdatemessagereactioncount.md) | GroupUpdateMessageReactionCount is a group contract model. |
-| [GroupUpdateMessagesDeleted](types/groupupdatemessagesdeleted.md) | GroupUpdateMessagesDeleted is a group contract model. |
-| [GroupUpdateMyChatMember](types/groupupdatemychatmember.md) | GroupUpdateMyChatMember is a group contract model. |
+| [GroupUpdateChatJoinRequest](types/groupupdatechatjoinrequest.md) | GroupUpdateChatJoinRequest describes a public group payload. |
+| [GroupUpdateChatMember](types/groupupdatechatmember.md) | GroupUpdateChatMember describes a public group payload. |
+| [GroupUpdateEditedMessage](types/groupupdateeditedmessage.md) | GroupUpdateEditedMessage describes a public group payload. |
+| [GroupUpdateMessage](types/groupupdatemessage.md) | GroupUpdateMessage describes a public group payload. |
+| [GroupUpdateMessageReaction](types/groupupdatemessagereaction.md) | GroupUpdateMessageReaction describes a public group payload. |
+| [GroupUpdateMessageReactionCount](types/groupupdatemessagereactioncount.md) | GroupUpdateMessageReactionCount describes a public group payload. |
+| [GroupUpdateMessagesDeleted](types/groupupdatemessagesdeleted.md) | GroupUpdateMessagesDeleted describes a public group payload. |
+| [GroupUpdateMyChatMember](types/groupupdatemychatmember.md) | GroupUpdateMyChatMember describes a public group payload. |
 | [GuardQueryAcknowledged](types/guardqueryacknowledged.md) | True when the join request decision or registered Mini App URL was accepted. |
 | [GuestDisclosedContent](types/guestdisclosedcontent.md) | Caller-disclosed text and entities. |
 | [GuestDisclosedQuote](types/guestdisclosedquote.md) | An optional client-asserted quote. |
@@ -376,8 +376,8 @@ Find the models for your workflow below. Each entry explains what you send or re
 | [ChecklistTask](types/checklisttask.md) | A checklist task with its identifier, label, and completion state. |
 | [ChecklistTaskText](types/checklisttasktext.md) | A checklist task label and its formatting entities. |
 | [ChecklistTitle](types/checklisttitle.md) | The checklist heading and its formatting entities. |
-| [GroupUpdatePoll](types/groupupdatepoll.md) | GroupUpdatePoll is a group contract model. |
-| [GroupUpdatePollAnswer](types/groupupdatepollanswer.md) | GroupUpdatePollAnswer is a group contract model. |
+| [GroupUpdatePoll](types/groupupdatepoll.md) | GroupUpdatePoll describes a public group payload. |
+| [GroupUpdatePollAnswer](types/groupupdatepollanswer.md) | GroupUpdatePollAnswer describes a public group payload. |
 | [InputChecklist](types/inputchecklist.md) | The title, tasks, and collaboration settings for a new checklist. |
 | [InputChecklistContent](types/inputchecklistcontent.md) | The checklist content to send in a new message. |
 | [InputChecklistTask](types/inputchecklisttask.md) | One task to create in a checklist, with an identifier unique within that checklist. |
@@ -654,7 +654,7 @@ Find the models for your workflow below. Each entry explains what you send or re
 | [GroupBotPrivacyChangedService](types/groupbotprivacychangedservice.md) | An immediate privacy-mode change. |
 | [GroupChatSharedService](types/groupchatsharedservice.md) | A group or channel selected through request_chat. |
 | [GroupLifecycleService](types/grouplifecycleservice.md) | A group lifecycle service. |
-| [GroupService](types/groupservice.md) | GroupService is a group contract model. |
+| [GroupService](types/groupservice.md) | GroupService describes a public group payload. |
 | [ManagedBotCreatedService](types/managedbotcreatedservice.md) | A platform service message confirming the managed bot created by the human in the private chat with its manager. |
 | [MemberUpdated](types/memberupdated.md) | A change to a user's membership status in a chat. |
 | [MessagePinnedService](types/messagepinnedservice.md) | A service event identifying a message that was pinned. |
@@ -680,8 +680,8 @@ Find the models for your workflow below. Each entry explains what you send or re
 | [UpdateBusinessConnection](types/updatebusinessconnection.md) | An update reporting the connected account state or permissions. |
 | [UpdateBusinessEnvelope](types/updatebusinessenvelope.md) | A raw encrypted Business update for polling or webhook delivery. |
 | [UpdateCallbackQuery](types/updatecallbackquery.md) | An update carrying an inline button press. |
-| [UpdateChannelPost](types/updatechannelpost.md) | A new post in a public channel. |
-| [UpdateEditedChannelPost](types/updateeditedchannelpost.md) | An edited post in a public channel. |
+| [UpdateChannelPost](types/updatechannelpost.md) | A new post in a channel. |
+| [UpdateEditedChannelPost](types/updateeditedchannelpost.md) | An edited post in a channel. |
 | [UpdateEditedMessage](types/updateeditedmessage.md) | An update carrying an edited message. |
 | [UpdateGuestMessage](types/updateguestmessage.md) | A Guest invocation for this bot only. |
 | [UpdateInlineQuery](types/updateinlinequery.md) | An inline query update containing the requesting user, query text and answer deadline. |

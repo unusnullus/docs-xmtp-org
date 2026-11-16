@@ -33,7 +33,7 @@ Each route uses the configured API base URL. [Shared request rules and errors](.
 
 `GET /bot-api/v1/chats/{chat_id}/administrators`
 
-List the owner and current administrators of a Super Group. Your bot must be a current member; it needs no administrator right.
+List the owner and current administrators of a Super Group or channel. In a group, your bot must be a current member; it needs no administrator right. In a channel, your bot must be a current administrator.
 
 By default the list contains people only. Set `include_bots=true` to include other bot administrators. Your own bot appears whenever it is an administrator. Each entry is a member object with `status` `owner` or `administrator`; administrator entries also carry their rights and `can_be_edited`, which tells you whether your bot may change that administrator.
 
@@ -56,7 +56,7 @@ Do not send a request body.
 
 ### Errors <a href="#errors" id="errors"></a>
 
-HTTP 404 `chat_not_found` means the group does not exist or your bot is not a member. HTTP 400 `invalid_request` means the query contains a parameter other than `include_bots`, or a value other than `true` or `false`. See [Errors](../errors.md) for the shared error format.
+HTTP 404 `chat_not_found` means the group does not exist or your bot is not a member, or the channel does not exist or your bot is not one of its administrators. HTTP 400 `invalid_request` means the query contains a parameter other than `include_bots`, or a value other than `true` or `false`. See [Errors](../errors.md) for the shared error format.
 
 ### Example <a href="#example" id="example"></a>
 
@@ -1064,7 +1064,7 @@ Example success response (HTTP 200). The SDK methods return `result`:
 
 `GET /bot-api/v1/chats/{chat_id}/member_count`
 
-Read the current number of members in a Super Group. Your bot must be a current member; it needs no administrator right.
+Read the current number of members in a Super Group, or of subscribers in a channel. In a group, your bot must be a current member; it needs no administrator right. In a channel, your bot must be a current administrator.
 
 The result is a single non-negative integer that reflects the group at the time of the request. This is a read, so you can repeat it freely.
 
@@ -1086,7 +1086,7 @@ Do not send a request body.
 
 ### Errors <a href="#errors-8" id="errors-8"></a>
 
-HTTP 404 `chat_not_found` means the group does not exist or your bot is not a member. HTTP 403 `capability_not_available` means group moderation is not available to your bot. See [Errors](../errors.md) for the shared error format.
+HTTP 404 `chat_not_found` means the group does not exist or your bot is not a member, or the channel does not exist or your bot is not one of its administrators. HTTP 403 `capability_not_available` means group moderation is not available to your bot. See [Errors](../errors.md) for the shared error format.
 
 ### Example <a href="#example-8" id="example-8"></a>
 
@@ -1173,9 +1173,9 @@ Example success response (HTTP 200). The SDK methods return `result`:
 
 `GET /bot-api/v1/chats/{chat_id}/members/{user_id}`
 
-Read one member of a Super Group. Pass the user's decimal ID, or `@username` for an exact, case-insensitive handle match.
+Read one member of a Super Group or channel. Pass the user's decimal ID, or `@username` for an exact, case-insensitive handle match. In a channel, pass the decimal ID only.
 
-Your bot can always read its own membership. Reading another user requires your bot to be a current administrator; no specific right is needed. The result reports `status` (`owner`, `administrator`, `member`, `restricted`, `left` or `banned`) with the fields that apply: administrator rights and `can_be_edited`, effective permissions for a restricted member, and `until_at` for a temporary sanction. Resolving a username returns the canonical user ID and grants no extra authority.
+Your bot can always read its own membership. Reading another user requires your bot to be a current administrator; no specific right is needed. In a channel, every read requires your bot to be a current administrator. The result reports `status` (`owner`, `administrator`, `member`, `restricted`, `left` or `banned`) with the fields that apply: administrator rights and `can_be_edited`, effective permissions for a restricted member, and `until_at` for a temporary sanction. Resolving a username returns the canonical user ID and grants no extra authority.
 
 ### Parameters <a href="#parameters-9" id="parameters-9"></a>
 
@@ -1196,7 +1196,7 @@ Do not send a request body.
 
 ### Errors <a href="#errors-9" id="errors-9"></a>
 
-HTTP 403 `not_enough_rights` means your bot is not an administrator and asked for another user. HTTP 404 `chat_not_found` means the group, your bot's membership or the member record is not visible. HTTP 400 `invalid_request` means the user ID or username is malformed. HTTP 403 `user_deactivated` means the account is no longer active. See [`members.list_admins`](groups.md#operation-members-list-admins) to read all administrators at once.
+HTTP 403 `not_enough_rights` means your bot is not an administrator and asked for another user. HTTP 404 `chat_not_found` means the group, your bot's membership or the member record is not visible. HTTP 400 `invalid_request` means the user ID or username is malformed; in a channel, a malformed ID or a username returns HTTP 400 `invalid_parameter`. HTTP 403 `user_deactivated` means the account is no longer active. See [`members.list_admins`](groups.md#operation-members-list-admins) to read all administrators at once.
 
 ### Example <a href="#example-9" id="example-9"></a>
 

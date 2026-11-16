@@ -1,6 +1,6 @@
 # GroupServiceMessage
 
-GroupServiceMessage is a group contract model. Availability is controlled by the evaluated group feature flags.
+GroupServiceMessage describes a public group payload.
 
 The response omits `subject_user_id`, `chat_event_seq`, `prev_chat_event_seq`, `privacy_target_bot_id`, `operator_epoch`, and `callback_context`.
 

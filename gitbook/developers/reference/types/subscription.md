@@ -8,6 +8,7 @@ A manually renewed subscription and its confirmed payment history.
 | `canceled_by` | `"user"` or `"bot"` or `"admin"` | No | Actor that canceled renewal, when cancellation is reported. |
 | `current_period_end_at` | string | Yes | End of the current paid period, before any grace period. The format is `date-time`. |
 | `grace_ends_at` | string | No | End of the grace period, when reported. The format is `date-time`. |
+| `has_access` | boolean | No | The payment authority's current access decision for this subscription. A lifecycle state or deadline alone does not grant access. |
 | `last_charge` | object | No | Most recent reported charge reference; it does not by itself establish current access. |
 | `last_charge.at` | string | Yes | Time of the reported charge in RFC 3339 format. The format is `date-time`. |
 | `last_charge.charge_id` | string | Yes | Opaque identifier of the reported charge. The minimum length is 1 character. |

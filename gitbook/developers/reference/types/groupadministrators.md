@@ -1,6 +1,6 @@
 # GroupAdministrators
 
-GroupAdministrators is a group contract model. Availability is controlled by the evaluated group feature flags.
+GroupAdministrators describes a public group payload.
 
 The value has the type Array of [GroupMember](groupmember.md).
 

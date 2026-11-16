@@ -15,7 +15,7 @@ Test the page in a desktop browser first, then open it from a TESTBOT in ARX Mes
 
 ## Run the page outside ARX <a href="#run-the-page-outside-arx" id="run-the-page-outside-arx"></a>
 
-Outside ARX Messenger, `AERX.WebApp` exists but has no native channel: `whenInitialized()` rejects with `UNSUPPORTED`, `initData` is empty and every host method rejects. Use this to build the layout and your fallback screen in a desktop browser.
+Outside ARX Messenger, `AERX.WebApp` exists but has no native channel: `whenInitialized()` rejects with `UNSUPPORTED`, `initData` is empty and every host method rejects or throws `UNSUPPORTED`. Use this to build the layout and your fallback screen in a desktop browser.
 
 To check your styles against ARX colors, set the CSS variables yourself, for example `--aerx-theme-bg-color` and `--aerx-theme-text-color`, in light and dark versions. See [Theme and layout](theme-and-layout.md#css-variables).
 

@@ -4,7 +4,7 @@ description: "Connect Claude Code, Claude Desktop, Cursor, VS Code or any MCP cl
 
 # Build with an AI agent (MCP)
 
-The ARX Nexo MCP server lets an AI agent work on your bot for you. Your agent connects to it with your bot token and gets a tool for each Bot API operation it can run with a bot token, plus guides, documentation search, project generation and health checks. You describe the bot you want; the agent configures it, writes the code with an official SDK and tests it with you.
+The ARX Nexo MCP server lets an AI agent work on your bot for you. Your agent connects to it with your bot token and gets a tool for almost every Bot API operation, plus guides, documentation search, project generation and health checks. You describe the bot you want; the agent configures it, writes the code with an official SDK and tests it with you.
 
 The server operates your bot through the public Bot API with your token, exactly as your own program would. It does not host your code: you run the program the agent generates, on your machine or your server.
 
@@ -20,7 +20,7 @@ The server operates your bot through the public Bot API with your token, exactly
 - Generate a working bot project in TypeScript, Python or Rust.
 - Check your bot's health and send a test message.
 
-Some steps need you in NexoCreator because they use your ARX account: creating the bot and reading its token, registering Mini App origins, choosing the wallet that receives payments, and turning on advanced modes. The agent tells you exactly what to do there and what to bring back. See [Steps you take in NexoCreator](#steps-you-take-in-nexocreator).
+Some steps need you in NexoCreator because they use your ARX account: creating the bot and reading its token, registering Mini App origins, choosing the wallet that receives payments, and turning on advanced modes. The agent tells you what to do there and what to bring back. See [Steps you take in NexoCreator](#steps-you-take-in-nexocreator).
 
 ## Connect your agent <a href="#connect-your-agent" id="connect-your-agent"></a>
 
@@ -132,7 +132,7 @@ The server is stateless. It answers each POST in the same HTTP response, issues 
 {% endtab %}
 {% endtabs %}
 
-You can connect before you have a bot. Without a token, the agent sees only the guide tools and can walk you through creating the bot. After you add the token and reconnect, it sees every bot tool.
+You can connect before you have a bot. Without a token, the server lists only the guide tools that need no token, and the agent can walk you through creating the bot. After you add the token and reconnect, it also lists `bot_roundtrip_test`, `bot_webhook_check` and every bot tool.
 
 ## Authentication and security <a href="#authentication-and-security" id="authentication-and-security"></a>
 
@@ -175,7 +175,7 @@ The bot tools follow the [API reference](api.md). Their names are the operation 
 
 ### Guide tools <a href="#guide-tools" id="guide-tools"></a>
 
-The guide tools through `bot_status` work without a token. `bot_roundtrip_test` and `bot_webhook_check` require a bot token.
+The eight tools from `nexo_guide` through `bot_status` work without a token. `bot_roundtrip_test` and `bot_webhook_check` require a bot token and are listed only when you send one.
 
 | Tool | Use |
 | --- | --- |
@@ -185,11 +185,12 @@ The guide tools through `bot_status` work without a token. `bot_roundtrip_test` 
 | `api_operation` | The full contract of one tool, or one complete example body. |
 | `api_schema` | One named schema from the API contract. |
 | `scaffold_project` | A bot project for the TypeScript, Python or Rust SDK, with polling or a webhook receiver. |
+| `mini_app_bridge` | The Mini App bridge script URL, the version-pinned URL with its `integrity` value and ready-to-paste script tags. Pass `include_source` for the full script. |
 | `bot_status` | Identity, delivery mode, webhook state, pending updates, recent errors, commands, menu button, payment setup and next steps. |
 | `bot_roundtrip_test` | Sends a test message and reports how long the Bot API took to accept it. |
 | `bot_webhook_check` | Sends a signed test ping to your webhook and reports the result. |
 
-The server also offers its guides and the API contract as MCP resources, and the prompts `build_a_bot` and `diagnose_bot`.
+The server also offers its guides, the API contract and the Mini App bridge script as MCP resources, and the prompts `build_a_bot` and `diagnose_bot`.
 
 ### Bot tools <a href="#bot-tools" id="bot-tools"></a>
 

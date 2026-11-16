@@ -1,6 +1,6 @@
 # GroupQuotedServiceMessage
 
-GroupQuotedServiceMessage is a group contract model. Availability is controlled by the evaluated group feature flags.
+GroupQuotedServiceMessage describes a public group payload.
 
 The response omits `subject_user_id`, `chat_event_seq`, `prev_chat_event_seq`, `privacy_target_bot_id`, `operator_epoch`, `callback_context`, `reply_to`, and `ephemeral_id`.
 

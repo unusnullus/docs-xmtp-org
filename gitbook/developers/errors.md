@@ -86,7 +86,8 @@ Your bot cannot enumerate users or infer resource existence from these responses
 
 | Code | HTTP | What to do |
 | --- | --- | --- |
-| `file_not_found` | 404 | Check file access, expiry and bot scope. Obtain a current file ID from an accessible source when possible. |
+| `file_not_found` | 404 | Check file access, expiry and bot scope. Obtain a current file ID from an accessible source when possible. A file ID read from a channel post that your bot did not upload works only in channels; upload the file again to send it elsewhere. |
+| `invalid_file_id` | 400 | In a channel post, the source post of a reused file ID is no longer visible, or your bot is no longer an administrator of its channel. Upload the file again. |
 | `file_too_large` | 413 | Choose a smaller file. `details.limit` gives the maximum bytes for that media type. |
 | `file_type_not_allowed` | 400 | Use an accepted container, codec or file type. Renaming the file will not fix its contents. |
 | `file_type_mismatch` | 400 | Use the file with the media kind it was validated for. |
@@ -131,7 +132,9 @@ Do not treat `draft_retired` as an error code. It is a reason attached to `versi
 | Code | HTTP | What to do |
 | --- | --- | --- |
 | `send_permission_denied` | 403 | The group's permissions do not allow this content for your bot. Read `details.permission`, refresh the group and send only permitted content. |
-| `not_enough_rights` | 403 | Your bot lacks the administrator right this action needs. Ask a group owner to grant it, then retry. |
+| `not_enough_rights` | 403 | Your bot lacks the administrator right this action needs. Ask a group or channel owner to grant it, then retry. A channel post needs `can_post_messages`. |
+| `invalid_content` | 400 | A channel post or album item has a field the channel does not accept, such as a video `cover`. Remove the field. See [Post media to a channel](messages.md#post-media-to-a-channel). |
+| `buttons_not_supported_in_channel` | 400 | Channels accept inline keyboards only. Remove the reply keyboard. |
 | `rights_not_subset` | 403 | Request only rights your bot holds and can delegate. |
 | `invalid_rights` | 400 | Correct the combination of administrator rights in the request. |
 | `admin_not_editable` | 403 | Your bot can change only administrators it promoted. Leave this administrator unchanged. |

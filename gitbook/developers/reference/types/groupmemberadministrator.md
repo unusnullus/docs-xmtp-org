@@ -1,6 +1,6 @@
 # GroupMemberAdministrator
 
-GroupMemberAdministrator is a group contract model. Availability is controlled by the evaluated group feature flags.
+GroupMemberAdministrator describes a public group payload.
 
 If `user` is omitted or has the type object, `is_anonymous` has the type `false`.
 

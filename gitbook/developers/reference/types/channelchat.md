@@ -1,6 +1,6 @@
 # ChannelChat
 
-The identity of a public channel. A compact reference may omit its title.
+The identity of a channel. A compact reference may omit its title.
 
 | Field | Type | Required | Description and constraints |
 | --- | --- | --- | --- |

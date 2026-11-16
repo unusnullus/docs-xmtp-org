@@ -1,6 +1,6 @@
 # RefundRequestUpdated
 
-A refund request state. The creator must send the return transfer.
+A refund request state. The creator must send the return transfer. Reserved refund status payload. The backend does not currently emit refund_request_updated bot updates.
 
 | Field | Type | Required | Description and constraints |
 | --- | --- | --- | --- |

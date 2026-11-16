@@ -1,6 +1,6 @@
 # GroupExternalOriginVisible
 
-GroupExternalOriginVisible is a group contract model. Availability is controlled by the evaluated group feature flags.
+GroupExternalOriginVisible describes a public group payload.
 
 You receive one of the following forms. Required fields apply within each form.
 

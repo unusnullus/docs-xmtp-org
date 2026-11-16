@@ -1,6 +1,6 @@
 # GroupQuotedMessage
 
-GroupQuotedMessage is a group contract model. Availability is controlled by the evaluated group feature flags.
+GroupQuotedMessage describes a public group payload.
 
 You receive one of the following forms. Required fields apply within each form.
 

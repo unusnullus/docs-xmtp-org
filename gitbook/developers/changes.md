@@ -6,6 +6,12 @@ description: "Follow user-visible changes to Nexo documentation and SDK integrat
 
 Follow changes that affect how you build and run your bot. The Atom feed links to these entries. API versions and SDK package versions are separate. Read [Versioning & deprecation](versioning.md) before upgrading a dependency.
 
+## November 14, 2026 <a href="#november-14-2026" id="november-14-2026"></a>
+
+### Channels <a href="#channels" id="channels"></a>
+
+Bots can post photos, videos and documents, and albums of them, to public and private channels where they are an administrator with `can_post_messages`. A file ID read from a channel post that your bot did not upload works only in channels. See [Messages in channels](messages.md#in-channels).
+
 ## November 11, 2026 <a href="#november-11-2026" id="november-11-2026"></a>
 
 ### Groups <a href="#groups" id="groups"></a>
