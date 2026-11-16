@@ -173,6 +173,148 @@ In a Super Group, `messages.send` accepts a smaller set of fields and content ty
 | `silent`, `protect_content`, `reply_to` and `topic_id`. | `effect_id` and `link_preview`. |
 | An inline keyboard on a text message. | Reply keyboards, and keyboards on media messages. |
 
-An unsupported field or content type returns HTTP 403 `capability_not_available`. Albums, copies and forwards work in private chats only. Group permissions, slow mode and topics add their own rules; see [Groups](groups.md).
+An unsupported field or content type returns HTTP 403 `capability_not_available`. Super Groups do not accept albums, copies or forwards. Group permissions, slow mode and topics add their own rules; see [Groups](groups.md).
+
+## In channels <a href="#in-channels" id="in-channels"></a>
+
+Your bot can post to a public or private channel where it is an administrator with the `can_post_messages` right. Without that right, a send returns HTTP 403 `not_enough_rights`. The channel owner grants the right when adding your bot as an administrator; see [Administrator rights](groups/admin-rights.md).
+
+| Accepted in a channel | Not accepted |
+| --- | --- |
+| `text`, `rich`, `photo`, `video` and `document` content, and albums. | Every other content type, user mentions, and media inside `rich`. They return HTTP 403 `capability_not_available`. |
+| `content`, `reply_markup`, `silent` and `protect_content`. | `reply_to`, `effect_id`, `link_preview` and `topic_id`. They return HTTP 400 `invalid_parameter`. |
+| An inline keyboard, on text and media posts. | Reply keyboards. They return HTTP 400 `buttons_not_supported_in_channel`. |
+
+Copies and forwards into a channel are not available.
+
+### Post media to a channel <a href="#post-media-to-a-channel" id="post-media-to-a-channel"></a>
+
+Send a photo, video or document with `messages.send`. Upload the file in the same multipart request, or pass the `file_id` of a ready file in your bot's library. This example uploads a photo and posts it with a caption behind a spoiler.
+
+Set `ARX_BOT_TOKEN`, `CHANNEL_ID`, `REQUEST_KEY` and `PHOTO_PATH`, the path of a JPEG, PNG or WebP file. Use the chat ID from a `channel_post` or `my_chat_member` update as `CHANNEL_ID`.
+
+{% tabs %}
+{% tab title="TypeScript" %}
+
+```ts
+import { Client, FileInput, UploadSource } from "@arx/nexo";
+
+const token = process.env.ARX_BOT_TOKEN;
+const key = process.env.REQUEST_KEY;
+const channelId = process.env.CHANNEL_ID;
+const path = process.env.PHOTO_PATH;
+if (!token || !key || !channelId || !path) {
+	throw new Error("Set ARX_BOT_TOKEN, REQUEST_KEY, CHANNEL_ID, PHOTO_PATH");
+}
+const bot = new Client({ token, baseUrl: "https://signal.arx.pro/bot-api/v1" });
+try {
+	const post = await bot.messagesSendMultipart(channelId, {
+		key,
+		body: {
+			content: {
+				type: "photo",
+				photo: FileInput.fromAttachment("photo"),
+				caption: "Today's route",
+				has_spoiler: true,
+			},
+		},
+		files: { photo: UploadSource.fromPath(path) },
+	});
+	console.log(post.message_id);
+} finally {
+	await bot.close();
+}
+```
+
+{% endtab %}
+{% tab title="Python" %}
+
+```python
+import os
+from arx_nexo import Client, Config, FileInput, UploadSource, models
+
+with Client(
+    Config(
+        token=os.environ["ARX_BOT_TOKEN"],
+        base_url="https://signal.arx.pro/bot-api/v1",
+    )
+) as bot:
+    request = models.SendMessage(
+        content=models.InputContent(
+            root=models.InputPhoto(
+                type="photo",
+                photo=FileInput.from_attachment("photo"),
+                caption="Today's route",
+                has_spoiler=True,
+            )
+        )
+    )
+    post = bot.messages_send_multipart(
+        os.environ["CHANNEL_ID"],
+        body=request,
+        files={"photo": UploadSource.from_path(os.environ["PHOTO_PATH"])},
+        key=os.environ["REQUEST_KEY"],
+    )
+    print(post.message_id)
+```
+
+{% endtab %}
+{% tab title="Rust" %}
+
+```rust
+use arx_nexo::{Client, Config, FileInput, UploadPart, UploadSource, models};
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let token = std::env::var("ARX_BOT_TOKEN")?;
+    let key = std::env::var("REQUEST_KEY")?;
+    let channel_id = std::env::var("CHANNEL_ID")?;
+    let bot = Client::new(Config::new(token, "https://signal.arx.pro/bot-api/v1", false)?)?;
+    let photo = models::InputPhoto {
+        caption: Some("Today's route".into()),
+        has_spoiler: Some(true),
+        ..models::InputPhoto::new(FileInput::from_attachment("photo")?)
+    };
+    let request =
+        models::SendMessage::new(models::InputContent::InputPhoto(Box::new(photo)));
+    let files = vec![UploadPart::new(
+        "photo",
+        UploadSource::from_path(std::env::var("PHOTO_PATH")?)?,
+    )?];
+    let post = bot
+        .messages_send_multipart(&channel_id, &request, files, Some(&key))
+        .await?;
+    println!("{}", post.message_id());
+    Ok(())
+}
+```
+
+{% endtab %}
+{% endtabs %}
+
+To post a file that is already in your library, send the same body with `FileInput.fromId(fileId)` (`from_id` in Python and Rust) and call `messagesSend` instead.
+
+| Field | Types in a channel | Rule |
+| --- | --- | --- |
+| `caption`, `caption_format` or `caption_entities` | Photo, video, document | Up to 1,024 UTF-16 units after parsing. A user mention returns HTTP 403 `capability_not_available`. |
+| `has_spoiler`, `caption_above_media` | Photo, video | As in [Media options](files.md#media-options). |
+| `thumbnail` | Video, document | A new JPEG attachment under 200,000 bytes. |
+| `width`, `height`, `duration_seconds`, `supports_streaming`, `start_seconds` | Video | As in [Media options](files.md#media-options). |
+| `disable_content_type_detection` | Document | Accepted for compatibility. |
+
+A video `cover`, or any other field outside this table, returns HTTP 400 `invalid_content`.
+
+To post 2 to 10 items as one album, use `messages.send_album`. Mix photos and videos in any order, or send documents only. Each item takes the fields above, and the request accepts `silent` and `protect_content`. See [Albums](messages/albums.md).
+
+### Reuse a file ID <a href="#reuse-a-file-id" id="reuse-a-file-id"></a>
+
+A `file_id` from your own upload, multipart attachment or URL import belongs to your bot's library. You can post it in any chat, including channels.
+
+A `file_id` that your bot read from a channel post it did not upload, for example from a `channel_post` update or `messages.history`, works only for posts to channels:
+
+- Sent to a private chat or a group, it returns HTTP 404 `file_not_found`.
+- Sent to a channel, it works while the source post is still visible and your bot is still an administrator of the source channel. Otherwise the send fails with `invalid_file_id` or `file_not_found`.
+
+To use such a file elsewhere, download it with [`files.download`](files.md#authenticated-downloads) and upload it again.
 
 Continue with the [message reference](reference/messages.md#operation-messages-send) for the complete request schema.

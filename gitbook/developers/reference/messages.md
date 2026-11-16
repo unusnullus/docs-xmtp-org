@@ -23,9 +23,11 @@ Each route uses the configured API base URL. [Shared request rules and errors](.
 
 `GET /bot-api/v1/chats/{chat_id}/messages`
 
-Read earlier messages of a Super Group, for example to build context before your bot replies. Messages use the same shape as group message updates.
+Read earlier messages of a Super Group or channel, for example to build context before your bot replies. Group messages use the same shape as group message updates, and channel posts the same shape as `channel_post` updates.
 
-Your bot must be a current member with access to all group messages: its group privacy is off, or it is an administrator. You see only what a member with your bot's membership can see: messages since your bot joined, or the full visible history when the group showed history to new members at that time. Messages from other bots and deleted, expired and ephemeral messages are omitted. Edited messages appear in their latest revision. Private chats and channels are not supported.
+Your bot must be a current member with access to all group messages: its group privacy is off, or it is an administrator. You see only what a member with your bot's membership can see: messages since your bot joined, or the full visible history when the group showed history to new members at that time. Messages from other bots and deleted, expired and ephemeral messages are omitted. Edited messages appear in their latest revision. Private chats are not supported.
+
+In a public or private channel, your bot must be a current administrator. You read the posts visible to your bot's membership. Channels have no topics, so do not pass `topic_id`.
 
 Without a cursor the page ends at the newest message. Pass `before_message_id` to read older messages or `after_message_id` to read newer ones; do not combine them. Continue with `next_before_message_id` or `next_after_message_id` while `has_more` is true. A page can hold fewer than `limit` messages. Pass `topic_id` to read one forum topic; `1` is General.
 
@@ -51,7 +53,7 @@ Do not send a request body.
 
 ### Errors <a href="#errors" id="errors"></a>
 
-HTTP 403 `history_access_required` means your bot cannot read all group messages; turn off its group privacy or have an administrator promote it. HTTP 403 `access_restricted` means your bot is not a current member of the group. HTTP 403 `capability_not_available` means the chat is a private chat or channel, which have no readable history. HTTP 400 `invalid_request` means a cursor, `topic_id` or `limit` is malformed, or both cursors were sent. HTTP 404 `topic_not_found` means the topic does not exist or the group is not a forum. See [Receiving updates](../receiving-updates.md) for group message updates.
+HTTP 403 `history_access_required` means your bot cannot read all group messages; turn off its group privacy or have an administrator promote it. HTTP 403 `access_restricted` means your bot is not a current member of the group. HTTP 403 `capability_not_available` means the chat is a private chat, which has no readable history. In a channel, HTTP 404 `chat_not_found` means the channel does not exist or your bot is not one of its administrators, and HTTP 400 `invalid_parameter` means a cursor or `limit` is malformed, both cursors were sent, or the request includes `topic_id`. HTTP 400 `invalid_request` means a cursor, `topic_id` or `limit` is malformed, or both cursors were sent. HTTP 404 `topic_not_found` means the topic does not exist or the group is not a forum. See [Receiving updates](../receiving-updates.md) for group message updates.
 
 ### Example <a href="#example" id="example"></a>
 
@@ -200,9 +202,9 @@ Example success response (HTTP 200). The SDK methods return `result`:
 
 `POST /bot-api/v1/chats/{chat_id}/messages`
 
-Send a message to a private chat that the user has started, or to a Super Group where your bot is a member. Use the chat ID from an update or a chat lookup. To post in a topic, set `topic_id`.
+Send a message to a private chat that the user has started, to a Super Group where your bot is a member, or to a public or private channel where your bot is an administrator with `can_post_messages`. Use the chat ID from an update or a chat lookup. To post in a topic, set `topic_id`.
 
-Choose the content's form with `content.type`. Use JSON for text and existing library files or URL sources. To attach new media, send multipart with the JSON request in `payload` and binary parts matching the attachment names. Preserve the complete request and idempotency key when retrying a send. In a group, your bot needs the group's permission to send messages, and the group's slow mode applies unless your bot is an administrator who can manage the chat.
+Choose the content's form with `content.type`. Use JSON for text and existing library files or URL sources. To attach new media, send multipart with the JSON request in `payload` and binary parts matching the attachment names. Preserve the complete request and idempotency key when retrying a send. In a group, your bot needs the group's permission to send messages, and the group's slow mode applies unless your bot is an administrator who can manage the chat. In a channel, your bot can send text, rich text, photos, videos and documents; other content types and user mentions linked to a user ID return HTTP 403 `capability_not_available`.
 
 ### Parameters <a href="#parameters-1" id="parameters-1"></a>
 
@@ -364,7 +366,7 @@ Example success response (HTTP 200). The SDK methods return `result`:
 
 Send 2 to 10 media items as one album. The result contains one message for each accepted item.
 
-You can mix photos, videos, and live photos. An audio album contains only audio, and a document album contains only documents. Use existing file IDs in JSON, or attach new files with multipart. Albums do not accept a reply keyboard or inline keyboard.
+You can mix photos, videos, and live photos. An audio album contains only audio, and a document album contains only documents. Use existing file IDs in JSON, or attach new files with multipart. Albums do not accept a reply keyboard or inline keyboard. In a channel, an album can contain photos, videos and documents only; your bot must be an administrator with `can_post_messages`.
 
 ### Parameters <a href="#parameters-2" id="parameters-2"></a>
 
@@ -407,7 +409,7 @@ The request deadline is 3,600 seconds.
 
 ### Errors <a href="#errors-2" id="errors-2"></a>
 
-HTTP 400 `invalid_parameter` with reason `album_family` means the items mix unsupported types, and reason `album_type` means an item type cannot be used in an album. HTTP 409 `file_not_ready` means an item still needs processing. See [Files](../files.md) for media limits and album uploads.
+HTTP 400 `invalid_parameter` with reason `album_family` means the items mix unsupported types, and reason `album_type` means an item type cannot be used in an album. In a channel, HTTP 403 `capability_not_available` means an item is not a photo, video or document. HTTP 409 `file_not_ready` means an item still needs processing. See [Files](../files.md) for media limits and album uploads.
 
 ### Example <a href="#example-2" id="example-2"></a>
 
@@ -1158,7 +1160,7 @@ The message IDs to read, for example the message_id of a reply reference. Only t
 
 ### Errors <a href="#errors-6" id="errors-6"></a>
 
-HTTP 403 `history_access_required` means your bot cannot read all group messages; turn off its group privacy or have an administrator promote it. HTTP 400 `payload_too_large` means the requested messages exceed one response; request fewer IDs. HTTP 403 `access_restricted` means your bot is not a current member of the group. HTTP 403 `capability_not_available` means the chat is a private chat or channel, which have no readable history. See [Receiving updates](../receiving-updates.md) for reply references.
+HTTP 403 `history_access_required` means your bot cannot read all group messages; turn off its group privacy or have an administrator promote it. HTTP 400 `payload_too_large` means the requested messages exceed one response; request fewer IDs. HTTP 403 `access_restricted` means your bot is not a current member of the group. HTTP 403 `capability_not_available` means the chat is a private chat or channel; read channel posts with [`messages.history`](messages.md#operation-messages-history). See [Receiving updates](../receiving-updates.md) for reply references.
 
 ### Example <a href="#example-6" id="example-6"></a>
 

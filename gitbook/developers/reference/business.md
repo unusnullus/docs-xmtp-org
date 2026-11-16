@@ -291,7 +291,7 @@ Example success response (HTTP 200). The SDK methods return `result`:
 
 `GET /bot-api/v1/business/endpoint-report`
 
-Reserved for reading the report that the installed Business endpoint runtime records for a connection. This operation is not available yet.
+Reserved for reading the status report that your Business endpoint records for a connection. This operation is not available yet.
 
 Business chats do not depend on it. Read the connection with [business_connections.get](business.md#operation-business-connections-get) and the endpoint with [business_endpoint.get](business.md#operation-business-endpoint-get).
 
@@ -403,7 +403,7 @@ Example success response (HTTP 200). The SDK methods return `result`:
 
 `PUT /bot-api/v1/business/endpoint-report`
 
-Reserved for recording a report from the installed Business endpoint runtime for a connection. This operation is not available yet.
+Reserved for recording a status report from your Business endpoint for a connection. This operation is not available yet.
 
 Business chats do not depend on it. Read the connection with [business_connections.get](business.md#operation-business-connections-get) and the endpoint with [business_endpoint.get](business.md#operation-business-endpoint-get).
 

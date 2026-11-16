@@ -191,4 +191,8 @@ To retry an album request, send the same key, JSON payload and file bytes. Chang
 
 Super Groups do not accept `messages.send_album`. Send group media one message at a time with `messages.send`. See [Groups](../groups.md).
 
+## In channels <a href="#in-channels" id="in-channels"></a>
+
+A channel accepts visual albums of photos and videos, and document albums. Audio albums, live photos and video covers are not accepted. The request accepts `silent` and `protect_content` only. See [Post media to a channel](../messages.md#post-media-to-a-channel).
+
 Continue with the [message reference](../reference/messages.md#operation-messages-send-album) for the full request schema.

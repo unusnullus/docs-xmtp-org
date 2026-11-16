@@ -4,7 +4,7 @@ The merchant approval query sent before a transfer, with its original ten-second
 
 | Field | Type | Required | Description and constraints |
 | --- | --- | --- | --- |
-| `amount` | string | Yes | The exact amount in asset base units, encoded as a decimal string. The value must match `^[1-9][0-9]*$`. The maximum length is 78 characters. |
+| `amount` | string | Yes | The full invoice price in token base units, before deducting any platform commission. The successful_payment receipt reports the merchant net amount instead. The value must match `^[1-9][0-9]*$`. The maximum length is 78 characters. |
 | `chain` | string | Yes | The network identifier for this transfer. |
 | `decimals` | integer | No | The number of decimal places configured for this token. The minimum is 0. The maximum is 255. |
 | `expires_at` | string | Yes | The original pre-checkout deadline in RFC 3339 format. Answer this query before this time; retries do not extend it. The format is `date-time`. |

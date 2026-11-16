@@ -1,6 +1,6 @@
 # UpdateChannelPost
 
-A new post in a public channel.
+A new post in a channel.
 
 | Field | Type | Required | Description and constraints |
 | --- | --- | --- | --- |

@@ -1291,6 +1291,7 @@ Example success response (HTTP 200). The SDK methods return `result`:
   "result": {
     "access_until": "2030-02-01T00:00:00Z",
     "current_period_end_at": "2030-02-01T00:00:00Z",
+    "has_access": true,
     "periods_paid": 1,
     "plan_id": "plan-1",
     "started_at": "2030-01-01T00:00:00Z",
@@ -1426,6 +1427,7 @@ Example success response (HTTP 200). The SDK methods return `result`:
   "result": {
     "access_until": "2030-02-01T00:00:00Z",
     "current_period_end_at": "2030-02-01T00:00:00Z",
+    "has_access": true,
     "periods_paid": 1,
     "plan_id": "plan-1",
     "started_at": "2030-01-01T00:00:00Z",

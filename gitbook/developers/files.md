@@ -204,6 +204,10 @@ To send several files as one grouped message, use `messages.send_album`. See [Al
 
 Supergroups accept `photo`, `video`, `animation`, `audio`, `voice`, `video_note`, `document` and `sticker` messages, one at a time. They do not accept live photos, albums or video covers. Group permissions can restrict media types; see [Groups](groups.md).
 
+## In channels <a href="#in-channels" id="in-channels"></a>
+
+Channels accept `photo`, `video` and `document` posts, and albums of them. They do not accept other media types or video covers. A `file_id` that your bot read from a channel post it did not upload can be sent only to channels; a private chat or group returns HTTP 404 `file_not_found`. Download the file and upload it again to use it there. See [Post media to a channel](messages.md#post-media-to-a-channel).
+
 ## Authenticated downloads <a href="#authenticated-downloads" id="authenticated-downloads"></a>
 
 `files.download`, `GET /file_contents/{file_id}`, streams original bytes when you supply your bot token in the Authorization header. It takes no query parameters or JSON body. It returns bytes rather than a JSON success envelope or redirect.

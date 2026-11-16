@@ -1,6 +1,6 @@
 # GroupExternalOriginChannel
 
-GroupExternalOriginChannel is a group contract model. Availability is controlled by the evaluated group feature flags.
+GroupExternalOriginChannel describes a public group payload.
 
 | Field | Type | Required | Description and constraints |
 | --- | --- | --- | --- |

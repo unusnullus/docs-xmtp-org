@@ -6,7 +6,7 @@ description: "Find every Nexo bot capability and the guide that covers it."
 
 Find what your bot needs to do, then follow the linked guide. Each guide lists the operations, fields, limits and errors for that capability, with TypeScript, Python and Rust examples.
 
-Some capabilities need a setting that you turn on in [NexoCreator](nexocreator.md). Call [`me.get`](reference/platform.md#operation-me-get) to see your bot's configuration. `settings` reports the options you control, such as `can_join_groups` and `can_read_all_group_messages`. The `features` object reports `available` for Mini Apps and payments when they are available to your bot, and for groups (`nexo_groups`) and each advanced mode when you have turned them on. Its `stickers`, `channels`, `inline`, `games` and `stories` entries always report `disabled`; do not use them to decide what your bot can do. Before you sell, call `getPaymentReadiness`, as [Set up payments](payments/setup.md#check-readiness) explains.
+Some capabilities need a setting that you turn on in [NexoCreator](nexocreator.md). Call [`me.get`](reference/platform.md#operation-me-get) to see your bot's configuration. `settings` reports the options you control, such as `can_join_groups` and `can_read_all_group_messages`. The `features` object reports `available` for Mini Apps and payments when they are available to your bot, and for groups (`nexo_groups`) and each advanced mode when you have turned them on. `channels` reports `available` when your bot can post to channels where it is an administrator. Its `stickers`, `inline`, `games` and `stories` entries always report `disabled`; do not use them to decide what your bot can do. Before you sell, call `getPaymentReadiness`, as [Set up payments](payments/setup.md#check-readiness) explains.
 
 ## Conversations and updates <a href="#conversations-and-updates" id="conversations-and-updates"></a>
 
@@ -57,7 +57,8 @@ Some capabilities need a setting that you turn on in [NexoCreator](nexocreator.m
 | Moderate members: ban, restrict, promote and set custom titles | [Moderation](groups/moderation.md) and [Administrator rights](groups/admin-rights.md) |
 | Manage invite links and approve or decline join requests | [Invite links and join requests](groups/invites-and-requests.md) |
 | Request administrator rights when people add your bot | [Bots in groups](groups.md) and [`default_admin_rights.set`](reference/profile.md#operation-default-admin-rights-set) |
-| Post text in a channel where your bot is an administrator | [Send messages](messages.md) and [Not available yet](not-available-yet.md#groups-and-channels) |
+| Post text, photos, videos, documents and albums in a public or private channel where your bot is an administrator | [Post to a channel](messages.md#in-channels) and [Not available yet](not-available-yet.md#groups-and-channels) |
+| Read a channel's history, details, members and administrators while your bot is one of its administrators | [`messages.history`](reference/messages.md#operation-messages-history), [`chats.get`](reference/platform.md#operation-chats-get) and [`members.list_admins`](reference/groups.md#operation-members-list-admins) |
 | Use topics in private chats with your bot, when available | [`topics.create`](reference/topics.md#operation-topics-create) |
 
 ## Mini Apps <a href="#mini-apps" id="mini-apps"></a>

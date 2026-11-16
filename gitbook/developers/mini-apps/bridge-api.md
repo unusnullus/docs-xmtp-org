@@ -39,7 +39,7 @@ try {
 }
 ```
 
-`whenInitialized()` resolves as soon as `initData` is available. `platform`, the supported features and the full theme can arrive a moment later, and ARX emits `themeChanged` once they have arrived. Until then, `platform` is `unknown` and `supports()` returns `false`. Register a `themeChanged` handler before you wait for `whenInitialized()`, and run your feature checks both after initialization and in that handler.
+`whenInitialized()` resolves when ARX has delivered the launch data together with `platform`, the supported features and the theme. Before that, `platform` is `unknown` and `supports()` returns `false`, so run your feature checks after `whenInitialized()` resolves. Register a `themeChanged` handler to follow later theme changes.
 
 Call `ready()` when your first screen has rendered. ARX keeps its launch screen visible until then. A page that does not use the bridge shortly after loading is shown without waiting.
 
@@ -55,7 +55,7 @@ Methods that wait for the host return a Promise. Most also accept a callback as 
 
 A rejected Promise carries an `Error` whose `code` is one of the [bridge errors](#errors). A `RATE_LIMITED` error can also carry `retry_after`, the whole seconds to wait.
 
-Invalid arguments throw `INVALID_PARAMS` synchronously, before any message reaches the host. Validate input before you call, or wrap the call in `try`.
+Invalid arguments throw `INVALID_PARAMS` synchronously, before any message reaches the host. Validate input before you call, or wrap the call in `try`. Methods that return their owner object instead of a Promise, such as `ready()`, the color setters, button calls such as `show()` and `setText()`, and `HapticFeedback`, also throw `UNSUPPORTED` outside ARX and `SESSION_EXPIRED` while the app is in the background.
 
 A call that gets no answer within 30 seconds rejects with `NETWORK_ERROR`. At most 64 calls can wait at once; more reject with `RATE_LIMITED`. Popups, the invoice sheet and other native sheets wait for the user and do not time out.
 
@@ -319,6 +319,6 @@ When the app goes to the background, ARX sends `deactivated`. Pending calls reje
 
 ## Methods that are not available <a href="#methods-that-are-not-available" id="methods-that-are-not-available"></a>
 
-These methods exist so that feature checks work. They always reject with `UNSUPPORTED`: `requestWalletSignature`, `setEmojiStatus`, `requestEmojiStatusAccess`, `shareToStory`, `reportAgeVerification`, `requestLogin` and `SecureStorage.restoreItem`. Their arguments are still validated, so invalid input throws `INVALID_PARAMS` first.
+These methods exist so that feature checks work. They always reject with `UNSUPPORTED`: `requestWalletSignature`, `setEmojiStatus`, `requestEmojiStatusAccess`, `shareToStory`, `reportAgeVerification`, `requestLogin` and `SecureStorage.restoreItem`. `requestLogin` and `restoreItem` check their arguments first, so invalid input to them throws `INVALID_PARAMS`.
 
 `AERX.WebApp` also has methods reserved for ARX's own apps. They reject with `UNSUPPORTED` in your Mini App.

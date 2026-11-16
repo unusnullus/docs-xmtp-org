@@ -19,7 +19,10 @@ Check this list before you design your bot around one of these features. Each it
 ## Groups and channels <a href="#groups-and-channels" id="groups-and-channels"></a>
 
 - Your bot cannot change a group's or channel's title or description.
-- In a channel, your bot can post text and rich text only. Media, user mentions and other content types return `capability_not_available`.
+- In a channel, your bot can post text, rich text, photos, videos and documents, and albums of photos, videos or documents. See [Post to a channel](messages.md#in-channels). The following return `capability_not_available` in a channel:
+  - User mentions in text, rich text or a caption.
+  - Media inside rich text.
+  - Every other content type, including animations, audio, voice messages, video notes, live photos, stickers, dice, polls, checklists, locations, venues, contacts and invoices. Albums of audio files or live photos are included.
 
 ## Payments <a href="#payments" id="payments"></a>
 

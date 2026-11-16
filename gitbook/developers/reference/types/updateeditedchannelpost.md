@@ -1,6 +1,6 @@
 # UpdateEditedChannelPost
 
-An edited post in a public channel.
+An edited post in a channel.
 
 | Field | Type | Required | Description and constraints |
 | --- | --- | --- | --- |

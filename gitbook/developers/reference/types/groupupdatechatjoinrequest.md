@@ -1,6 +1,6 @@
 # GroupUpdateChatJoinRequest
 
-GroupUpdateChatJoinRequest is a group contract model. Availability is controlled by the evaluated group feature flags.
+GroupUpdateChatJoinRequest describes a public group payload.
 
 If `chat_join_request` has the type any JSON value, the response includes `expires_at`. Otherwise, the response omits `expires_at`.
 

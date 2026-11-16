@@ -1,6 +1,6 @@
 # UpdateRefundRequestUpdated
 
-A durable refund request update ordered with this payer's payment events.
+A durable refund request update ordered with this payer's payment events. Reserved update type. The backend does not currently emit refund_request_updated to bots; the filter name remains accepted.
 
 | Field | Type | Required | Description and constraints |
 | --- | --- | --- | --- |

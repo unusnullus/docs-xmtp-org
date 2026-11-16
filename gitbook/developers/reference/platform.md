@@ -131,9 +131,9 @@ Example success response (HTTP 200). The SDK methods return `result`:
 
 `GET /bot-api/v1/chats/{chat_id}`
 
-Read the metadata of a chat your bot can access: a private chat, a Super Group where your bot is a current member, or a public channel where your bot is a member or administrator. Use the chat ID from an update, `users.get_chat` or `chats.resolve`, and keep it as a string.
+Read the metadata of a chat your bot can access: a private chat, a Super Group where your bot is a current member, or a public or private channel where your bot is a current administrator. Use the chat ID from an update, `users.get_chat` or `chats.resolve`, and keep it as a string.
 
-Group results include the title, forum mode and current default permissions. This request reads an existing chat without starting it. Stopping a bot does not remove its chat. Deleted users and users removed from a test bot's tester list are no longer accessible.
+Group results include the title, forum mode and current default permissions. Channel results include the title, description, whether posts are signed and protected, and the latest visible pinned post. This request reads an existing chat without starting it. Stopping a bot does not remove its chat. Deleted users and users removed from a test bot's tester list are no longer accessible.
 
 ### Parameters <a href="#parameters-1" id="parameters-1"></a>
 
@@ -153,7 +153,7 @@ Do not send a request body.
 
 ### Errors <a href="#errors-1" id="errors-1"></a>
 
-HTTP 404 `chat_not_found` means the chat is missing, or it is a group or channel outside your bot's membership. See [Receiving updates](../receiving-updates.md) to obtain chat IDs from conversations.
+HTTP 404 `chat_not_found` means the chat is missing, it is a group outside your bot's membership, or it is a channel where your bot is not an administrator. See [Receiving updates](../receiving-updates.md) to obtain chat IDs from conversations.
 
 ### Example <a href="#example-1" id="example-1"></a>
 
@@ -837,7 +837,8 @@ Example success response (HTTP 200). The SDK methods return `result`:
       ]
     },
     "revision": "1",
-    "send_profile": "standard"
+    "send_profile": "standard",
+    "webhook_egress_cidrs": []
   }
 }
 ```

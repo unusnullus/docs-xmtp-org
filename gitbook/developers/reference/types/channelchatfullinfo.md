@@ -1,6 +1,6 @@
 # ChannelChatFullInfo
 
-Current public channel FullInfo for a bot member or administrator. A non-member, private, missing or blocked channel returns chat_not_found. Optional pinned_message is the latest visible pinned post by send time, not pin time. No private identifiers or membership authority are exposed.
+Current public or private channel FullInfo for a current bot administrator. A bot without a current administrator grant, a missing channel or a blocked channel returns chat_not_found. Optional pinned_message is the latest visible pinned post by send time, not pin time. No private identifiers or membership authority are exposed.
 
 | Field | Type | Required | Description and constraints |
 | --- | --- | --- | --- |

@@ -1,6 +1,6 @@
 # GroupChat
 
-A server-managed Super Group visible to a bot. Its decimal chat ID is not a user ID. Group features require both nexo_groups.enabled and nexo_groups.bots; this model does not grant membership or enable an operation.
+A server-managed Super Group visible to a bot. Its decimal chat ID is not a user ID. This model does not grant membership or enable an operation.
 
 The response omits `bot`, `user`, `operator_epoch`, and `started`.
 

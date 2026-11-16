@@ -1,6 +1,6 @@
 # GroupExternalOriginUser
 
-GroupExternalOriginUser is a group contract model. Availability is controlled by the evaluated group feature flags.
+GroupExternalOriginUser describes a public group payload.
 
 | Field | Type | Required | Description and constraints |
 | --- | --- | --- | --- |
