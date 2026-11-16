@@ -1,23 +1,25 @@
 # 5 System Architecture
 
-The ARX system architecture defines how privacy, scalability, and decentralization operate together within one framework. It connects communication, payments, and governance under a single, modular structure that ensures speed, reliability, and user sovereignty.
+The ARX system architecture defines how privacy and scalability operate together within one framework. It connects communication, payments, and governance under a single, modular structure.
+
+This section describes the system as it runs today. Where a layer also has a planned model, the page says so.
 
 ### The Technical Layers
 
 Each component works independently but contributes to the overall network integrity and security across several distinct layers:
 
-* **Identity Layer:** Establishes wallet-based user authentication and self-sovereign digital identity (SSI).
-* **Messaging Layer:** Enables encrypted, off-chain communication without the need for centralized servers.
-* **Network Layer:** Maintains reliability through validator and relay coordination using **Proof-of-Stake (PoS)** and **Proof-of-Relay** mechanisms.
-* **Governance Layer:** Oversees decision-making, treasury control, and protocol upgrades through on-chain voting.
-* **Security Framework:** Ensures protection at the device, protocol, and economic levels.
+* **Identity Layer:** Establishes wallet-based user authentication.
+* **Messaging Layer:** Delivers end-to-end encrypted, off-chain communication between users.
+* **Network Layer:** The infrastructure that carries messages, VPN traffic, and files. It is operated by ARX today; a model with independent operators is planned.
+* **Governance Layer:** The on-chain voting contracts and the planned governance process.
+* **Security Framework:** Protection at the device and protocol levels.
 * **Scalability & Performance:** Optimizes throughput and efficiency for large-scale adoption.
 
 ---
 
 ### Structural Overview
 
-This multi-layered approach ensures that the network remains fast enough for daily use while maintaining the cryptographic guarantees required for absolute privacy.
+This multi-layered approach keeps the system fast enough for daily use while keeping message content end-to-end encrypted.
 
 ```mermaid
 graph TD
@@ -33,7 +35,7 @@ graph TD
         L3[Identity Layer] --- L2[Messaging Layer]
     end
 
-    subgraph BOT ["Infrastructure & Economics"]
+    subgraph BOT ["Infrastructure"]
         L1[Network Layer] --- L0[Scalability & Performance]
     end
 
@@ -58,5 +60,5 @@ graph TD
 
 {% hint style="info" %}
 **Modular Resilience**
-Because each layer is modular, the failure or compromise of a single non-core component does not jeopardize the integrity of the user's identity or the security of their assets.
+Identity and wallet keys are held on the user's device, so a failure in another layer does not expose them.
 {% endhint %}

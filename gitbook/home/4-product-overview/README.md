@@ -6,9 +6,9 @@ ARX is built around three functional verticals that together form a unified priv
 
 Each vertical operates independently but becomes exponentially more powerful when combined under one wallet-based identity:
 
-1.  **Communication:** A secure, encrypted messenger designed for private interaction and high-stakes coordination. It removes the need for centralized metadata storage.
+1.  **Communication:** A secure, end-to-end encrypted messenger designed for private interaction and high-stakes coordination.
 2.  **Fintech:** Integrated wallet, card, and payment tools that enable frictionless digital commerce, allowing users to manage assets and make payments globally.
-3.  **Connection:** A decentralized VPN (dVPN) and eSIM network providing secure, borderless connectivity that bypasses traditional tracking and regional restrictions.
+3.  **Connection:** A built-in VPN, eSIM data plans, and encrypted cloud storage.
 
 ---
 
@@ -30,7 +30,7 @@ graph TD
 
     subgraph Messenger ["ARX Messenger"]
         V1 --- M1[E2EE Chat]
-        V1 --- M2[Private Relays]
+        V1 --- M2[Groups & Channels]
     end
 
     subgraph Finance ["ARX Fintech"]
@@ -39,7 +39,7 @@ graph TD
     end
 
     subgraph Network ["ARX Connection"]
-        V3 --- N1[dVPN Layer]
+        V3 --- N1[Built-in VPN]
         V3 --- N2[Global eSIM]
     end
 
@@ -64,5 +64,5 @@ graph TD
 
 {% hint style="info" %}
 **Identity as the Anchor**
-While these verticals provide diverse functionalities, they are all anchored by a single cryptographic identity. This ensures that privacy is maintained across every touchpoint of the ecosystem.
+While these verticals provide diverse functionalities, they are all anchored by a single cryptographic identity.
 {% endhint %}

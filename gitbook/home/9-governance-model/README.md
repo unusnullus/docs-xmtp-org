@@ -1,5 +1,10 @@
 # 9 Governance Model
 
+{% hint style="info" %}
+**Status**
+This section describes the planned governance model. It is not live. The token, staking, and governance contracts are currently deployed on the Sepolia testnet; see [Architecture](../../usdarx/architecture.md).
+{% endhint %}
+
 The ARX governance model defines how the network evolves, allocates resources, and maintains accountability through on-chain, community-driven decision-making. Governance ensures that the ARX ecosystem operates transparently, sustainably, and without any centralized control.
 
 Every stakeholder who contributes to the network—from node operators to long-term holders—can participate in shaping its future through verified, **on-chain procedures**.

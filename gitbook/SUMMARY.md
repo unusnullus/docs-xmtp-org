@@ -95,10 +95,6 @@
 
 * [Architecture](usdarx/architecture.md)
 
-## XMTP
-
-* [Protocol](xmtp/protocol.md)
-
 ## Encryption
 
 * [Signal protocol](encryption/signal-protocol.md)
@@ -855,4 +851,3 @@
 ## Legal agreement
 
 * [Privacy](legal-agreement/privacy.md)
-* [Terms of use](legal-agreement/terms.md)

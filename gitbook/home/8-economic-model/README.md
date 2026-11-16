@@ -1,5 +1,10 @@
 # 8 Economic Model
 
+{% hint style="info" %}
+**Status**
+This section describes the planned economic model. It is not live. The token, staking, and governance contracts are currently deployed on the Sepolia testnet; see [Architecture](../../usdarx/architecture.md).
+{% endhint %}
+
 The ARX economic model is engineered for long-term sustainability, intentionally bypassing traditional monetization paths like advertising, custodial profit-taking, or purely speculative appreciation.
 
 It functions as a **closed, circular economy** where every participant—from the casual messenger user to the enterprise validator—is rewarded based on their tangible contribution to privacy, network uptime, and decentralization. As the ecosystem matures throughout 2026 and beyond, ARX transitions from inflation-driven incentives to a self-sustaining model powered by organic demand for sovereign digital services.

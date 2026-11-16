@@ -1,21 +1,19 @@
 # 3 The ARX Solution
 
-ARX is a decentralized framework designed for **digital sovereignty**. It replaces centralized layers of identity, communication, and networking with an architecture built on **cryptographic ownership** and **verifiable coordination**.
+ARX is a platform designed for **digital sovereignty**. It builds identity, communication, and payments on **cryptographic ownership**.
 
 ### Core Guiding Principles
 
 The ARX platform is built on four pillars that redefine the relationship between users and the digital services they use:
 
-1.  **Self-Custody as a Baseline:** Users control their identity and keys directly from their devices. There are no intermediaries, no "forgot password" links managed by corporations, and no external authentication systems.
-2.  **Privacy without Opacity:** User data remains local and encrypted. Conversely, the coordination logic (the code that secures the network) is fully transparent, open-source, and auditable.
+1.  **Self-Custody as a Baseline:** Users control their identity and keys directly from their devices. There are no "forgot password" links managed by corporations and no external authentication systems.
+2.  **Privacy without Opacity:** Message content is encrypted on the device. The token, staking, and governance smart contracts are public and verifiable.
 3.  **Functional Convergence:** ARX unifies messaging, payments, and connectivity. This allows for a seamless experience where users can transact and communicate without the friction of switching between fragmented, siloed platforms.
-4.  **Governance through Participation:** The network is not a "product" managed by a board of directors; it is a protocol governed by its users through on-chain voting and staking.
+4.  **Governance through Participation:** ARX is designed to move toward governance by token holders through on-chain voting and staking. This is a plan; see [9 Governance model](../9-governance-model/README.md).
 
 ---
 
 ### The Foundation of Sovereignty
-
-ARX transitions the digital ecosystem from a model of **Corporate Control** to one of **Distributed Consensus**.
 
 
 
@@ -40,8 +38,8 @@ graph TD
     style P4 fill:#2B3648,stroke:#346ddb,color:#fefeff
 
     %% Detail nodes
-    P1 --- D1[No Intermediaries]
-    P2 --- D2[Encrypted Local Data]
+    P1 --- D1[Keys on Device]
+    P2 --- D2[Encrypted Content]
     P3 --- D4[Unified Wallet & Chat]
     P4 --- D5[Stakeholder Voting]
     
